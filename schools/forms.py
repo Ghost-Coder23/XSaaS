@@ -86,7 +86,8 @@ class ParentRegistrationForm(forms.Form):
 
     def clean_student_admission(self):
         admission = self.cleaned_data['student_admission']
-        if not self.school.student_set.filter(admission_number=admission).exists():
+        from academics.models import Student
+        if not Student.objects.filter(school=self.school, admission_number=admission).exists():
             raise forms.ValidationError("Student admission number not found in this school.")
         return admission
 

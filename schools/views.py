@@ -320,6 +320,7 @@ class ParentRegistrationView(CreateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
+        kwargs.pop('instance', None)
         kwargs['school'] = self.request.school
         return kwargs
 
@@ -330,7 +331,8 @@ class ParentRegistrationView(CreateView):
 
     def form_valid(self, form):
         school = self.request.school
-        student = school.student_set.get(admission_number=form.cleaned_data['student_admission'])
+        from academics.models import Student
+        student = Student.objects.get(school=school, admission_number=form.cleaned_data['student_admission'])
 
         # Create user
         user = User.objects.create_user(
