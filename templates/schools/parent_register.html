@@ -1,0 +1,76 @@
+{% extends 'base_public.html' %}
+{% block title %}Parent Registration — {{ current_school.name }}{% endblock %}
+{% block page_title %}Parent Registration{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header text-center">
+        <h4>Join {{ current_school.name }} Parent Portal</h4>
+        <p class="text-muted">Register to access your child's results and reports</p>
+      </div>
+      <div class="card-body p-4">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-bold">Student Admission Number *</label>
+            {{ form.student_admission.label_tag }}
+            {{ form.student_admission }}
+            {% if form.student_admission.errors %}
+              <div class="invalid-feedback d-block">{{ form.student_admission.errors.0 }}</div>
+            {% endif %}
+            <div class="form-text">Enter your child's admission number (e.g. 2024001)</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Your First Name *</label>
+            {{ form.parent_first_name }}
+            {% if form.parent_first_name.errors %}
+              <div class="invalid-feedback d-block">{{ form.parent_first_name.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Your Last Name *</label>
+            {{ form.parent_last_name }}
+            {% if form.parent_last_name.errors %}
+              <div class="invalid-feedback d-block">{{ form.parent_last_name.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Your Email *</label>
+            {{ form.parent_email }}
+            {% if form.parent_email.errors %}
+              <div class="invalid-feedback d-block">{{ form.parent_email.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Password *</label>
+              {{ form.password1 }}
+              {% if form.password1.errors %}
+                <div class="invalid-feedback d-block">{{ form.password1.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Confirm Password *</label>
+              {{ form.password2 }}
+              {% if form.password2.errors %}
+                <div class="invalid-feedback d-block">{{ form.password2.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
+          {% endif %}
+          <button type="submit" class="btn btn-primary w-100 btn-lg">Register Now</button>
+        </form>
+        <div class="text-center mt-4">
+          <small class="text-muted">
+            Already registered? <a href="{% url 'login' %}">Login here</a>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

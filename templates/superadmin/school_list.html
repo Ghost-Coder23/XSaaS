@@ -1,0 +1,42 @@
+{% extends "superadmin/dashboard.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">Schools {% if status_filter %}<span class="badge bg-secondary">{{ status_filter }}</span>{% endif %}</h5>
+</div>
+<div class="card mb-3"><div class="card-body py-2">
+  <form method="get" class="d-flex gap-2">
+    <select name="status" class="form-select form-select-sm" style="max-width:180px;">
+      <option value="">All Statuses</option>
+      <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+      <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+      <option value="suspended" {% if status_filter == 'suspended' %}selected{% endif %}>Suspended</option>
+    </select>
+    <button class="btn btn-sm btn-primary">Filter</button>
+  </form>
+</div></div>
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>School</th><th>Subdomain</th><th>Email</th><th>Status</th><th>Students</th><th>Registered</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for s in schools %}
+        <tr>
+          <td><strong>{{ s.name }}</strong></td>
+          <td><code>{{ s.subdomain }}</code></td>
+          <td>{{ s.email }}</td>
+          <td><span class="badge {% if s.status == 'active' %}bg-success{% elif s.status == 'pending' %}bg-warning text-dark{% elif s.status == 'suspended' %}bg-danger{% else %}bg-secondary{% endif %}">{{ s.get_status_display }}</span></td>
+          <td>{{ s.student_count }}</td>
+          <td>{{ s.created_at|date:"d M Y" }}</td>
+          <td class="d-flex gap-1">
+            <a href="{% url 'superadmin:school_detail' s.id %}" class="btn btn-xs btn-outline-secondary" style="font-size:.72rem;padding:2px 7px;">View</a>
+            {% if s.status == 'pending' %}<a href="{% url 'superadmin:approve_school' s.id %}" class="btn btn-xs btn-success" style="font-size:.72rem;padding:2px 7px;" onclick="return confirm('Approve?')">Approve</a>{% endif %}
+            {% if s.status == 'active' %}<a href="{% url 'superadmin:suspend_school' s.id %}" class="btn btn-xs btn-danger" style="font-size:.72rem;padding:2px 7px;" onclick="return confirm('Suspend?')">Suspend</a>{% endif %}
+          </td>
+        </tr>
+        {% empty %}<tr><td colspan="7" class="text-center text-muted py-4">No schools found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

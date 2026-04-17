@@ -1,0 +1,163 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Enter Results{% endblock %}
+{% block page_title %}Result Entry{% endblock %}
+{% block content %}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-medium">Class</label>
+                <select name="class" class="form-select" required>
+                    <option value="">Select Class</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if class_section.id == c.id %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-medium">Subject</label>
+                <select name="subject" class="form-select" required>
+                    <option value="">Select Subject</option>
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}" {% if subject.id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-medium">Term</label>
+                <select name="term" class="form-select" required>
+                    <option value="">Select Term</option>
+                    {% for t in terms %}
+                    <option value="{{ t.id }}" {% if term.id == t.id %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel me-1"></i>Load Students
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if results %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>
+            <strong>{{ subject.name }}</strong> &mdash; {{ class_section }} &mdash; {{ term }}
+        </span>
+        <span class="text-muted small">{{ results|length }} student{{ results|length|pluralize }}</span>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="class" value="{{ class_section.id }}">
+        <input type="hidden" name="subject" value="{{ subject.id }}">
+        <input type="hidden" name="term" value="{{ term.id }}">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th style="width:130px;">CA Score <small class="text-muted">(30%)</small></th>
+                        <th style="width:130px;">Exam Score <small class="text-muted">(70%)</small></th>
+                        <th style="width:100px;">Total</th>
+                        <th style="width:70px;">Grade</th>
+                        <th>Comment</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>
+                            <div class="fw-medium">{{ result.student.user.get_full_name }}</div>
+                            <div class="text-muted small">{{ result.student.admission_number }}</div>
+                        </td>
+                        <td>
+                            <input type="number" name="ca_{{ result.id }}" value="{{ result.continuous_assessment }}"
+                                class="form-control form-control-sm ca-input" data-id="{{ result.id }}"
+                                min="0" max="100" step="0.5"
+                                {% if result.status == 'locked' %}readonly{% endif %}>
+                        </td>
+                        <td>
+                            <input type="number" name="exam_{{ result.id }}" value="{{ result.exam_score }}"
+                                class="form-control form-control-sm exam-input" data-id="{{ result.id }}"
+                                min="0" max="100" step="0.5"
+                                {% if result.status == 'locked' %}readonly{% endif %}>
+                        </td>
+                        <td>
+                            <span class="fw-bold total-{{ result.id }}">{{ result.total_score|floatformat:1 }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary grade-{{ result.id }}">{{ result.grade|default:'-' }}</span>
+                        </td>
+                        <td>
+                            <input type="text" name="comment_{{ result.id }}" value="{{ result.teacher_comment }}"
+                                class="form-control form-control-sm" placeholder="Optional"
+                                {% if result.status == 'locked' %}readonly{% endif %}>
+                        </td>
+                        <td>
+                            {% if result.status == 'draft' %}
+                            <span class="badge bg-secondary">Draft</span>
+                            {% elif result.status == 'submitted' %}
+                            <span class="badge bg-warning text-dark">Submitted</span>
+                            {% elif result.status == 'approved' %}
+                            <span class="badge bg-success">Approved</span>
+                            {% elif result.status == 'locked' %}
+                            <span class="badge bg-dark">Locked</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <small class="text-muted">Results will be submitted for headmaster approval.</small>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-send me-1"></i>Submit Results
+            </button>
+        </div>
+    </form>
+</div>
+
+{% elif class_section %}
+<div class="card"><div class="card-body text-center py-5 text-muted">
+    <i class="bi bi-people fs-1 d-block mb-2"></i>
+    No active students in this class, or selection incomplete.
+</div></div>
+{% else %}
+<div class="card"><div class="card-body text-center py-5 text-muted">
+    <i class="bi bi-arrow-up-circle fs-1 d-block mb-2"></i>
+    Select a class, subject, and term above to load students.
+</div></div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Live total calculation
+function calcTotal(id) {
+    const ca = parseFloat(document.querySelector(`.ca-input[data-id="${id}"]`)?.value || 0);
+    const exam = parseFloat(document.querySelector(`.exam-input[data-id="${id}"]`)?.value || 0);
+    const total = (ca * 0.3) + (exam * 0.7);
+    const totalEl = document.querySelector(`.total-${id}`);
+    if (totalEl) totalEl.textContent = total.toFixed(1);
+    const gradeEl = document.querySelector(`.grade-${id}`);
+    if (gradeEl) {
+        let grade = 'F';
+        if (total >= 80) grade = 'A';
+        else if (total >= 65) grade = 'B';
+        else if (total >= 50) grade = 'C';
+        else if (total >= 40) grade = 'D';
+        gradeEl.textContent = grade;
+    }
+}
+document.querySelectorAll('.ca-input, .exam-input').forEach(input => {
+    input.addEventListener('input', () => calcTotal(input.dataset.id));
+});
+</script>
+{% endblock %}

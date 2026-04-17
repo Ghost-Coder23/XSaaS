@@ -1,0 +1,78 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Student Dashboard{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="stat-card text-center">
+    <div class="stat-label mb-1">Attendance</div>
+    {% if att_pct is not None %}
+      <div class="stat-number {% if att_pct >= 80 %}text-success{% elif att_pct >= 60 %}text-warning{% else %}text-danger{% endif %}">{{ att_pct }}%</div>
+    {% else %}<div class="text-muted">-</div>{% endif %}
+    <small class="text-muted">This term</small>
+  </div></div>
+  <div class="col-6 col-md-3"><div class="stat-card text-center">
+    <div class="stat-label mb-1">Fee Balance</div>
+    <div class="stat-number {% if fee_balance > 0 %}text-danger{% else %}text-success{% endif %}">${{ fee_balance|floatformat:2 }}</div>
+    <small class="text-muted">{% if fee_balance > 0 %}Outstanding{% else %}Clear{% endif %}</small>
+  </div></div>
+  {% if term_summaries %}
+  {% with term_summaries.first as ts %}
+  <div class="col-6 col-md-3"><div class="stat-card text-center">
+    <div class="stat-label mb-1">Last Average</div>
+    <div class="stat-number text-primary">{{ ts.average|floatformat:1 }}%</div>
+    <small class="text-muted">{{ ts.term.name }}</small>
+  </div></div>
+  <div class="col-6 col-md-3"><div class="stat-card text-center">
+    <div class="stat-label mb-1">Class Position</div>
+    <div class="stat-number text-primary">{{ ts.class_position|default:"-" }}</div>
+    <small class="text-muted">{{ ts.term.name }}</small>
+  </div></div>
+  {% endwith %}
+  {% endif %}
+</div>
+
+{% if current_results %}
+<div class="card mb-3">
+  <div class="card-header"><i class="bi bi-award me-2"></i>{% if current_term %}{{ current_term.name }}{% endif %} Results</div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Subject</th><th>CA</th><th>Exam</th><th>Total</th><th>Grade</th><th>Position</th></tr></thead>
+      <tbody>
+        {% for r in current_results %}
+        <tr>
+          <td>{{ r.subject.name }}</td>
+          <td>{{ r.continuous_assessment|floatformat:1 }}</td>
+          <td>{{ r.exam_score|floatformat:1 }}</td>
+          <td><strong>{{ r.total_score|floatformat:1 }}</strong></td>
+          <td><span class="badge bg-secondary">{{ r.grade|default:"-" }}</span></td>
+          <td>{{ r.position|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% if term_summaries %}
+<div class="card">
+  <div class="card-header"><i class="bi bi-clock-history me-2"></i>Past Terms</div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Term</th><th>Average</th><th>Position</th><th>Grade</th><th></th></tr></thead>
+      <tbody>
+        {% for ts in term_summaries %}
+        <tr>
+          <td>{{ ts.term.name }}</td>
+          <td>{{ ts.average|floatformat:1 }}%</td>
+          <td>{{ ts.class_position|default:"-" }}</td>
+          <td>{{ ts.overall_grade|default:"-" }}</td>
+          <td><a href="{% url 'reports:generate' student.pk ts.term.pk %}" class="btn btn-xs btn-outline-secondary" style="font-size:.7rem;padding:2px 8px;"><i class="bi bi-download me-1"></i>Report</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

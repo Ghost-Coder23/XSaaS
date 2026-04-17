@@ -1,0 +1,26 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Parent Dashboard{% endblock %}
+{% block page_title %}Parent Dashboard{% endblock %}
+{% block content %}
+<h5 class="fw-bold mb-3">My Children</h5>
+{% if children %}
+<div class="row g-3">
+{% for child in children %}
+<div class="col-md-4">
+<div class="card">
+<div class="card-body">
+<h6 class="fw-bold">{{ child.user.get_full_name }}</h6>
+<p class="text-muted small mb-1">Admission: {{ child.admission_number }}</p>
+<p class="text-muted small mb-3">Class: {{ child.current_class|default:'Not assigned' }}</p>
+<a href="{% url 'results:student_results' child.id %}" class="btn btn-sm btn-primary">View Results</a>
+</div>
+</div>
+</div>
+{% endfor %}
+</div>
+{% else %}
+<div class="card"><div class="card-body text-center py-5 text-muted">
+<i class="bi bi-people fs-1 d-block mb-2"></i>No children linked to your account. Contact your school admin.
+</div></div>
+{% endif %}
+{% endblock %}

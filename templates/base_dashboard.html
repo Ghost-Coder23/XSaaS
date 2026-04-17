@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="{{ current_school.theme_color|default:'#4F46E5' }}">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>{% block title %}EduCore{% endblock %} | {{ current_school.name|default:"EduCore" }}</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<style>
+:root {
+  --primary: {{ current_school.theme_color|default:"#4F46E5" }};
+  --primary-dark: #3730a3;
+  --sidebar-bg: #1e1b4b;
+  --sidebar-width: 256px;
+}
+* { box-sizing: border-box; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; margin: 0; }
+/* Sidebar */
+.sidebar { width: var(--sidebar-width); min-height: 100vh; background: var(--sidebar-bg); position: fixed; top: 0; left: 0; z-index: 200; overflow-y: auto; transition: transform .25s ease; display: flex; flex-direction: column; }
+.sidebar-brand { padding: 1.25rem 1rem; border-bottom: 1px solid rgba(255,255,255,.08); }
+.sidebar-brand h5 { color: #fff; font-weight: 700; margin: 0; font-size: 1rem; line-height: 1.3; }
+.sidebar-brand small { color: rgba(255,255,255,.4); font-size: .7rem; }
+.nav-section { color: rgba(255,255,255,.3); font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; padding: .9rem 1rem .25rem; }
+.nav-link { color: rgba(255,255,255,.65); padding: .5rem .85rem; border-radius: 7px; margin: 1px 8px; font-size: .82rem; display: flex; align-items: center; gap: 9px; transition: all .15s; text-decoration: none; }
+.nav-link:hover, .nav-link.active { color: #fff; background: rgba(255,255,255,.12); }
+.nav-link i { font-size: 1rem; width: 18px; text-align: center; flex-shrink: 0; }
+.sidebar-footer { margin-top: auto; padding: .75rem; border-top: 1px solid rgba(255,255,255,.08); }
+/* Main */
+.main-content { margin-left: var(--sidebar-width); min-height: 100vh; transition: margin .25s ease; }
+.topbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: .7rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 1rem; }
+.topbar-left { display: flex; align-items: center; gap: .75rem; }
+.topbar-right { display: flex; align-items: center; gap: .75rem; }
+.page-content { padding: 1.5rem; }
+/* Cards */
+.card { border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); background: #fff; }
+.card-header { background: #fff; border-bottom: 1px solid #e2e8f0; font-weight: 600; padding: .85rem 1.25rem; border-radius: 12px 12px 0 0 !important; }
+/* Stat cards */
+.stat-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; }
+.stat-card .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
+.stat-card .stat-number { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+.stat-card .stat-label { font-size: .78rem; color: #64748b; margin-top: 2px; }
+.stat-card .stat-change { font-size: .75rem; margin-top: .4rem; }
+/* Buttons */
+.btn-primary { background: var(--primary); border-color: var(--primary); }
+.btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+.btn-outline-primary { color: var(--primary); border-color: var(--primary); }
+.btn-outline-primary:hover { background: var(--primary); border-color: var(--primary); }
+.text-primary { color: var(--primary) !important; }
+.bg-primary { background: var(--primary) !important; }
+/* Badges */
+.badge-present { background: #dcfce7; color: #166534; }
+.badge-absent { background: #fee2e2; color: #991b1b; }
+.badge-late { background: #fef9c3; color: #854d0e; }
+.badge-excused { background: #dbeafe; color: #1e40af; }
+.badge-role-headmaster { background: #ede9fe; color: #5b21b6; }
+.badge-role-admin { background: #dbeafe; color: #1d4ed8; }
+.badge-role-teacher { background: #d1fae5; color: #065f46; }
+.badge-role-student { background: #fef9c3; color: #854d0e; }
+.badge-role-parent { background: #fce7f3; color: #9d174d; }
+/* Notif bell */
+.notif-badge { position: absolute; top: -4px; right: -4px; background: #ef4444; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: .6rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+/* Alert */
+.alert { border-radius: 10px; border: none; font-size: .875rem; }
+/* Table */
+.table th { font-size: .75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid #e2e8f0; }
+.table td { font-size: .875rem; vertical-align: middle; }
+/* PWA install banner */
+#pwa-install-banner { background: var(--primary); color: #fff; padding: .75rem 1rem; font-size: .85rem; display: none; align-items: center; justify-content: space-between; gap: 1rem; position: sticky; top: 0; z-index: 300; }
+/* Offline indicator */
+#offline-indicator { background: #f59e0b; color: #fff; text-align: center; padding: .4rem; font-size: .8rem; display: none; }
+/* Mobile */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main-content { margin-left: 0; }
+  .page-content { padding: 1rem; }
+  .stat-card .stat-number { font-size: 1.5rem; }
+}
+/* Sidebar overlay */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 199; }
+.sidebar-overlay.show { display: block; }
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<div id="offline-indicator"><i class="bi bi-wifi-off me-1"></i> You are offline. Changes will sync when reconnected.</div>
+<div id="pwa-install-banner">
+  <span><i class="bi bi-phone me-2"></i>Install EduCore on your device for offline access</span>
+  <div class="d-flex gap-2">
+    <button class="btn btn-sm btn-light" onclick="installPWA()">Install</button>
+    <button class="btn btn-sm btn-outline-light" onclick="document.getElementById('pwa-install-banner').style.display='none'">×</button>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    {% if current_school.logo %}
+      <img src="{{ current_school.logo.url }}" height="38" class="mb-2 rounded" style="max-width:160px;">
+    {% else %}
+      <div style="width:38px;height:38px;border-radius:9px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.1rem;margin-bottom:8px;">{{ current_school.name|first|upper }}</div>
+    {% endif %}
+    <h5>{{ current_school.name }}</h5>
+    <small>{{ user.get_full_name|default:user.username }} &middot; {{ school_role|title }}</small>
+  </div>
+
+  <nav class="py-2 flex-grow-1">
+    <div class="nav-section">Main</div>
+    <a href="{% url 'analytics:dashboard' %}" class="nav-link {% if 'dashboard' in request.path %}active{% endif %}">
+      <i class="bi bi-grid-1x2"></i> Dashboard
+    </a>
+    <a href="{% url 'notifications:announcements' %}" class="nav-link {% if 'announcements' in request.path %}active{% endif %}">
+      <i class="bi bi-megaphone"></i> Announcements
+    </a>
+
+    {% if school_role in 'headmaster,admin,teacher' %}
+    <div class="nav-section">Academic</div>
+    <a href="{% url 'academics:student_list' %}" class="nav-link {% if 'students' in request.path %}active{% endif %}">
+      <i class="bi bi-people"></i> Students
+    </a>
+    <a href="{% url 'academics:class_section_list' %}" class="nav-link {% if 'sections' in request.path %}active{% endif %}">
+      <i class="bi bi-building"></i> Classes
+    </a>
+    <a href="{% url 'academics:subject_list' %}" class="nav-link {% if 'subjects' in request.path %}active{% endif %}">
+      <i class="bi bi-book"></i> Subjects
+    </a>
+
+    <div class="nav-section">Attendance</div>
+    <a href="{% url 'attendance:home' %}" class="nav-link {% if 'attendance' in request.path %}active{% endif %}">
+      <i class="bi bi-calendar-check"></i> Attendance
+    </a>
+
+    <div class="nav-section">Results</div>
+    <a href="{% url 'results:result_entry' %}" class="nav-link {% if 'entry' in request.path %}active{% endif %}">
+      <i class="bi bi-pencil-square"></i> Enter Results
+    </a>
+    {% if school_role == 'headmaster' %}
+    <a href="{% url 'results:pending_approvals' %}" class="nav-link {% if 'pending' in request.path %}active{% endif %}">
+      <i class="bi bi-clock-history"></i> Pending Approvals
+    </a>
+    {% endif %}
+    <a href="{% url 'results:term_list' %}" class="nav-link {% if 'terms' in request.path %}active{% endif %}">
+      <i class="bi bi-calendar3"></i> Terms
+    </a>
+    {% endif %}
+
+    {% if school_role in 'headmaster,admin' %}
+    <div class="nav-section">Fees</div>
+    <a href="{% url 'fees:home' %}" class="nav-link {% if request.path == '/fees/' %}active{% endif %}">
+      <i class="bi bi-cash-coin"></i> Fee Overview
+    </a>
+    <a href="{% url 'fees:invoice_list' %}" class="nav-link {% if 'invoices' in request.path %}active{% endif %}">
+      <i class="bi bi-receipt"></i> Invoices
+    </a>
+    <a href="{% url 'fees:structure_list' %}" class="nav-link {% if 'structures' in request.path %}active{% endif %}">
+      <i class="bi bi-list-check"></i> Fee Structures
+    </a>
+
+    <div class="nav-section">Administration</div>
+    <a href="{% url 'academics:academic_year_list' %}" class="nav-link {% if 'years' in request.path %}active{% endif %}">
+      <i class="bi bi-calendar-range"></i> Academic Years
+    </a>
+    <a href="{% url 'academics:teacher_assignment_list' %}" class="nav-link {% if 'assignments' in request.path %}active{% endif %}">
+      <i class="bi bi-person-badge"></i> Teacher Assignments
+    </a>
+    <a href="{% url 'results:grade_scale_list' %}" class="nav-link {% if 'grade-scale' in request.path %}active{% endif %}">
+      <i class="bi bi-bar-chart"></i> Grade Scales
+    </a>
+    <a href="{% url 'user_management' %}" class="nav-link {% if 'users' in request.path %}active{% endif %}">
+      <i class="bi bi-person-gear"></i> Users
+    </a>
+    <a href="{% url 'school_settings' %}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
+      <i class="bi bi-gear"></i> Settings
+    </a>
+    <a href="{% url 'fees:payment_config' %}" class="nav-link {% if 'payment-config' in request.path %}active{% endif %}">
+      <i class="bi bi-credit-card"></i> Payment Config
+    </a>
+    {% endif %}
+
+    {% if school_role in 'parent,student' %}
+    <div class="nav-section">My Information</div>
+    {% if school_role == 'student' %}
+    <a href="{% url 'results:result_entry' %}" class="nav-link"><i class="bi bi-award"></i> My Results</a>
+    {% endif %}
+    {% if school_role == 'parent' %}
+    <a href="{% url 'fees:invoice_list' %}" class="nav-link {% if 'invoices' in request.path %}active{% endif %}">
+      <i class="bi bi-receipt"></i> Fee Statements
+    </a>
+    {% endif %}
+    {% endif %}
+
+    {% if user.is_superuser %}
+    <div class="nav-section">Platform</div>
+    <a href="{% url 'superadmin:dashboard' %}" class="nav-link {% if 'platform' in request.path %}active{% endif %}">
+      <i class="bi bi-globe"></i> Superadmin
+    </a>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="{% url 'accounts:profile' %}" class="nav-link"><i class="bi bi-person-circle"></i> My Profile</a>
+    <a href="{% url 'accounts:logout' %}" class="nav-link"><i class="bi bi-box-arrow-right"></i> Logout</a>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="btn btn-sm btn-light d-md-none" onclick="toggleSidebar()" aria-label="Menu">
+        <i class="bi bi-list fs-5"></i>
+      </button>
+      <nav aria-label="breadcrumb" class="d-none d-md-block">
+        <span class="text-muted" style="font-size:.85rem;">{% block page_title %}{% endblock %}</span>
+      </nav>
+    </div>
+    <div class="topbar-right">
+      <a href="{% url 'notifications:list' %}" class="btn btn-sm btn-light position-relative" title="Notifications">
+        <i class="bi bi-bell"></i>
+        <span class="notif-badge" id="notif-count" style="display:none">0</span>
+      </a>
+      <span class="text-muted d-none d-md-inline" style="font-size:.83rem;">
+        <i class="bi bi-person-circle me-1"></i>{{ user.get_full_name|default:user.username }}
+      </span>
+    </div>
+  </div>
+
+  <div class="page-content">
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show mb-3" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Sidebar toggle
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
+
+// Offline indicator
+window.addEventListener('online', () => { document.getElementById('offline-indicator').style.display = 'none'; });
+window.addEventListener('offline', () => { document.getElementById('offline-indicator').style.display = 'block'; });
+if (!navigator.onLine) document.getElementById('offline-indicator').style.display = 'block';
+
+// PWA install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('pwa-install-banner').style.display = 'flex';
+});
+function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+      document.getElementById('pwa-install-banner').style.display = 'none';
+    });
+  }
+}
+
+// Service Worker registration
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js', {scope: '/'})
+    .then(reg => console.log('SW registered:', reg.scope))
+    .catch(err => console.log('SW error:', err));
+}
+
+// Notification count
+function loadNotifCount() {
+  fetch('/notifications/unread/')
+    .then(r => r.json())
+    .then(d => {
+      const el = document.getElementById('notif-count');
+      if (d.count > 0) { el.textContent = d.count; el.style.display = 'flex'; }
+      else el.style.display = 'none';
+    }).catch(() => {});
+}
+loadNotifCount();
+setInterval(loadNotifCount, 60000);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

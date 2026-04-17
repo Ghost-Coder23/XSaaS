@@ -1,0 +1,409 @@
+"""
+Schools views - Public website and school management
+"""
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DetailView
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.urls import reverse_lazy
+from django.db import transaction
+from django.utils.decorators import method_decorator
+from django.core.mail import send_mail
+
+from .models import School, SchoolUser
+from .forms import SchoolRegistrationForm, SchoolBrandingForm, AddSchoolUserForm, ParentRegistrationForm
+
+
+class HomeView(TemplateView):
+    """Landing page for EduCore"""
+    template_name = 'schools/home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['active_schools_count'] = School.objects.filter(status='active').count()
+        context['features'] = [
+            {
+                'icon': 'bi-clipboard-data',
+                'title': 'Smart Results Management',
+                'description': 'Effortlessly manage term results with automated calculations and grading.'
+            },
+            {
+                'icon': 'bi-people',
+                'title': 'Parent & Student Portal',
+                'description': 'Give parents and students instant access to results and progress reports.'
+            },
+            {
+                'icon': 'bi-building',
+                'title': 'Multi-Tenant Architecture',
+                'description': 'Each school gets their own private subdomain with complete data isolation.'
+            },
+            {
+                'icon': 'bi-file-pdf',
+                'title': 'PDF Report Cards',
+                'description': 'Generate professional report cards with your school branding.'
+            },
+            {
+                'icon': 'bi-shield-check',
+                'title': 'Role-Based Access',
+                'description': 'Secure access control for headmasters, admins, teachers, students, and parents.'
+            },
+            {
+                'icon': 'bi-graph-up',
+                'title': 'Analytics Dashboard',
+                'description': 'Track performance trends and generate insights for better decision making.'
+            },
+        ]
+        return context
+
+
+class FeaturesView(TemplateView):
+    """Features page"""
+    template_name = 'schools/features.html'
+
+
+class PricingView(TemplateView):
+    """Pricing page"""
+    template_name = 'schools/pricing.html'
+
+
+class ContactView(TemplateView):
+    """Contact page"""
+    template_name = 'schools/contact.html'
+
+
+class SchoolRegistrationView(CreateView):
+    """School self-registration view"""
+    model = School
+    form_class = SchoolRegistrationForm
+    template_name = 'schools/register_school.html'
+    success_url = reverse_lazy('registration_pending')
+
+    def form_valid(self, form):
+        try:
+            with transaction.atomic():
+                # Create school
+                school = form.save(commit=False)
+                school.status = 'pending'
+                school.save()
+
+                # Create headmaster user
+                user = User.objects.create_user(
+                    username=form.cleaned_data['headmaster_email'],
+                    email=form.cleaned_data['headmaster_email'],
+                    password=form.cleaned_data['headmaster_password'],
+                    first_name=form.cleaned_data['headmaster_first_name'],
+                    last_name=form.cleaned_data['headmaster_last_name']
+                )
+
+                # Create SchoolUser link
+                SchoolUser.objects.create(
+                    user=user,
+                    school=school,
+                    role='headmaster',
+                    is_active=True
+                )
+
+                # Send notification to platform owner
+                self.notify_platform_owner(school)
+
+                messages.success(
+                    self.request, 
+                    f'Registration successful! Your school "{school.name}" is pending approval. '
+                    f'You will be notified at {school.email} once approved.'
+                )
+
+                return redirect('home')
+
+        except Exception as e:
+            messages.error(self.request, f'Registration failed: {str(e)}')
+            return self.form_invalid(form)
+
+    def notify_platform_owner(self, school):
+        """Send email notification to platform owner"""
+        try:
+            send_mail(
+                subject=f'New School Registration: {school.name}',
+                message=f'A new school "{school.name}" has registered and is pending approval.\n'
+                        f'Subdomain: {school.subdomain}\n'
+                        f'Email: {school.email}',
+                from_email='noreply@educore.com',
+                recipient_list=['admin@educore.com'],
+                fail_silently=True
+            )
+        except:
+            pass
+
+
+# School Admin Views (require login and school membership)
+@method_decorator(login_required, name='dispatch')
+class DashboardView(TemplateView):
+    """Main dashboard - redirects based on role"""
+    template_name = 'schools/dashboard.html'
+
+    def get(self, request, *args, **kwargs):
+        # Determine which dashboard to show based on user's role in school
+        school = getattr(request, 'school', None)
+        if not school:
+            messages.error(request, "No school context found.")
+            return redirect('home')
+
+        try:
+            membership = SchoolUser.objects.get(user=request.user, school=school)
+            if membership.role == 'headmaster':
+                return self.render_headmaster_dashboard(request, school)
+            elif membership.role == 'admin':
+                return self.render_admin_dashboard(request, school)
+            elif membership.role == 'teacher':
+                return self.render_teacher_dashboard(request, school)
+            elif membership.role == 'student':
+                return self.render_student_dashboard(request, school)
+            elif membership.role == 'parent':
+                return self.render_parent_dashboard(request, school)
+        except SchoolUser.DoesNotExist:
+            messages.error(request, "You don't have access to this school.")
+            return redirect('home')
+
+    def render_headmaster_dashboard(self, request, school):
+        from results.models import TermSummary, StudentResult
+        from academics.models import Student, ClassSection
+
+        context = {
+            'school': school,
+            'total_students': Student.objects.filter(school=school, is_active=True).count(),
+            'total_teachers': SchoolUser.objects.filter(school=school, role='teacher').count(),
+            'total_classes': ClassSection.objects.filter(school=school).count(),
+            'pending_approvals': StudentResult.objects.filter(
+                class_section__school=school,
+                status='submitted'
+            ).count(),
+            'recent_results': TermSummary.objects.filter(
+                class_section__school=school
+            ).select_related('student', 'term')[:10]
+        }
+        return render(request, 'schools/dashboard_headmaster.html', context)
+
+    def render_admin_dashboard(self, request, school):
+        from academics.models import Student, ClassSection
+
+        context = {
+            'school': school,
+            'total_students': Student.objects.filter(school=school, is_active=True).count(),
+            'total_teachers': SchoolUser.objects.filter(school=school, role='teacher').count(),
+            'total_classes': ClassSection.objects.filter(school=school).count(),
+        }
+        return render(request, 'schools/dashboard_admin.html', context)
+
+    def render_teacher_dashboard(self, request, school):
+        from academics.models import TeacherSubjectAssignment, Student
+
+        assignments = TeacherSubjectAssignment.objects.filter(
+            teacher__user=request.user,
+            class_section__school=school
+        ).select_related('subject', 'class_section')
+
+        context = {
+            'school': school,
+            'assignments': assignments,
+        }
+        return render(request, 'schools/dashboard_teacher.html', context)
+
+    def render_student_dashboard(self, request, school):
+        from results.models import TermSummary
+        from academics.models import Student
+
+        try:
+            student = Student.objects.get(user=request.user, school=school)
+            summaries = TermSummary.objects.filter(student=student).select_related('term')
+
+            context = {
+                'school': school,
+                'student': student,
+                'summaries': summaries,
+            }
+            return render(request, 'schools/dashboard_student.html', context)
+        except Student.DoesNotExist:
+            messages.error(request, "Student profile not found.")
+            return redirect('home')
+
+    def render_parent_dashboard(self, request, school):
+        from academics.models import Student
+
+        # Find children linked to this parent's email
+        children = Student.objects.filter(
+            school=school,
+            parent_email=request.user.email,
+            is_active=True
+        )
+
+        context = {
+            'school': school,
+            'children': children,
+        }
+        return render(request, 'schools/dashboard_parent.html', context)
+
+
+@method_decorator(login_required, name='dispatch')
+class SchoolSettingsView(UpdateView):
+    """School branding and settings"""
+    model = School
+    form_class = SchoolBrandingForm
+    template_name = 'schools/school_settings.html'
+    success_url = reverse_lazy('dashboard')
+
+    def get_object(self):
+        return self.request.school
+
+    def form_valid(self, form):
+        messages.success(self.request, 'School settings updated successfully!')
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class UserManagementView(ListView):
+    """Manage school users"""
+    model = SchoolUser
+    template_name = 'schools/user_management.html'
+    context_object_name = 'users'
+
+    def get_queryset(self):
+        return SchoolUser.objects.filter(
+            school=self.request.school
+        ).select_related('user').order_by('role', 'user__last_name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['school'] = self.request.school
+        context['add_user_form'] = AddSchoolUserForm()
+        return context
+
+
+@login_required
+def add_school_user(request):
+    """Add a new user to the school"""
+    if request.method == 'POST':
+        form = AddSchoolUserForm(request.POST)
+        if form.is_valid():
+            school = request.school
+
+            # Create user
+            user = User.objects.create_user(
+                username=form.cleaned_data['email'],
+                email=form.cleaned_data['email'],
+                password=User.objects.make_random_password(),
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name']
+            )
+
+            # Create SchoolUser
+            SchoolUser.objects.create(
+                user=user,
+                school=school,
+                role=form.cleaned_data['role'],
+                is_active=True
+            )
+
+            # TODO: Send welcome email with password reset link
+
+            messages.success(request, f"User {user.get_full_name()} added successfully!")
+            return redirect('user_management')
+
+    return redirect('user_management')
+
+
+class ParentRegistrationView(CreateView):
+    """Parent self-registration view"""
+    form_class = ParentRegistrationForm
+    template_name = 'schools/parent_register.html'
+    success_url = reverse_lazy('home')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['school'] = self.request.school
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['school'] = self.request.school
+        return context
+
+    def form_valid(self, form):
+        school = self.request.school
+        student = school.student_set.get(admission_number=form.cleaned_data['student_admission'])
+
+        # Create user
+        user = User.objects.create_user(
+            username=form.cleaned_data['parent_email'],
+            email=form.cleaned_data['parent_email'],
+            password=form.cleaned_data['password1'],
+            first_name=form.cleaned_data['parent_first_name'],
+            last_name=form.cleaned_data['parent_last_name']
+        )
+
+        # Create SchoolUser
+        SchoolUser.objects.create(
+            user=user,
+            school=school,
+            role='parent',
+            is_active=True
+        )
+
+        # Optional: update student.parent_phone if provided
+        # student.parent_phone = form.cleaned_data.get('parent_phone')
+
+        messages.success(
+            self.request,
+            f'Welcome {user.get_full_name()}! You can now access your child\'s results.'
+        )
+        return super().form_valid(form)
+
+
+import json
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.cache import cache_control
+from django.views.decorators.http import require_GET
+
+
+@require_GET
+@cache_control(max_age=0, no_cache=True, no_store=True, must_revalidate=True)
+def service_worker(request):
+    """Serve the PWA service worker from templates so Django can process it"""
+    import os
+    sw_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'pwa', 'sw.js')
+    if os.path.exists(sw_path):
+        with open(sw_path, 'r') as f:
+            content = f.read()
+    else:
+        content = "// Service Worker placeholder"
+    return HttpResponse(content, content_type='application/javascript')
+
+
+def pwa_manifest(request):
+    """Dynamic PWA manifest with school branding"""
+    school = getattr(request, 'school', None)
+    name = school.name if school else 'EduCore'
+    color = school.theme_color if school else '#4F46E5'
+    manifest = {
+        "name": name,
+        "short_name": name[:12],
+        "description": f"{name} School Management",
+        "start_url": "/analytics/dashboard/",
+        "display": "standalone",
+        "background_color": "#ffffff",
+        "theme_color": color,
+        "orientation": "any",
+        "scope": "/",
+        "icons": [
+            {"src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+            {"src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+            {"src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+        ],
+        "categories": ["education", "productivity"],
+        "shortcuts": [
+            {"name": "Dashboard", "url": "/analytics/dashboard/", "description": "Go to dashboard"},
+            {"name": "Attendance", "url": "/attendance/", "description": "Mark attendance"},
+            {"name": "Students", "url": "/academics/students/", "description": "View students"},
+        ]
+    }
+    return JsonResponse(manifest)

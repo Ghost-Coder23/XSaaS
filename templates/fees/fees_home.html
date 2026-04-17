@@ -1,0 +1,88 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Fees{% endblock %}
+{% block page_title %}Fee Management{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">Fee Overview</h5>
+  <div class="d-flex gap-2">
+    <a href="{% url 'fees:create_invoice' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus me-1"></i>New Invoice</a>
+    <a href="{% url 'fees:bulk_invoice' %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-people me-1"></i>Bulk Invoice</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="stat-card">
+    <div class="stat-label">Total Invoiced</div>
+    <div class="stat-number text-primary">${{ total_invoiced|floatformat:2 }}</div>
+  </div></div>
+  <div class="col-6 col-md-3"><div class="stat-card">
+    <div class="stat-label">Collected</div>
+    <div class="stat-number text-success">${{ total_paid|floatformat:2 }}</div>
+  </div></div>
+  <div class="col-6 col-md-3"><div class="stat-card">
+    <div class="stat-label">Outstanding</div>
+    <div class="stat-number text-danger">${{ total_outstanding|floatformat:2 }}</div>
+  </div></div>
+  <div class="col-6 col-md-3"><div class="stat-card">
+    <div class="stat-label">Overdue</div>
+    <div class="stat-number text-warning">{{ overdue_count }}</div>
+  </div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-receipt me-2"></i>Recent Invoices</span>
+        <a href="{% url 'fees:invoice_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Student</th><th>Amount</th><th>Paid</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {% for inv in recent_invoices %}
+            <tr>
+              <td>
+                <div class="fw-semibold">{{ inv.student.user.get_full_name }}</div>
+                <small class="text-muted">{{ inv.invoice_number }}</small>
+              </td>
+              <td>{{ inv.currency }} {{ inv.amount }}</td>
+              <td>{{ inv.currency }} {{ inv.amount_paid }}</td>
+              <td><span class="badge {% if inv.status == 'paid' %}bg-success{% elif inv.status == 'partial' %}bg-warning text-dark{% elif inv.status == 'overdue' %}bg-danger{% else %}bg-secondary{% endif %}">{{ inv.get_status_display }}</span></td>
+              <td><a href="{% url 'fees:invoice_detail' inv.pk %}" class="btn btn-xs btn-outline-secondary" style="font-size:.72rem;padding:2px 7px;">View</a></td>
+            </tr>
+            {% empty %}<tr><td colspan="5" class="text-center text-muted py-3">No invoices yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-clock-history me-2"></i>Recent Payments</div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Student</th><th>Amount</th></tr></thead>
+          <tbody>
+            {% for p in recent_payments %}
+            <tr>
+              <td>
+                <div style="font-size:.83rem;">{{ p.invoice.student.user.get_full_name }}</div>
+                <small class="text-muted">{{ p.get_method_display }}</small>
+              </td>
+              <td class="text-success fw-semibold">{{ p.currency }} {{ p.amount }}</td>
+            </tr>
+            {% empty %}<tr><td colspan="2" class="text-center text-muted py-3">No payments yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="mt-3">
+      <a href="{% url 'fees:structure_list' %}" class="btn btn-sm btn-outline-secondary w-100 mb-2"><i class="bi bi-list-check me-1"></i>Fee Structures</a>
+      <a href="{% url 'fees:payment_config' %}" class="btn btn-sm btn-outline-secondary w-100"><i class="bi bi-credit-card me-1"></i>Payment Settings</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

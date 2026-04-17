@@ -1,0 +1,51 @@
+{% extends "superadmin/dashboard.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">{{ school.name }}</h5>
+  <div class="d-flex gap-2">
+    {% if school.status == 'pending' %}<a href="{% url 'superadmin:approve_school' school.id %}" class="btn btn-sm btn-success" onclick="return confirm('Approve?')">Approve</a>{% endif %}
+    {% if school.status == 'active' %}<a href="{% url 'superadmin:suspend_school' school.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Suspend?')">Suspend</a>{% endif %}
+    <a href="{% url 'superadmin:school_list' %}" class="btn btn-sm btn-outline-secondary">Back</a>
+  </div>
+</div>
+<div class="row g-3">
+  <div class="col-md-5">
+    <div class="card mb-3">
+      <div class="card-header">School Info</div>
+      <div class="card-body">
+        <dl class="row mb-0" style="font-size:.88rem;">
+          <dt class="col-5">Name</dt><dd class="col-7">{{ school.name }}</dd>
+          <dt class="col-5">Subdomain</dt><dd class="col-7"><code>{{ school.subdomain }}.educore.com</code></dd>
+          <dt class="col-5">Email</dt><dd class="col-7">{{ school.email }}</dd>
+          <dt class="col-5">Phone</dt><dd class="col-7">{{ school.phone|default:"-" }}</dd>
+          <dt class="col-5">Status</dt><dd class="col-7"><span class="badge {% if school.status == 'active' %}bg-success{% elif school.status == 'pending' %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ school.get_status_display }}</span></dd>
+          <dt class="col-5">Students</dt><dd class="col-7">{{ student_count }}</dd>
+          <dt class="col-5">Registered</dt><dd class="col-7">{{ school.created_at|date:"d M Y" }}</dd>
+          <dt class="col-5">Address</dt><dd class="col-7">{{ school.address|default:"-" }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header">Members</div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Active</th></tr></thead>
+          <tbody>
+            {% for m in members %}
+            <tr>
+              <td>{{ m.user.get_full_name }}</td>
+              <td class="text-muted">{{ m.user.email }}</td>
+              <td><span class="badge badge-role-{{ m.role }}">{{ m.get_role_display }}</span></td>
+              <td>{% if m.is_active %}<i class="bi bi-check-circle text-success"></i>{% else %}<i class="bi bi-x-circle text-danger"></i>{% endif %}</td>
+            </tr>
+            {% empty %}<tr><td colspan="4" class="text-center text-muted py-3">No members.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

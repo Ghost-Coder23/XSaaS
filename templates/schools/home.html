@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}EduCore — School Management System{% endblock %}
+{% block content %}
+
+<section class="py-5" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); color: white;">
+    <div class="container py-4">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-3">Modern School Management</h1>
+                <p class="lead mb-4 opacity-75">EduCore gives every school its own private portal — manage students, enter results, generate report cards, and keep parents informed. All in one place.</p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{% url 'register_school' %}" class="btn btn-warning btn-lg px-4 fw-bold">
+                        <i class="bi bi-building-add me-2"></i>Register Your School
+                    </a>
+                    <a href="{% url 'features' %}" class="btn btn-outline-light btn-lg px-4">See Features</a>
+                </div>
+                {% if active_schools_count %}
+                <p class="mt-4 opacity-50 small"><i class="bi bi-check-circle me-1"></i>{{ active_schools_count }} school{{ active_schools_count|pluralize }} already using EduCore</p>
+                {% endif %}
+            </div>
+            <div class="col-lg-6 d-none d-lg-block text-center">
+                <i class="bi bi-mortarboard-fill" style="font-size: 10rem; opacity: 0.15;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-2">Everything your school needs</h2>
+        <p class="text-center text-muted mb-5">Built for African schools with multi-term systems</p>
+        <div class="row g-4">
+            {% for feature in features %}
+            <div class="col-md-4">
+                <div class="card h-100 border-0" style="border-radius:16px; background:#f8fafc;">
+                    <div class="card-body p-4">
+                        <div class="mb-3" style="width:48px;height:48px;border-radius:12px;background:var(--primary);display:flex;align-items:center;justify-content:center;">
+                            <i class="bi {{ feature.icon }} text-white fs-5"></i>
+                        </div>
+                        <h5 class="fw-bold">{{ feature.title }}</h5>
+                        <p class="text-muted mb-0">{{ feature.description }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-white">
+    <div class="container text-center">
+        <h2 class="fw-bold mb-3">Ready to get started?</h2>
+        <p class="text-muted mb-4">Register your school in minutes. Free trial, no credit card required.</p>
+        <a href="{% url 'register_school' %}" class="btn btn-primary btn-lg px-5">
+            <i class="bi bi-arrow-right-circle me-2"></i>Register Your School
+        </a>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Dashboard — {{ school.name }}{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number text-primary">{{ total_students }}</div><div class="stat-label">Students</div></div></div>
+<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number text-success">{{ total_teachers }}</div><div class="stat-label">Teachers</div></div></div>
+<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number text-info">{{ total_classes }}</div><div class="stat-label">Classes</div></div></div>
+</div>
+<div class="row g-3">
+<div class="col-md-6"><div class="card"><div class="card-header">Quick Actions</div><div class="card-body d-grid gap-2">
+<a href="{% url 'academics:student_add' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-person-plus me-1"></i>Add Student</a>
+<a href="{% url 'academics:class_section_add' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-building-add me-1"></i>Add Class</a>
+<a href="{% url 'academics:subject_add' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-book me-1"></i>Add Subject</a>
+<a href="{% url 'user_management' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-people me-1"></i>Manage Users</a>
+</div></div></div>
+</div>
+{% endblock %}

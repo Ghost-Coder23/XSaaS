@@ -1,0 +1,45 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}{{ student.user.get_full_name }}{% endblock %}
+{% block page_title %}Student Profile{% endblock %}
+{% block content %}
+<div class="row g-3">
+<div class="col-md-4">
+<div class="card text-center p-4">
+<div style="width:80px;height:80px;border-radius:50%;background:#e0e7ff;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:#4338ca;margin:0 auto 1rem;">{{ student.user.first_name|first|upper }}</div>
+<h5 class="fw-bold">{{ student.user.get_full_name }}</h5>
+<p class="text-muted">{{ student.current_class|default:'No class assigned' }}</p>
+<span class="badge bg-primary">{{ student.admission_number }}</span>
+</div>
+</div>
+<div class="col-md-8">
+<div class="card mb-3">
+<div class="card-header">Personal Information</div>
+<div class="card-body">
+<table class="table table-sm mb-0">
+<tr><th width="40%">Email</th><td>{{ student.user.email }}</td></tr>
+<tr><th>Date of Birth</th><td>{{ student.date_of_birth }}</td></tr>
+<tr><th>Gender</th><td>{{ student.get_gender_display }}</td></tr>
+<tr><th>Phone</th><td>{{ student.phone|default:'—' }}</td></tr>
+<tr><th>Address</th><td>{{ student.address }}</td></tr>
+</table>
+</div>
+</div>
+<div class="card">
+<div class="card-header">Parent/Guardian</div>
+<div class="card-body">
+<table class="table table-sm mb-0">
+<tr><th width="40%">Name</th><td>{{ student.parent_name }}</td></tr>
+<tr><th>Phone</th><td>{{ student.parent_phone }}</td></tr>
+<tr><th>Email</th><td>{{ student.parent_email }}</td></tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-3">
+<a href="{% url 'results:student_results' student.pk %}" class="btn btn-primary">
+<i class="bi bi-clipboard-data me-1"></i>View Results
+</a>
+<a href="{% url 'academics:student_list' %}" class="btn btn-outline-secondary ms-2">Back to List</a>
+</div>
+{% endblock %}

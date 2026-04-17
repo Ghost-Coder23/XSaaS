@@ -1,0 +1,47 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Fee Structures{% endblock %}
+{% block page_title %}Fee Structures{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">Defined Fee Structures</div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Name</th><th>Class Level</th><th>Amount</th><th>Academic Year</th><th>Mandatory</th></tr></thead>
+          <tbody>
+            {% for s in structures %}
+            <tr>
+              <td>{{ s.name }}</td>
+              <td>{{ s.class_level|default:"All Classes" }}</td>
+              <td><strong>{{ s.currency }} {{ s.amount }}</strong></td>
+              <td>{{ s.academic_year }}</td>
+              <td>{% if s.is_mandatory %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
+            </tr>
+            {% empty %}<tr><td colspan="5" class="text-center text-muted py-4">No fee structures defined yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">Add Fee Structure</div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="mb-2">
+            <label class="form-label fw-semibold" style="font-size:.8rem;">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<div class="text-danger" style="font-size:.75rem;">{{ field.errors }}</div>{% endif %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary w-100 mt-1">Add Structure</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Features — EduCore{% endblock %}
+{% block content %}
+<div class="container py-5">
+<h1 class="fw-bold mb-2">Features</h1>
+<p class="text-muted mb-5">Everything you need to manage your school effectively.</p>
+<div class="row g-4">
+<div class="col-md-6"><div class="card p-4"><i class="bi bi-clipboard-data fs-2 text-primary mb-3 d-block"></i><h5>Smart Results Management</h5><p class="text-muted">Enter CA and exam scores. Automatic grade calculation with configurable grade scales. Position ranking per subject and overall class.</p></div></div>
+<div class="col-md-6"><div class="card p-4"><i class="bi bi-file-pdf fs-2 text-primary mb-3 d-block"></i><h5>PDF Report Cards</h5><p class="text-muted">Professional report cards with your school logo, colors, and headmaster signature. Downloadable per student or bulk for the whole class.</p></div></div>
+<div class="col-md-6"><div class="card p-4"><i class="bi bi-building fs-2 text-primary mb-3 d-block"></i><h5>Multi-Tenant Architecture</h5><p class="text-muted">Each school gets its own private subdomain (yourschool.educore.com) with complete data isolation from other schools.</p></div></div>
+<div class="col-md-6"><div class="card p-4"><i class="bi bi-shield-check fs-2 text-primary mb-3 d-block"></i><h5>Role-Based Access</h5><p class="text-muted">Separate portals for headmasters, admins, teachers, students, and parents. Everyone sees only what they need.</p></div></div>
+<div class="col-md-6"><div class="card p-4"><i class="bi bi-check2-circle fs-2 text-primary mb-3 d-block"></i><h5>Approval Workflow</h5><p class="text-muted">Teachers submit results, headmaster reviews and approves. Lock terms when finalized. Full audit trail.</p></div></div>
+<div class="col-md-6"><div class="card p-4"><i class="bi bi-people fs-2 text-primary mb-3 d-block"></i><h5>Parent Portal</h5><p class="text-muted">Parents log in to view their child's results and progress reports in real time.</p></div></div>
+</div>
+</div>
+{% endblock %}

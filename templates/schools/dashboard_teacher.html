@@ -1,0 +1,28 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Dashboard — Teacher{% endblock %}
+{% block page_title %}Teacher Dashboard{% endblock %}
+{% block content %}
+<h5 class="fw-bold mb-3">My Assigned Classes & Subjects</h5>
+{% if assignments %}
+<div class="row g-3">
+{% for a in assignments %}
+<div class="col-md-4">
+<div class="card">
+<div class="card-body">
+<h6 class="fw-bold">{{ a.subject.name }}</h6>
+<p class="text-muted mb-2 small">{{ a.class_section }}</p>
+<a href="{% url 'results:result_entry' %}?class={{ a.class_section.id }}&subject={{ a.subject.id }}" class="btn btn-sm btn-primary">
+<i class="bi bi-pencil-square me-1"></i>Enter Results
+</a>
+</div>
+</div>
+</div>
+{% endfor %}
+</div>
+{% else %}
+<div class="card"><div class="card-body text-center py-5 text-muted">
+<i class="bi bi-person-badge fs-1 d-block mb-2"></i>
+No subject assignments yet. Contact your school admin.
+</div></div>
+{% endif %}
+{% endblock %}

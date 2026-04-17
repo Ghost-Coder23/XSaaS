@@ -1,0 +1,105 @@
+"""Schools forms"""
+from django import forms
+from django.contrib.auth.models import User
+from .models import School, SchoolUser
+
+
+class SchoolRegistrationForm(forms.ModelForm):
+    """Form for school self-registration"""
+    headmaster_first_name = forms.CharField(max_length=100, label="Headmaster First Name")
+    headmaster_last_name = forms.CharField(max_length=100, label="Headmaster Last Name")
+    headmaster_email = forms.EmailField(label="Headmaster Email")
+    headmaster_password = forms.CharField(widget=forms.PasswordInput, label="Password")
+    headmaster_password_confirm = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
+
+    class Meta:
+        model = School
+        fields = ['name', 'subdomain', 'email', 'phone', 'address']
+        widgets = {
+            'subdomain': forms.TextInput(attrs={
+                'placeholder': 'e.g., greenwood',
+                'help_text': 'This will create greenwood.educore.com'
+            }),
+        }
+
+    def clean_subdomain(self):
+        subdomain = self.cleaned_data['subdomain'].lower()
+        if School.objects.filter(subdomain=subdomain).exists():
+            raise forms.ValidationError("This subdomain is already taken.")
+        if not subdomain.replace('-', '').isalnum():
+            raise forms.ValidationError("Subdomain can only contain letters, numbers, and hyphens.")
+        return subdomain
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('headmaster_password')
+        password_confirm = cleaned_data.get('headmaster_password_confirm')
+
+        if password and password_confirm and password != password_confirm:
+            raise forms.ValidationError("Passwords do not match.")
+
+        return cleaned_data
+
+
+class SchoolLoginForm(forms.Form):
+    """Form for school login"""
+    email = forms.EmailField()
+    password = forms.CharField(widget=forms.PasswordInput)
+
+
+class SchoolBrandingForm(forms.ModelForm):
+    """Form for customizing school branding"""
+    class Meta:
+        model = School
+        fields = ['logo', 'theme_color', 'motto']
+        widgets = {
+            'theme_color': forms.TextInput(attrs={'type': 'color'}),
+        }
+
+
+class AddSchoolUserForm(forms.Form):
+    """Form to add a new user to a school"""
+    first_name = forms.CharField(max_length=100)
+    last_name = forms.CharField(max_length=100)
+    email = forms.EmailField()
+    role = forms.ChoiceField(choices=SchoolUser.ROLE_CHOICES)
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("A user with this email already exists.")
+        return email
+
+
+class ParentRegistrationForm(forms.Form):
+    """Form for parent self-registration"""
+    student_admission = forms.CharField(max_length=20, label="Student Admission Number")
+    parent_first_name = forms.CharField(max_length=100)
+    parent_last_name = forms.CharField(max_length=100)
+    parent_email = forms.EmailField()
+    password1 = forms.CharField(widget=forms.PasswordInput, label="Password")
+    password2 = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
+
+    def __init__(self, *args, **kwargs):
+        self.school = kwargs.pop('school', None)
+        super().__init__(*args, **kwargs)
+
+    def clean_student_admission(self):
+        admission = self.cleaned_data['student_admission']
+        if not self.school.student_set.filter(admission_number=admission).exists():
+            raise forms.ValidationError("Student admission number not found in this school.")
+        return admission
+
+    def clean_parent_email(self):
+        email = self.cleaned_data['parent_email']
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("This email is already registered.")
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get('password1')
+        p2 = cleaned_data.get('password2')
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("Passwords do not match.")
+        return cleaned_data

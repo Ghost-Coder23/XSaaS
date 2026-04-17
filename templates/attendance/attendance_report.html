@@ -1,0 +1,74 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Attendance Report{% endblock %}
+{% block page_title %}Attendance Report{% endblock %}
+{% block content %}
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label fw-semibold" style="font-size:.8rem;">Class</label>
+        <select name="class" class="form-select form-select-sm">
+          <option value="">All Classes</option>
+          {% for c in classes %}<option value="{{ c.id }}" {% if selected_class == c.id %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label fw-semibold" style="font-size:.8rem;">Month</label>
+        <select name="month" class="form-select form-select-sm">
+          {% for m in "1,2,3,4,5,6,7,8,9,10,11,12"|split:"," %}
+          <option value="{{ m }}" {% if month == m|add:0 %}selected{% endif %}>
+            {% if m == "1" %}Jan{% elif m == "2" %}Feb{% elif m == "3" %}Mar{% elif m == "4" %}Apr{% elif m == "5" %}May{% elif m == "6" %}Jun{% elif m == "7" %}Jul{% elif m == "8" %}Aug{% elif m == "9" %}Sep{% elif m == "10" %}Oct{% elif m == "11" %}Nov{% else %}Dec{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label fw-semibold" style="font-size:.8rem;">Year</label>
+        <input type="number" name="year" class="form-control form-control-sm" value="{{ year }}" min="2020" max="2035">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-sm btn-primary w-100">Generate</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if sessions %}
+<div class="card">
+  <div class="card-header">Attendance Matrix — {{ sessions|length }} sessions</div>
+  <div class="card-body p-0" style="overflow-x:auto;">
+    <table class="table table-sm table-bordered mb-0" style="font-size:.78rem;">
+      <thead>
+        <tr>
+          <th style="min-width:150px;">Student</th>
+          {% for s in sessions %}<th class="text-center" style="min-width:50px;">{{ s.date|date:"d/m" }}</th>{% endfor %}
+          <th class="text-center">%</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td>{{ student.user.get_full_name }}</td>
+          {% for s in sessions %}
+          {% with matrix|dictsort:"id" as m %}
+          <td class="text-center">
+            {% with matrix[student.id][s.id] as status %}
+            {% if status == 'present' %}<span style="color:#16a34a;">P</span>
+            {% elif status == 'absent' %}<span style="color:#dc2626;">A</span>
+            {% elif status == 'late' %}<span style="color:#d97706;">L</span>
+            {% elif status == 'excused' %}<span style="color:#2563eb;">E</span>
+            {% else %}<span style="color:#9ca3af;">-</span>{% endif %}
+            {% endwith %}
+          </td>
+          {% endwith %}
+          {% endfor %}
+          <td class="text-center fw-bold">-</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer text-muted" style="font-size:.75rem;">P = Present &nbsp; A = Absent &nbsp; L = Late &nbsp; E = Excused</div>
+</div>
+{% endif %}
+{% endblock %}

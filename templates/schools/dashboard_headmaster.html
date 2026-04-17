@@ -1,0 +1,106 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Dashboard — {{ school.name }}{% endblock %}
+{% block page_title %}Headmaster Dashboard{% endblock %}
+{% block content %}
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-number text-primary">{{ total_students }}</div>
+            <div class="stat-label"><i class="bi bi-people me-1"></i>Students</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-number text-success">{{ total_teachers }}</div>
+            <div class="stat-label"><i class="bi bi-person-badge me-1"></i>Teachers</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-number text-info">{{ total_classes }}</div>
+            <div class="stat-label"><i class="bi bi-building me-1"></i>Classes</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-number text-warning">{{ pending_approvals }}</div>
+            <div class="stat-label"><i class="bi bi-clock-history me-1"></i>Pending Approvals</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Recent Results</span>
+                <a href="{% url 'results:pending_approvals' %}" class="btn btn-sm btn-outline-primary">View Pending</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_results %}
+                <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Term</th>
+                            <th>Average</th>
+                            <th>Position</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for summary in recent_results %}
+                        <tr>
+                            <td>{{ summary.student.user.get_full_name }}</td>
+                            <td>{{ summary.term.name }}</td>
+                            <td>{{ summary.average|floatformat:1 }}%</td>
+                            <td>{% if summary.class_position %}#{{ summary.class_position }}{% else %}-{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-clipboard-x fs-1 d-block mb-2"></i>
+                    No results yet. <a href="{% url 'results:result_entry' %}">Enter results</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">Quick Actions</div>
+            <div class="card-body d-grid gap-2">
+                <a href="{% url 'academics:student_add' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-person-plus me-1"></i>Add Student
+                </a>
+                <a href="{% url 'user_management' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-person-badge me-1"></i>Add Teacher
+                </a>
+                <a href="{% url 'results:result_entry' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-pencil-square me-1"></i>Enter Results
+                </a>
+                <a href="{% url 'results:pending_approvals' %}" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-check2-all me-1"></i>Approve Results
+                    {% if pending_approvals %}<span class="badge bg-warning text-dark ms-1">{{ pending_approvals }}</span>{% endif %}
+                </a>
+                <a href="{% url 'school_settings' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-gear me-1"></i>School Settings
+                </a>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">School Info</div>
+            <div class="card-body small">
+                <div class="mb-2"><i class="bi bi-globe2 me-1 text-muted"></i>{{ school.subdomain }}.educore.com</div>
+                <div class="mb-2"><i class="bi bi-envelope me-1 text-muted"></i>{{ school.email }}</div>
+                {% if school.phone %}<div class="mb-2"><i class="bi bi-telephone me-1 text-muted"></i>{{ school.phone }}</div>{% endif %}
+                {% if school.motto %}<div class="fst-italic text-muted">"{{ school.motto }}"</div>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

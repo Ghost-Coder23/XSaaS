@@ -1,0 +1,68 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Results — {{ student.user.get_full_name }}{% endblock %}
+{% block page_title %}Student Results{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+<div>
+<h5 class="fw-bold mb-1">{{ student.user.get_full_name }}</h5>
+<p class="text-muted mb-0 small">{{ student.admission_number }} &mdash; {{ student.current_class|default:'No class' }}</p>
+</div>
+<div class="d-flex gap-2">
+{% if current_term %}
+<a href="{% url 'reports:generate' student.id current_term.id %}" class="btn btn-primary btn-sm">
+<i class="bi bi-file-pdf me-1"></i>Download Report Card
+</a>
+{% endif %}
+<a href="{% url 'academics:student_list' %}" class="btn btn-outline-secondary btn-sm">Back</a>
+</div>
+</div>
+
+{% if current_results %}
+<div class="card mb-3">
+<div class="card-header fw-bold">{{ current_term.name }} Results</div>
+<div class="table-responsive"><table class="table mb-0">
+<thead class="table-light"><tr><th>Subject</th><th>CA (30%)</th><th>Exam (70%)</th><th>Total</th><th>Grade</th><th>Position</th><th>Remark</th></tr></thead>
+<tbody>
+{% for r in current_results %}
+<tr>
+<td class="fw-medium">{{ r.subject.name }}</td>
+<td>{{ r.continuous_assessment|floatformat:1 }}</td>
+<td>{{ r.exam_score|floatformat:1 }}</td>
+<td class="fw-bold">{{ r.total_score|floatformat:1 }}</td>
+<td><span class="badge bg-primary">{{ r.grade|default:'-' }}</span></td>
+<td>{% if r.position %}#{{ r.position }}{% else %}—{% endif %}</td>
+<td class="text-muted small">{{ r.teacher_comment|default:'—' }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table></div>
+</div>
+{% endif %}
+
+{% if term_summaries %}
+<div class="card">
+<div class="card-header fw-bold">Term History</div>
+<div class="table-responsive"><table class="table mb-0">
+<thead class="table-light"><tr><th>Term</th><th>Year</th><th>Average</th><th>Position</th><th>Grade</th><th>Action</th></tr></thead>
+<tbody>
+{% for s in term_summaries %}
+<tr>
+<td>{{ s.term.name }}</td>
+<td>{{ s.term.academic_year.name }}</td>
+<td>{{ s.average|floatformat:1 }}%</td>
+<td>{% if s.class_position %}#{{ s.class_position }}{% else %}—{% endif %}</td>
+<td><span class="badge bg-primary">{{ s.overall_grade|default:'-' }}</span></td>
+<td><a href="{% url 'reports:generate' student.id s.term.id %}" class="btn btn-xs btn-sm btn-outline-primary"><i class="bi bi-file-pdf"></i></a></td>
+</tr>
+{% endfor %}
+</tbody>
+</table></div>
+</div>
+{% endif %}
+
+{% if not current_results and not term_summaries %}
+<div class="card"><div class="card-body text-center py-5 text-muted">
+<i class="bi bi-clipboard-x fs-1 d-block mb-2"></i>No approved results yet.
+</div></div>
+{% endif %}
+{% endblock %}

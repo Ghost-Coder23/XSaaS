@@ -1,0 +1,75 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Parent Dashboard{% endblock %}
+{% block page_title %}Parent Dashboard{% endblock %}
+{% block content %}
+{% for cd in children_data %}
+<div class="card mb-4">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-person-circle me-2"></i>{{ cd.student.user.get_full_name }}</span>
+    <span class="text-muted" style="font-size:.82rem;">{{ cd.student.current_class }} &middot; Adm: {{ cd.student.admission_number }}</span>
+  </div>
+  <div class="card-body">
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <div class="stat-card text-center">
+          <div class="stat-label mb-1">Attendance This Month</div>
+          {% if cd.att_pct is not None %}
+            <div class="stat-number {% if cd.att_pct >= 80 %}text-success{% elif cd.att_pct >= 60 %}text-warning{% else %}text-danger{% endif %}">{{ cd.att_pct }}%</div>
+            <small class="text-muted">{{ cd.att_present }} / {{ cd.att_total }} days</small>
+          {% else %}
+            <div class="text-muted">No data</div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card text-center">
+          <div class="stat-label mb-1">Fee Balance</div>
+          <div class="stat-number {% if cd.fee_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+            ${{ cd.fee_balance|floatformat:2 }}
+          </div>
+          <small class="text-muted">{% if cd.fee_balance > 0 %}Outstanding{% else %}All paid{% endif %}</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card text-center">
+          <div class="stat-label mb-1">Last Term Position</div>
+          {% if cd.latest_summary %}
+            <div class="stat-number text-primary">{{ cd.latest_summary.class_position|default:"-" }}</div>
+            <small class="text-muted">{{ cd.latest_summary.term.name }} &mdash; {{ cd.latest_summary.average|floatformat:1 }}%</small>
+          {% else %}
+            <div class="text-muted">No results yet</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% if cd.latest_results %}
+    <h6 class="fw-semibold mb-2">{% if cd.current_term %}{{ cd.current_term.name }}{% endif %} Results</h6>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead><tr><th>Subject</th><th>CA</th><th>Exam</th><th>Total</th><th>Grade</th></tr></thead>
+        <tbody>
+          {% for r in cd.latest_results %}
+          <tr>
+            <td>{{ r.subject.name }}</td>
+            <td>{{ r.continuous_assessment|floatformat:1 }}</td>
+            <td>{{ r.exam_score|floatformat:1 }}</td>
+            <td><strong>{{ r.total_score|floatformat:1 }}</strong></td>
+            <td><span class="badge bg-secondary">{{ r.grade|default:"-" }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <div class="d-flex gap-2 mt-3">
+      <a href="{% url 'fees:student_statement' cd.student.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-receipt me-1"></i>Fee Statement</a>
+      <a href="{% url 'results:student_results' cd.student.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-award me-1"></i>Full Results</a>
+    </div>
+  </div>
+</div>
+{% empty %}
+<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No children linked to your account. Contact the school admin to link your child.</div>
+{% endfor %}
+{% endblock %}

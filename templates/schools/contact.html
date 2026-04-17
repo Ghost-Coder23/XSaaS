@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Contact — EduCore{% endblock %}
+{% block content %}
+<div class="container py-5">
+<div class="row justify-content-center">
+<div class="col-md-6">
+<h1 class="fw-bold mb-2">Contact Us</h1>
+<p class="text-muted mb-4">Have questions? We'd love to hear from you.</p>
+<div class="card p-4">
+<div class="mb-3"><i class="bi bi-envelope-fill text-primary me-2"></i><strong>Email:</strong> hello@educore.com</div>
+<div class="mb-3"><i class="bi bi-telephone-fill text-primary me-2"></i><strong>Phone:</strong> +1 (555) 123-4567</div>
+<div class="mb-3"><i class="bi bi-chat-fill text-primary me-2"></i><strong>Live chat:</strong> Available Mon–Fri, 9am–5pm</div>
+<hr>
+<h6>Send us a message</h6>
+<form>
+{% csrf_token %}
+<div class="mb-3"><input type="text" class="form-control" placeholder="Your Name" required></div>
+<div class="mb-3"><input type="email" class="form-control" placeholder="Email Address" required></div>
+<div class="mb-3"><textarea class="form-control" rows="4" placeholder="How can we help?"></textarea></div>
+<button type="submit" class="btn btn-primary w-100">Send Message</button>
+</form>
+</div>
+</div>
+</div>
+</div>
+{% endblock %}

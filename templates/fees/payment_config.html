@@ -1,0 +1,68 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Payment Settings{% endblock %}
+{% block page_title %}Payment Gateway Settings{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Configure your school's payment methods. Parents will use these to pay fees online. Leave fields blank to disable a payment method.</div>
+    <div class="card">
+      <div class="card-header"><i class="bi bi-credit-card me-2"></i>Payment Configuration</div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <h6 class="fw-semibold mb-3 text-muted">Cash</h6>
+          <div class="mb-3 form-check">
+            {{ form.accept_cash }}
+            <label class="form-check-label" for="{{ form.accept_cash.id_for_label }}">Accept Cash Payments (manually recorded)</label>
+          </div>
+          <hr>
+          <h6 class="fw-semibold mb-3 text-muted">Paynow</h6>
+          <div class="mb-2 form-check">
+            {{ form.accept_paynow }}
+            <label class="form-check-label" for="{{ form.accept_paynow.id_for_label }}">Enable Paynow</label>
+          </div>
+          <div class="mb-2">
+            <label class="form-label fw-semibold" style="font-size:.82rem;">Integration ID</label>
+            {{ form.paynow_integration_id }}
+          </div>
+          <div class="mb-2">
+            <label class="form-label fw-semibold" style="font-size:.82rem;">Integration Key</label>
+            {{ form.paynow_integration_key }}
+          </div>
+          <div class="mb-2">
+            <label class="form-label fw-semibold" style="font-size:.82rem;">Result URL</label>
+            {{ form.paynow_result_url }}
+            <div class="text-muted" style="font-size:.75rem;">e.g. https://yourschool.educore.com/fees/paynow/result/</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:.82rem;">Return URL</label>
+            {{ form.paynow_return_url }}
+          </div>
+          <hr>
+          <h6 class="fw-semibold mb-3 text-muted">EcoCash</h6>
+          <div class="mb-2 form-check">
+            {{ form.accept_ecocash }}
+            <label class="form-check-label" for="{{ form.accept_ecocash.id_for_label }}">Enable EcoCash</label>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:.82rem;">Merchant Code</label>
+            {{ form.ecocash_merchant_code }}
+          </div>
+          <hr>
+          <h6 class="fw-semibold mb-3 text-muted">Bank Transfer / Zimswitch</h6>
+          <div class="mb-2 form-check">
+            {{ form.accept_bank_transfer }}
+            <label class="form-check-label" for="{{ form.accept_bank_transfer.id_for_label }}">Accept Bank Transfers</label>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-4"><label class="form-label fw-semibold" style="font-size:.82rem;">Bank Name</label>{{ form.bank_name }}</div>
+            <div class="col-md-4"><label class="form-label fw-semibold" style="font-size:.82rem;">Account Number</label>{{ form.bank_account_number }}</div>
+            <div class="col-md-4"><label class="form-label fw-semibold" style="font-size:.82rem;">Branch</label>{{ form.bank_branch }}</div>
+          </div>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save Settings</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

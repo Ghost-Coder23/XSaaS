@@ -1,0 +1,150 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Mark Attendance{% endblock %}
+{% block page_title %}Mark Attendance — {{ class_section }}{% endblock %}
+{% block extra_css %}
+<style>
+.att-btn-group .btn { font-size:.78rem; padding:4px 10px; }
+.att-row.present-row { background: #f0fdf4; }
+.att-row.absent-row { background: #fff1f2; }
+.att-row.late-row { background: #fffbeb; }
+.att-row.excused-row { background: #eff6ff; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h5 class="mb-0">{{ class_section }}</h5>
+    <small class="text-muted">{{ selected_date }}</small>
+  </div>
+  <div class="d-flex gap-2">
+    <input type="date" class="form-control form-control-sm" value="{{ selected_date }}"
+      onchange="window.location='{% url 'attendance:mark' class_section.id %}?date='+this.value" style="width:145px;">
+    <a href="{% url 'attendance:home' %}" class="btn btn-sm btn-outline-secondary">Back</a>
+  </div>
+</div>
+
+{% if is_finalized %}
+<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>This attendance session has been finalized. You can still edit below.</div>
+{% endif %}
+
+<form method="post" id="att-form">
+  {% csrf_token %}
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>{{ student_records|length }} Students</span>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-sm btn-success" onclick="markAll('present')">All Present</button>
+        <button type="button" class="btn btn-sm btn-danger" onclick="markAll('absent')">All Absent</button>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0" id="att-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student</th>
+              <th>Status</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in student_records %}
+            <tr class="att-row {% if item.record %}{{ item.record.status }}-row{% endif %}" id="row-{{ item.student.id }}">
+              <td class="text-muted">{{ forloop.counter }}</td>
+              <td>
+                <div class="fw-semibold">{{ item.student.user.get_full_name }}</div>
+                <small class="text-muted">{{ item.student.admission_number }}</small>
+              </td>
+              <td>
+                <div class="btn-group att-btn-group" role="group">
+                  {% for val, label in 'present,Present|absent,Absent|late,Late|excused,Excused'|cut:" "|split_by:"|" %}
+                  {% endfor %}
+                  <input type="radio" name="status_{{ item.student.id }}" value="present" id="p_{{ item.student.id }}"
+                    {% if item.record.status == 'present' or not item.record %}checked{% endif %}
+                    onchange="updateRow({{ item.student.id }}, 'present')" style="display:none;">
+                  <label for="p_{{ item.student.id }}" class="btn btn-sm {% if item.record.status == 'present' or not item.record %}btn-success{% else %}btn-outline-success{% endif %}" id="lp_{{ item.student.id }}">Present</label>
+
+                  <input type="radio" name="status_{{ item.student.id }}" value="absent" id="a_{{ item.student.id }}"
+                    {% if item.record.status == 'absent' %}checked{% endif %}
+                    onchange="updateRow({{ item.student.id }}, 'absent')" style="display:none;">
+                  <label for="a_{{ item.student.id }}" class="btn btn-sm {% if item.record.status == 'absent' %}btn-danger{% else %}btn-outline-danger{% endif %}" id="la_{{ item.student.id }}">Absent</label>
+
+                  <input type="radio" name="status_{{ item.student.id }}" value="late" id="l_{{ item.student.id }}"
+                    {% if item.record.status == 'late' %}checked{% endif %}
+                    onchange="updateRow({{ item.student.id }}, 'late')" style="display:none;">
+                  <label for="l_{{ item.student.id }}" class="btn btn-sm {% if item.record.status == 'late' %}btn-warning{% else %}btn-outline-warning{% endif %}" id="ll_{{ item.student.id }}">Late</label>
+
+                  <input type="radio" name="status_{{ item.student.id }}" value="excused" id="e_{{ item.student.id }}"
+                    {% if item.record.status == 'excused' %}checked{% endif %}
+                    onchange="updateRow({{ item.student.id }}, 'excused')" style="display:none;">
+                  <label for="e_{{ item.student.id }}" class="btn btn-sm {% if item.record.status == 'excused' %}btn-info{% else %}btn-outline-info{% endif %}" id="le_{{ item.student.id }}">Excused</label>
+                </div>
+              </td>
+              <td><input type="text" name="notes_{{ item.student.id }}" class="form-control form-control-sm"
+                placeholder="Optional" value="{{ item.record.notes|default:'' }}" style="min-width:120px;"></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="d-flex gap-2 justify-content-end">
+    <a href="{% url 'attendance:home' %}" class="btn btn-outline-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i>Save Attendance</button>
+  </div>
+</form>
+{% endblock %}
+{% block extra_js %}
+<script>
+const statuses = ['present','absent','late','excused'];
+const statusColors = {present:'success',absent:'danger',late:'warning',excused:'info'};
+
+function updateRow(studentId, status) {
+  const row = document.getElementById('row-'+studentId);
+  row.className = 'att-row ' + status + '-row';
+  statuses.forEach(s => {
+    const lbl = document.getElementById('l'+s[0]+'_'+studentId);
+    if (lbl) lbl.className = 'btn btn-sm ' + (s === status ? 'btn-'+statusColors[s] : 'btn-outline-'+statusColors[s]);
+  });
+  // Save to IndexedDB for offline
+  saveOffline(studentId, status);
+}
+
+function markAll(status) {
+  document.querySelectorAll('input[type=radio][value='+status+']').forEach(r => {
+    r.checked = true;
+    const id = r.name.replace('status_','');
+    updateRow(id, status);
+  });
+}
+
+// Offline storage
+function saveOffline(studentId, status) {
+  if ('indexedDB' in window) {
+    const db_req = indexedDB.open('educore_attendance', 1);
+    db_req.onupgradeneeded = e => e.target.result.createObjectStore('records', {keyPath:'id'});
+    db_req.onsuccess = e => {
+      const db = e.target.result;
+      const tx = db.transaction('records', 'readwrite');
+      tx.objectStore('records').put({
+        id: 'att_{{ class_section.id }}_{{ selected_date }}_'+studentId,
+        classId: {{ class_section.id }},
+        date: '{{ selected_date }}',
+        studentId: parseInt(studentId),
+        status: status,
+        timestamp: Date.now()
+      });
+    };
+  }
+}
+
+// Auto-save draft every 30s
+setInterval(() => {
+  if (!navigator.onLine) {
+    console.log('Offline: attendance saved locally');
+  }
+}, 30000);
+</script>
+{% endblock %}

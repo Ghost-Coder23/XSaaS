@@ -1,0 +1,42 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Academics — EduCore{% endblock %}
+{% block page_title %}Academics{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+<h5 class="fw-bold mb-0">{% if 'list' in 'class_level_form' %}{% if 'year' in 'class_level_form' %}Academic Years{% elif 'level' in 'class_level_form' %}Class Levels{% elif 'subject' in 'class_level_form' %}Subjects{% elif 'section' in 'class_level_form' %}Class Sections{% elif 'assignment' in 'class_level_form' %}Teacher Assignments{% endif %}{% else %}{% if 'year' in 'class_level_form' %}Add Academic Year{% elif 'level' in 'class_level_form' %}Add Class Level{% elif 'subject' in 'class_level_form' %}Add Subject{% elif 'section' in 'class_level_form' %}Add Class Section{% elif 'assignment' in 'class_level_form' %}Add Assignment{% else %}Form{% endif %}{% endif %}</h5>
+{% if 'list' in 'class_level_form' %}<a href="{% if 'year' in 'class_level_form' %}{% url 'academics:academic_year_add' %}{% elif 'level' in 'class_level_form' %}{% url 'academics:class_level_add' %}{% elif 'subject' in 'class_level_form' %}{% url 'academics:subject_add' %}{% elif 'section' in 'class_level_form' %}{% url 'academics:class_section_add' %}{% elif 'assignment' in 'class_level_form' %}{% url 'academics:teacher_assignment_add' %}{% endif %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i>Add New</a>{% endif %}
+</div>
+{% if 'list' in 'class_level_form' %}
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+<thead class="table-light"><tr><th>Name</th><th>Details</th></tr></thead>
+<tbody>
+{% for obj in object_list %}
+<tr><td>{{ obj }}</td><td class="text-muted small">{{ obj.pk }}</td></tr>
+{% empty %}<tr><td colspan="2" class="text-center py-4 text-muted">No records yet.</td></tr>
+{% endfor %}
+</tbody>
+</table></div></div>
+{% else %}
+<div class="row justify-content-center"><div class="col-md-6">
+<div class="card"><div class="card-body">
+<form method="post">{% csrf_token %}
+{% for field in form %}
+<div class="mb-3">
+<label class="form-label">{{ field.label }}</label>
+{% if field.field.widget.input_type == 'checkbox' %}
+<div class="form-check"><input type="checkbox" name="{{ field.html_name }}" class="form-check-input" {% if field.value %}checked{% endif %}></div>
+{% elif field.field.widget.input_type == 'select' %}
+<select name="{{ field.html_name }}" class="form-select {% if field.errors %}is-invalid{% endif %}">{% for v,l in field.field.choices %}<option value="{{ v }}" {% if field.value|stringformat:'s' == v|stringformat:'s' %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+{% else %}
+<input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.html_name }}" value="{{ field.value|default:'' }}" class="form-control {% if field.errors %}is-invalid{% endif %}">
+{% endif %}
+{% for e in field.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+</div>
+{% endfor %}
+<button type="submit" class="btn btn-primary">Save</button>
+<a href="javascript:history.back()" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+</div></div>
+</div></div>
+{% endif %}
+{% endblock %}
