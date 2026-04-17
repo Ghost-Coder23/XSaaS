@@ -1,8 +1,8 @@
 """
 Schools views - Public website and school management
 """
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DetailView
+from django.shortcuts import render, redirect
+from django.views.generic import TemplateView, CreateView, ListView, UpdateView
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
@@ -142,7 +142,7 @@ class DashboardView(TemplateView):
     """Main dashboard - redirects based on role"""
     template_name = 'schools/dashboard.html'
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, *_, **__):
         # Determine which dashboard to show based on user's role in school
         school = getattr(request, 'school', None)
         if not school:
@@ -196,7 +196,7 @@ class DashboardView(TemplateView):
         return render(request, 'schools/dashboard_admin.html', context)
 
     def render_teacher_dashboard(self, request, school):
-        from academics.models import TeacherSubjectAssignment, Student
+        from academics.models import TeacherSubjectAssignment
 
         assignments = TeacherSubjectAssignment.objects.filter(
             teacher__user=request.user,
@@ -320,9 +320,12 @@ class ParentRegistrationView(CreateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs.pop('instance', None)
-        kwargs['school'] = self.request.school
+        if 'instance' in kwargs:
+            kwargs.pop('instance')
+        kwargs['school'] = getattr(self.request, 'school', None)
         return kwargs
+
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -332,7 +335,7 @@ class ParentRegistrationView(CreateView):
     def form_valid(self, form):
         school = self.request.school
         from academics.models import Student
-        student = Student.objects.get(school=school, admission_number=form.cleaned_data['student_admission'])
+        Student.objects.get(school=school, admission_number=form.cleaned_data['student_admission'])
 
         # Create user
         user = User.objects.create_user(
@@ -358,10 +361,13 @@ class ParentRegistrationView(CreateView):
             self.request,
             f'Welcome {user.get_full_name()}! You can now access your child\'s results.'
         )
-        return super().form_valid(form)
+        # Auto-login the new parent
+        user = authenticate(self.request, username=user.username, password=form.cleaned_data['password1'])
+        if user:
+            login(self.request, user)
+        return redirect('/school/dashboard/')
 
 
-import json
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
@@ -369,7 +375,7 @@ from django.views.decorators.http import require_GET
 
 @require_GET
 @cache_control(max_age=0, no_cache=True, no_store=True, must_revalidate=True)
-def service_worker(request):
+def service_worker(_):
     """Serve the PWA service worker from templates so Django can process it"""
     import os
     sw_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'pwa', 'sw.js')

@@ -164,10 +164,14 @@ class StudentCreateView(CreateView):
 
     def form_valid(self, form):
         # Create user for student
+        import string
+        import random
+        password_chars = string.ascii_letters + string.digits
+        password = ''.join(random.choice(password_chars) for _ in range(12))
         user = User.objects.create_user(
             username=form.cleaned_data['email'],
             email=form.cleaned_data['email'],
-            password=User.objects.make_random_password(),
+            password=password,
             first_name=form.cleaned_data['first_name'],
             last_name=form.cleaned_data['last_name']
         )

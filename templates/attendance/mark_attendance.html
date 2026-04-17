@@ -58,7 +58,10 @@
               </td>
               <td>
                 <div class="btn-group att-btn-group" role="group">
-                  {% for val, label in 'present,Present|absent,Absent|late,Late|excused,Excused'|cut:" "|split_by:"|" %}
+                  {% for val_label in 'present,Present|absent,Absent|late,Late|excused,Excused'|split:"|" %}
+                    {% with val_label|cut:" "|split:"," as pair %}
+                      {% for val in pair.0 %} {% endfor %}
+                      {% for label in pair.1 %} {% endfor %}
                   {% endfor %}
                   <input type="radio" name="status_{{ item.student.id }}" value="present" id="p_{{ item.student.id }}"
                     {% if item.record.status == 'present' or not item.record %}checked{% endif %}
