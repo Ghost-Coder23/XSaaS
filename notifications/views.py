@@ -10,9 +10,15 @@ from schools.models import SchoolUser
 @login_required
 def notification_list(request):
     school = request.school
-    notifications = Notification.objects.filter(
-        recipient=request.user, school=school
-    ).order_by('-created_at')[:50]
+    school_user = SchoolUser.objects.filter(user=request.user, school=school).first()
+    if school_user.role in ('student', 'parent'):
+        notifications = Notification.objects.filter(
+            recipient=request.user, school=school, notification_type__in=['announcement']
+        ).order_by('-created_at')[:50]
+    else:
+        notifications = Notification.objects.filter(
+            recipient=request.user, school=school
+        ).order_by('-created_at')[:50]
     # Mark all as read
     Notification.objects.filter(recipient=request.user, school=school, is_read=False).update(is_read=True)
     return render(request, 'notifications/notification_list.html', {'notifications': notifications})

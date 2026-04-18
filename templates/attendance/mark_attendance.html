@@ -18,7 +18,7 @@
   </div>
   <div class="d-flex gap-2">
     <input type="date" class="form-control form-control-sm" value="{{ selected_date }}"
-      onchange="window.location='{% url 'attendance:mark' class_section.id %}?date='+this.value" style="width:145px;">
+      onchange="window.location='?date='+this.value" style="width:145px;">
     <a href="{% url 'attendance:home' %}" class="btn btn-sm btn-outline-secondary">Back</a>
   </div>
 </div>
@@ -58,11 +58,6 @@
               </td>
               <td>
                 <div class="btn-group att-btn-group" role="group">
-                  {% for val_label in 'present,Present|absent,Absent|late,Late|excused,Excused'|split:"|" %}
-                    {% with val_label|cut:" "|split:"," as pair %}
-                      {% for val in pair.0 %} {% endfor %}
-                      {% for label in pair.1 %} {% endfor %}
-                  {% endfor %}
                   <input type="radio" name="status_{{ item.student.id }}" value="present" id="p_{{ item.student.id }}"
                     {% if item.record.status == 'present' or not item.record %}checked{% endif %}
                     onchange="updateRow({{ item.student.id }}, 'present')" style="display:none;">

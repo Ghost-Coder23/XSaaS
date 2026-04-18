@@ -149,6 +149,9 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     <a href="{% url 'results:term_list' %}" class="nav-link {% if 'terms' in request.path %}active{% endif %}">
       <i class="bi bi-calendar3"></i> Terms
     </a>
+    <a href="/school/dashboard/" class="nav-link">
+      <i class="bi bi-house-door"></i> Admin Panel
+    </a>
     {% endif %}
 
     {% if school_role in 'headmaster,admin' %}
@@ -225,8 +228,14 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
         <i class="bi bi-bell"></i>
         <span class="notif-badge" id="notif-count" style="display:none">0</span>
       </a>
-      <span class="text-muted d-none d-md-inline" style="font-size:.83rem;">
-        <i class="bi bi-person-circle me-1"></i>{{ user.get_full_name|default:user.username }}
+      <a href="{% url 'accounts:profile' %}" class="btn btn-sm btn-light" title="Profile">
+        <i class="bi bi-person-circle"></i>
+      </a>
+      <a href="{% url 'accounts:logout' %}" class="btn btn-sm btn-outline-danger" title="Logout">
+        <i class="bi bi-box-arrow-right"></i>
+      </a>
+      <span class="text-muted d-none d-md-inline-block ms-2" style="font-size:.83rem;">
+        {{ user.get_full_name|default:user.username }}
       </span>
     </div>
   </div>

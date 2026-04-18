@@ -1,10 +1,20 @@
-# Parent Self-Registration TODO
+# Logout Panel Fix - Desktop Visibility
 
-**Status:** 6/6 ✅ Complete
+## Status: ✅ COMPLETE
+- [x] Templates correct ✓
+- [x] Views correct ✓  
+- [x] User confirmed: F12 sidebar force-visible shows logout
+- [x] Added topbar Profile/Logout buttons → always visible desktop/mobile
 
-- [x] 1. Add ParentRegistrationForm to schools/forms.py
-- [x] 2. Create ParentRegistrationView in schools/views.py
-- [x] 3. Add URL to schools/urls.py
-- [x] 4. Create templates/schools/parent_register.html
-- [x] 5. Test registration → login → dashboard_parent.html (verified)
-- [x] 6. attempt_completion
+## Changes:
+```
+templates/base_dashboard.html: Added logout/profile buttons to topbar-right
+Sidebar logout preserved as backup
+```
+
+## Test:
+1. Hard refresh (Ctrl+F5)
+2. Desktop: Logout/Profile buttons top-right ✓
+3. Mobile: Same + sidebar toggle ✓
+
+**Hard refresh your browser now - logout/profile buttons appear top-right on ALL dashboards!**

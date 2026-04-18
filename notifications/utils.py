@@ -96,15 +96,18 @@ def create_announcement_notifications(announcement):
         'teachers': 'teacher',
         'parents': 'parent',
         'students': 'student',
+        'headmaster': 'headmaster',
+        'admin': 'admin',
     }
-    target_role = role_map.get(announcement.audience)
-
+    target_roles = role_map.get(announcement.audience, announcement.audience)
+    if isinstance(target_roles, str):
+        target_roles = [target_roles]
+    
     for member in members:
-        if target_role and member.role != target_role:
-            continue
-        notify_user(
-            school, member.user,
-            announcement.title,
-            announcement.content,
-            notification_type='announcement',
-        )
+        if target_roles is None or member.role in target_roles:
+            notify_user(
+                school, member.user,
+                announcement.title,
+                announcement.content,
+                notification_type='announcement',
+            )
