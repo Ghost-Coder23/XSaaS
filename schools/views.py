@@ -304,7 +304,24 @@ def add_school_user(request):
                 is_active=True
             )
 
-            # TODO: Send welcome email with password reset link
+            # Send welcome email with password reset link
+            from django.contrib.sites.shortcuts import get_current_site
+            from django.utils.http import urlsafe_base64_encode
+            from django.utils.encoding import force_bytes
+            from django.template.loader import render_to_string
+            from django.contrib.auth.tokens import default_token_generator
+            
+            current_site = get_current_site(request)
+            subject = 'Welcome to EduCore! Set your password'
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_link = f"https://{current_site.domain}/accounts/password/reset/confirm/{uid}/{token}/"
+            message = render_to_string('accounts/welcome_email.txt', {
+                'user': user,
+                'school': school,
+                'reset_link': reset_link,
+            })
+            user.email_user(subject, message)
 
             messages.success(request, f"User {user.get_full_name()} added successfully!")
             return redirect('user_management')
