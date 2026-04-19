@@ -120,7 +120,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
       <i class="bi bi-megaphone"></i> Announcements
     </a>
 
-    {% if school_role in 'headmaster,admin,teacher' %}
+    {% if school_role in 'headmaster,teacher' %}
     <div class="nav-section">Academic</div>
     <a href="{% url 'academics:student_list' %}" class="nav-link {% if 'students' in request.path %}active{% endif %}">
       <i class="bi bi-people"></i> Students
@@ -141,6 +141,15 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     <a href="{% url 'results:result_entry' %}" class="nav-link {% if 'entry' in request.path %}active{% endif %}">
       <i class="bi bi-pencil-square"></i> Enter Results
     </a>
+    {% elif school_role == 'admin' %}
+    <div class="nav-section">Analytics</div>
+    <a href="{% url 'analytics:dashboard_admin' %}" class="nav-link {% if 'dashboard_admin' in request.path %}active{% endif %}">
+      <i class="bi bi-graph-up"></i> Admin Stats
+    </a>
+    <a href="{% url 'attendance:report' %}" class="nav-link {% if 'attendance_report' in request.path %}active{% endif %}">
+      <i class="bi bi-bar-chart"></i> Attendance Stats
+    </a>
+    {% endif %}
     {% if school_role == 'headmaster' %}
     <a href="{% url 'results:pending_approvals' %}" class="nav-link {% if 'pending' in request.path %}active{% endif %}">
       <i class="bi bi-clock-history"></i> Pending Approvals
@@ -149,7 +158,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     <a href="{% url 'results:term_list' %}" class="nav-link {% if 'terms' in request.path %}active{% endif %}">
       <i class="bi bi-calendar3"></i> Terms
     </a>
-    <a href="/school/dashboard/" class="nav-link">
+
       <i class="bi bi-house-door"></i> Admin Panel
     </a>
     {% endif %}

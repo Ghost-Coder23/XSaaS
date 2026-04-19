@@ -25,7 +25,9 @@
           {% endif %}
         {% endif %}{% endfor %}
         {% endwith %}
+        {% if school_role in 'headmaster,teacher' %}
         <a href="{% url 'attendance:mark' cs.id %}" class="btn btn-sm btn-primary w-100 mt-1">Mark Attendance</a>
+        {% endif %}
       </div>
     </div>
   </div>

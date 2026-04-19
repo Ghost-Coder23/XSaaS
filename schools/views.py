@@ -288,10 +288,13 @@ def add_school_user(request):
             school = request.school
 
             # Create user
+            import random
+            import string
+            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
             user = User.objects.create_user(
                 username=form.cleaned_data['email'],
                 email=form.cleaned_data['email'],
-                password=User.objects.make_random_password(),
+                password=temp_password,
                 first_name=form.cleaned_data['first_name'],
                 last_name=form.cleaned_data['last_name']
             )
@@ -315,7 +318,7 @@ def add_school_user(request):
             subject = 'Welcome to EduCore! Set your password'
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            reset_link = f"https://{current_site.domain}/accounts/password/reset/confirm/{uid}/{token}/"
+            reset_link = f"http://{current_site.domain}/accounts/password/reset/confirm/{uid}/{token}/"
             message = render_to_string('accounts/welcome_email.txt', {
                 'user': user,
                 'school': school,

@@ -1,20 +1,10 @@
-# Logout Panel Fix - Desktop Visibility
+# Admin Panel View-Only Update
+Status: In Progress
 
-## Status: ✅ COMPLETE
-- [x] Templates correct ✓
-- [x] Views correct ✓  
-- [x] User confirmed: F12 sidebar force-visible shows logout
-- [x] Added topbar Profile/Logout buttons → always visible desktop/mobile
-
-## Changes:
-```
-templates/base_dashboard.html: Added logout/profile buttons to topbar-right
-Sidebar logout preserved as backup
-```
-
-## Test:
-1. Hard refresh (Ctrl+F5)
-2. Desktop: Logout/Profile buttons top-right ✓
-3. Mobile: Same + sidebar toggle ✓
-
-**Hard refresh your browser now - logout/profile buttons appear top-right on ALL dashboards!**
+**Plan Steps:**
+- [x] 1. Update base_dashboard.html - hide edit/mark for admin role
+- [x] 2. Update attendance templates - hide mark/edit buttons for admin
+- [ ] 3. Update results templates - hide entry forms for admin
+- [ ] 4. Verify analytics dashboard_admin.html has stats
+- [ ] 5. Test admin vs headmaster/teacher views
+- [ ] 6. attempt_completion

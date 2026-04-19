@@ -139,8 +139,24 @@
   </div>
   {% endif %}
 
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">Quick Actions</div>
+      <div class="card-body d-grid gap-2">
+        <a href="{% url 'user_management' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-people me-1"></i>Manage Staff/Users
+        </a>
+        <a href="{% url 'school_settings' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-gear me-1"></i>School Settings
+        </a>
+        <a href="{% url 'academics:student_add' %}" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-person-plus me-1"></i>Add Student
+        </a>
+      </div>
+    </div>
+  </div>
   {% if recent_pending %}
-  <div class="col-12">
+  <div class="col-md-8">
     <div class="card">
       <div class="card-header d-flex align-items-center justify-content-between">
         <span><i class="bi bi-clock me-2"></i>Recent Pending Results</span>

@@ -32,7 +32,7 @@
 
 <div class="row g-3">
     <div class="col-md-8">
-        <div class="card">
+        <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Recent Results</span>
                 <a href="{% url 'results:pending_approvals' %}" class="btn btn-sm btn-outline-primary">View Pending</a>
@@ -69,6 +69,62 @@
                 {% endif %}
             </div>
         </div>
+        <div class="card mb-3">
+            <div class="card-header">Manage Entities</div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for teacher in teachers %}
+                        <tr>
+                            <td>Teacher</td>
+                            <td>{{ teacher.user.get_full_name }}</td>
+                            <td>
+                                <a href="{% url 'academics:teacher_edit' teacher.pk %}" class="btn btn-xs btn-outline-primary">Edit</a>
+                                <a href="{% url 'academics:teacher_delete' teacher.pk %}" class="btn btn-xs btn-outline-danger" onclick="return confirm('Delete this teacher?');">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% for student in students %}
+                        <tr>
+                            <td>Student</td>
+                            <td>{{ student.user.get_full_name }}</td>
+                            <td>
+                                <a href="{% url 'academics:student_edit' student.pk %}" class="btn btn-xs btn-outline-primary">Edit</a>
+                                <a href="{% url 'academics:student_delete' student.pk %}" class="btn btn-xs btn-outline-danger" onclick="return confirm('Delete this student?');">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% for subject in subjects %}
+                        <tr>
+                            <td>Subject</td>
+                            <td>{{ subject.name }}</td>
+                            <td>
+                                <a href="{% url 'academics:subject_edit' subject.pk %}" class="btn btn-xs btn-outline-primary">Edit</a>
+                                <a href="{% url 'academics:subject_delete' subject.pk %}" class="btn btn-xs btn-outline-danger" onclick="return confirm('Delete this subject?');">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% for class_section in class_sections %}
+                        <tr>
+                            <td>Class</td>
+                            <td>{{ class_section }}</td>
+                            <td>
+                                <a href="{% url 'academics:class_section_edit' class_section.pk %}" class="btn btn-xs btn-outline-primary">Edit</a>
+                                <a href="{% url 'academics:class_section_delete' class_section.pk %}" class="btn btn-xs btn-outline-danger" onclick="return confirm('Delete this class?');">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
     <div class="col-md-4">
         <div class="card mb-3">
@@ -77,8 +133,14 @@
                 <a href="{% url 'academics:student_add' %}" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-person-plus me-1"></i>Add Student
                 </a>
-                <a href="{% url 'user_management' %}" class="btn btn-outline-primary btn-sm">
+                <a href="{% url 'academics:teacher_add' %}" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-person-badge me-1"></i>Add Teacher
+                </a>
+                <a href="{% url 'academics:subject_add' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-book me-1"></i>Add Subject
+                </a>
+                <a href="{% url 'academics:class_section_add' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-building-add me-1"></i>Add Class
                 </a>
                 <a href="{% url 'results:result_entry' %}" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-pencil-square me-1"></i>Enter Results
@@ -87,8 +149,14 @@
                     <i class="bi bi-check2-all me-1"></i>Approve Results
                     {% if pending_approvals %}<span class="badge bg-warning text-dark ms-1">{{ pending_approvals }}</span>{% endif %}
                 </a>
+                <a href="{% url 'user_management' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-people me-2"></i>Manage Staff/Users
+                </a>
                 <a href="{% url 'school_settings' %}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-gear me-1"></i>School Settings
+                </a>
+                <a href="{% url 'analytics:dashboard_headmaster' %}" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-graph-up me-1"></i>Analytics & Performance
                 </a>
             </div>
         </div>
