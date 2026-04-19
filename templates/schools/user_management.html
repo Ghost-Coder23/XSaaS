@@ -10,7 +10,7 @@
 </div>
 <div class="card">
 <div class="table-responsive"><table class="table table-hover mb-0">
-<thead class="table-light"><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead>
+<thead class="table-light"><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
 <tbody>
 {% for u in users %}
 <tr>
@@ -18,9 +18,19 @@
 <td>{{ u.user.email }}</td>
 <td><span class="badge badge-role-{{ u.role }}">{{ u.get_role_display }}</span></td>
 <td>{% if u.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+<td>
+  <div class="btn-group btn-group-sm">
+    <a href="/school/user/{{ u.pk }}/edit/" class="btn btn-outline-primary" title="Edit">
+      <i class="bi bi-pencil"></i>
+    </a>
+    <button class="btn btn-outline-danger" onclick="if(confirm('Deactivate {{ u.user.get_full_name }}?')){window.location.href='/school/user/{{ u.pk }}/deactivate/';}" title="Deactivate">
+      <i class="bi bi-trash"></i>
+    </button>
+  </div>
+</td>
 </tr>
 {% empty %}
-<tr><td colspan="4" class="text-center py-4 text-muted">No users yet.</td></tr>
+<tr><td colspan="5" class="text-center py-4 text-muted">No users yet.</td></tr>
 {% endfor %}
 </tbody>
 </table></div>

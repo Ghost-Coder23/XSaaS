@@ -71,6 +71,37 @@ class AddSchoolUserForm(forms.Form):
         return email
 
 
+class SchoolUserEditForm(forms.ModelForm):
+    """Form to edit school user details"""
+    first_name = forms.CharField(max_length=100, label="First Name")
+    last_name = forms.CharField(max_length=100, label="Last Name")
+    email = forms.EmailField(label="Email")
+
+    class Meta:
+        model = SchoolUser
+        fields = ['role', 'is_active']
+        widgets = {
+            'role': forms.Select(choices=SchoolUser.ROLE_CHOICES),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user_form = None
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        school_user = super().save(commit=False)
+        if self.user_form:
+            user = self.user_form.save(commit=False)
+            user.first_name = self.user_form.cleaned_data['first_name']
+            user.last_name = self.user_form.cleaned_data['last_name']
+            user.email = self.user_form.cleaned_data['email']
+            if commit:
+                user.save()
+        if commit:
+            school_user.save()
+        return school_user
+
+
 class ParentRegistrationForm(forms.Form):
     """Form for parent self-registration"""
     student_admission = forms.CharField(max_length=20, label="Student Admission Number")
@@ -104,3 +135,4 @@ class ParentRegistrationForm(forms.Form):
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError("Passwords do not match.")
         return cleaned_data
+

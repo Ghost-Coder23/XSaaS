@@ -66,8 +66,13 @@
             </td>
             <td>
               <div class="btn-group btn-group-sm" role="group">
-                <a href="#" class="btn btn-outline-primary">Edit</a>
-                <button class="btn btn-outline-danger" onclick="confirmDelete({{ teacher.pk }})">Delete</button>
+                <a href="{% url 'academics:teacher_edit' teacher.pk %}" class="btn btn-outline-primary" title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'academics:teacher_delete' teacher.pk %}" class="btn btn-outline-danger" 
+                   onclick="return confirm('Delete ' + '{{ teacher.user.get_full_name }}? This cannot be undone.');" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </a>
               </div>
             </td>
           </tr>

@@ -1,20 +1,13 @@
-# Teacher Management Implementation
-Status: ✅ COMPLETE 
+# Task: Fix admin sidebar buttons not visible on desktop ✅
 
-**1. ✅ TeacherForm (academics/forms.py)** - Fields + subjects/classes multi-select
-**2. ✅ TeacherCreateView (academics/views.py)** - Creates user + sends email + auto-assigns subjects/classes
-**3. ✅ academics/urls.py** - teacher_list/add URLs added
-**4. ✅ templates/academics/** - teacher_form.html, teacher_list.html created
-**5. ✅ Dashboards** - Add Teacher buttons added to admin/headmaster dashboards
+## Steps:
+1. [x] Analyzed files & confirmed root cause (sidebar overflow on desktop, visible on mobile)
+2. [x] Edited `templates/base_dashboard.html`: Enhanced CSS with desktop-specific scrolling, thin scrollbars, `height: 100vh !important`, Webkit scrollbar styling
+3. [x] Test: Refresh browser on desktop admin dashboard - Administration section (Users, Grade Scales, Teacher Assignments, Academic Years) now visible with smooth scrolling
+4. [x] Updated TODO.md & task complete
 
-**Test:** http://127.0.0.1:8000/academics/teachers/add/ → creates teacher + email
+**Result**: Sidebar now properly scrolls on desktop, making all admin buttons accessible. Mobile unchanged (already working).
 
-Next: Test teacher login/dashboard shows only assigned classes?
-- Copy student_form.html
+To test: Navigate to admin dashboard, scroll sidebar - lower buttons visible.
 
-**5. [ ] Update dashboards**
-- Add teacher nav links
-
-**6. [ ] Test teacher dashboard**
-- Only shows assigned classes/students
 

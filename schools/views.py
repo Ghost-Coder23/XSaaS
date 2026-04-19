@@ -1,19 +1,20 @@
 """
 Schools views - Public website and school management
 """
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView, CreateView, ListView, UpdateView
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse_lazy
+from django import forms
 from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
 
 from .models import School, SchoolUser
-from .forms import SchoolRegistrationForm, SchoolBrandingForm, AddSchoolUserForm, ParentRegistrationForm
+from .forms import SchoolRegistrationForm, SchoolBrandingForm, AddSchoolUserForm, ParentRegistrationForm, SchoolUserEditForm
 
 
 class HomeView(TemplateView):
@@ -330,6 +331,58 @@ def add_school_user(request):
             return redirect('user_management')
 
     return redirect('user_management')
+
+
+@login_required
+def school_user_edit(request, pk):
+    """Edit school user details"""
+    school_user = get_object_or_404(SchoolUser, pk=pk, school=request.school)
+    
+    class UserForm(forms.Form):
+        first_name = forms.CharField()
+        last_name = forms.CharField()
+        email = forms.EmailField()
+    
+    if request.method == 'POST':
+        user_form = UserForm(request.POST)
+        school_user_form = SchoolUserEditForm(request.POST, instance=school_user)
+        
+        if user_form.is_valid() and school_user_form.is_valid():
+            # Update user
+            school_user.user.first_name = user_form.cleaned_data['first_name']
+            school_user.user.last_name = user_form.cleaned_data['last_name']
+            school_user.user.email = user_form.cleaned_data['email']
+            school_user.user.save()
+            
+            school_user_form.save()
+            messages.success(request, f'User {school_user.user.get_full_name()} updated successfully!')
+            return redirect('schools:user_management')
+    else:
+        user_form = UserForm(initial={
+            'first_name': school_user.user.first_name,
+            'last_name': school_user.user.last_name,
+            'email': school_user.user.email,
+        })
+        school_user_form = SchoolUserEditForm(instance=school_user)
+    
+    context = {
+        'school_user': school_user,
+        'user_form': user_form,
+        'school_user_form': school_user_form,
+        'school': request.school,
+    }
+    return render(request, 'schools/user_edit.html', context)
+
+
+@login_required
+def school_user_deactivate(request, pk):
+    """Toggle school user active status"""
+    school_user = get_object_or_404(SchoolUser, pk=pk, school=request.school)
+    school_user.is_active = not school_user.is_active
+    action = 'deactivated' if not school_user.is_active else 'reactivated'
+    school_user.save()
+    messages.success(request, f'User {school_user.user.get_full_name()} {action} successfully!')
+    return redirect('schools:user_management')
 
 
 class ParentRegistrationView(CreateView):
