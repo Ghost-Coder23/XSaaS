@@ -145,6 +145,9 @@ def record_payment(request, invoice_pk):
     school_user = SchoolUser.objects.filter(user=request.user, school=school).first()
     invoice = get_object_or_404(FeeInvoice, pk=invoice_pk, school=school)
     if request.method == 'POST':
+        payment_date_str = request.POST.get('payment_date')
+        if payment_date_str:
+            payment_date_str += ':00'  # Ensure seconds for datetime-local
         form = FeePaymentForm(data=request.POST)
         if form.is_valid():
             payment = form.save(commit=False)
@@ -153,6 +156,8 @@ def record_payment(request, invoice_pk):
             payment.status = 'confirmed'
             payment.save()
             messages.success(request, f'Payment of {payment.currency} {payment.amount} recorded.')
+        else:
+            messages.error(request, f'Form errors: {form.errors}')
     return redirect('fees:invoice_detail', pk=invoice_pk)
 
 

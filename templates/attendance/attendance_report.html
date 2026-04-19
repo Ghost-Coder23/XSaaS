@@ -14,13 +14,20 @@
       </div>
       <div class="col-md-3">
         <label class="form-label fw-semibold" style="font-size:.8rem;">Month</label>
-        <select name="month" class="form-select form-select-sm">
-          {% for m in "1,2,3,4,5,6,7,8,9,10,11,12"|split:"," %}
-          <option value="{{ m }}" {% if month == m|add:0 %}selected{% endif %}>
-            {% if m == "1" %}Jan{% elif m == "2" %}Feb{% elif m == "3" %}Mar{% elif m == "4" %}Apr{% elif m == "5" %}May{% elif m == "6" %}Jun{% elif m == "7" %}Jul{% elif m == "8" %}Aug{% elif m == "9" %}Sep{% elif m == "10" %}Oct{% elif m == "11" %}Nov{% else %}Dec{% endif %}
-          </option>
-          {% endfor %}
-        </select>
+    <select name="month" class="form-select form-select-sm">
+      <option value="1" {% if month == 1 %}selected{% endif %}>Jan</option>
+      <option value="2" {% if month == 2 %}selected{% endif %}>Feb</option>
+      <option value="3" {% if month == 3 %}selected{% endif %}>Mar</option>
+      <option value="4" {% if month == 4 %}selected{% endif %}>Apr</option>
+      <option value="5" {% if month == 5 %}selected{% endif %}>May</option>
+      <option value="6" {% if month == 6 %}selected{% endif %}>Jun</option>
+      <option value="7" {% if month == 7 %}selected{% endif %}>Jul</option>
+      <option value="8" {% if month == 8 %}selected{% endif %}>Aug</option>
+      <option value="9" {% if month == 9 %}selected{% endif %}>Sep</option>
+      <option value="10" {% if month == 10 %}selected{% endif %}>Oct</option>
+      <option value="11" {% if month == 11 %}selected{% endif %}>Nov</option>
+      <option value="12" {% if month == 12 %}selected{% endif %}>Dec</option>
+    </select>
       </div>
       <div class="col-md-2">
         <label class="form-label fw-semibold" style="font-size:.8rem;">Year</label>
@@ -50,17 +57,9 @@
         <tr>
           <td>{{ student.user.get_full_name }}</td>
           {% for s in sessions %}
-          {% with matrix|dictsort:"id" as m %}
           <td class="text-center">
-            {% with matrix[student.id][s.id] as status %}
-            {% if status == 'present' %}<span style="color:#16a34a;">P</span>
-            {% elif status == 'absent' %}<span style="color:#dc2626;">A</span>
-            {% elif status == 'late' %}<span style="color:#d97706;">L</span>
-            {% elif status == 'excused' %}<span style="color:#2563eb;">E</span>
-            {% else %}<span style="color:#9ca3af;">-</span>{% endif %}
-            {% endwith %}
+            <span style="color:#9ca3af;">-</span>
           </td>
-          {% endwith %}
           {% endfor %}
           <td class="text-center fw-bold">-</td>
         </tr>

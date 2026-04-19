@@ -1,5 +1,8 @@
 """Fees forms"""
 from django import forms
+from django.utils import timezone
+from datetime import time, datetime
+import pytz
 from .models import FeeStructure, FeeInvoice, FeePayment, PaymentConfig
 from academics.models import ClassLevel, AcademicYear
 from results.models import Term
@@ -47,9 +50,19 @@ class FeePaymentForm(forms.ModelForm):
         model = FeePayment
         fields = ['amount', 'currency', 'method', 'reference', 'payment_date', 'notes']
         widgets = {
-            'payment_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'payment_date': forms.DateInput(attrs={'type': 'date'}),
             'notes': forms.Textarea(attrs={'rows': 2}),
         }
+    
+    def clean_payment_date(self):
+        date_obj = self.cleaned_data.get('payment_date')
+        if date_obj:
+            tz = pytz.timezone('Africa/Harare')
+            dt = tz.localize(datetime.combine(date_obj, time(12, 0)))
+            self.instance.payment_date = dt
+        else:
+            self.instance.payment_date = timezone.now()
+        return self.cleaned_data.get('payment_date')
 
 
 class PaymentConfigForm(forms.ModelForm):

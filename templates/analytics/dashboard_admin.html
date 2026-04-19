@@ -3,12 +3,14 @@
 {% block page_title %}Admin Dashboard{% endblock %}
 {% block content %}
 <div class="row g-3 mb-4">
-  <div class="col-6 col-md-3"><div class="stat-card">
-    <div class="d-flex align-items-start justify-content-between">
-      <div><div class="stat-number text-primary">{{ total_students }}</div><div class="stat-label">Students</div></div>
-      <div class="stat-icon" style="background:#ede9fe;color:#5b21b6;"><i class="bi bi-people"></i></div>
-    </div>
-  </div></div>
+  <div class="col-6 col-md-3">
+    <a href="{% url 'academics:student_list' %}" class="stat-card text-decoration-none text-reset">
+      <div class="d-flex align-items-start justify-content-between">
+        <div><div class="stat-number text-primary">{{ total_students }}</div><div class="stat-label">Students</div></div>
+        <div class="stat-icon" style="background:#ede9fe;color:#5b21b6;"><i class="bi bi-people"></i></div>
+      </div>
+    </a>
+  </div>
   <div class="col-6 col-md-3"><div class="stat-card">
     <div class="d-flex align-items-start justify-content-between">
       <div><div class="stat-number" style="color:#059669;">{{ total_teachers }}</div><div class="stat-label">Teachers</div></div>
@@ -29,8 +31,16 @@
   </div></div>
 </div>
 
-<div class="row g-3 mb-4">
-  <div class="col-md-6"><div class="card">
+  <div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <a href="{% url 'academics:student_list' %}" class="stat-card text-decoration-none text-reset">
+      <div class="d-flex align-items-start justify-content-between">
+        <div><div class="stat-number text-primary">{{ total_students }}</div><div class="stat-label">Students</div></div>
+        <div class="stat-icon" style="background:#ede9fe;color:#5b21b6;"><i class="bi bi-people"></i></div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4"><div class="card">
     <div class="card-header"><i class="bi bi-cash-coin me-2"></i>Fee Summary</div>
     <div class="card-body">
       <div class="row g-2 text-center">

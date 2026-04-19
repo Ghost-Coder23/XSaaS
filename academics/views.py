@@ -10,7 +10,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 
 from .models import AcademicYear, ClassLevel, Subject, ClassSection, Student, TeacherSubjectAssignment
-from .forms import AcademicYearForm, ClassLevelForm, SubjectForm, ClassSectionForm, StudentForm, TeacherAssignmentForm
+from .forms import AcademicYearForm, ClassLevelForm, SubjectForm, ClassSectionForm, StudentForm, TeacherForm, TeacherAssignmentForm
 from schools.models import SchoolUser
 
 
@@ -200,6 +200,101 @@ class StudentDetailView(DetailView):
 
     def get_queryset(self):
         return Student.objects.filter(school=self.request.school)
+
+
+# Teacher Views
+@method_decorator(login_required, name='dispatch')
+class TeacherListView(ListView):
+    model = SchoolUser
+    template_name = 'academics/teacher_list.html'
+    context_object_name = 'teachers'
+    
+    def get_queryset(self):
+        return SchoolUser.objects.filter(
+            school=self.request.school,
+            role='teacher',
+            is_active=True
+        ).select_related('user')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['assignments'] = TeacherSubjectAssignment.objects.filter(
+            class_section__school=self.request.school
+        ).select_related('teacher__user', 'subject', 'class_section')
+        context['teachers'] = self.get_queryset()
+        return context
+
+
+@method_decorator(login_required, name='dispatch')
+class TeacherCreateView(CreateView):
+    model = SchoolUser
+    form_class = TeacherForm
+    template_name = 'academics/teacher_form.html'
+    success_url = reverse_lazy('academics:teacher_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['school'] = self.request.school
+        return kwargs
+
+    def form_valid(self, form):
+        from django.contrib.auth.models import User
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.http import urlsafe_base64_encode
+        from django.utils.encoding import force_bytes
+        from django.contrib.sites.shortcuts import get_current_site
+        from django.core.mail import send_mail
+        from django.template.loader import render_to_string
+        
+        cleaned_data = form.cleaned_data
+        
+        # Create user
+        password = User.objects.make_random_password()
+        user = User.objects.create_user(
+            username=cleaned_data['email'],
+            email=cleaned_data['email'],
+            first_name=cleaned_data['first_name'],
+            last_name=cleaned_data['last_name'],
+            password=password
+        )
+        
+        # Create SchoolUser
+        school_user = form.save(commit=False)
+        school_user.user = user
+        school_user.school = self.request.school
+        school_user.role = 'teacher'
+        school_user.is_active = True
+        school_user.save()
+        
+        # Send welcome email with password reset
+        current_site = get_current_site(self.request)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        reset_url = f"https://{current_site.domain}/accounts/password/reset/confirm/{uid}/{token}/"
+        
+        subject = 'Welcome to EduCore! Set Your Password'
+        message = render_to_string('accounts/welcome_email.txt', {
+            'user': user,
+            'school': self.request.school,
+            'reset_link': reset_url,
+        })
+        send_mail(subject, message, 'noreply@educore.com', [user.email], html_message=message)
+        
+        # Create teacher-subject assignments
+        subjects = cleaned_data.get('subjects', [])
+        classes = cleaned_data.get('classes', [])
+        for subject in subjects:
+            for class_section in classes:
+                TeacherSubjectAssignment.objects.get_or_create(
+                    teacher=school_user,
+                    subject=subject,
+                    class_section=class_section,
+                    academic_year__is_current=True,  # Current year
+                    defaults={'academic_year': AcademicYear.objects.filter(school=self.request.school, is_current=True).first()}
+                )
+        
+        messages.success(self.request, f'Teacher {user.get_full_name()} created and notified!')
+        return super().form_valid(form)
 
 
 # Teacher Assignment Views

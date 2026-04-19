@@ -1,0 +1,5 @@
+{% for m in '1 2 3 4 5 6 7 8 9 10 11 12' %}
+<option value="{{ m }}" {% if month == m %}selected{% endif %}>
+  {% if m == '1' %}Jan{% elif m == '2' %}Feb{% elif m == '3' %}Mar{% elif m == '4' %}Apr{% elif m == '5' %}May{% elif m == '6' %}Jun{% elif m == '7' %}Jul{% elif m == '8' %}Aug{% elif m == '9' %}Sep{% elif m == '10' %}Oct{% elif m == '11' %}Nov{% else %}Dec{% endif %}
+</option>
+{% endfor %}

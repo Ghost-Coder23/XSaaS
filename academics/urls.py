@@ -16,6 +16,8 @@ urlpatterns = [
     path('students/', views.StudentListView.as_view(), name='student_list'),
     path('students/add/', views.StudentCreateView.as_view(), name='student_add'),
     path('students/<int:pk>/', views.StudentDetailView.as_view(), name='student_detail'),
+    path('teachers/', views.TeacherListView.as_view(), name='teacher_list'),
+    path('teachers/add/', views.TeacherCreateView.as_view(), name='teacher_add'),
     path('assignments/', views.TeacherAssignmentListView.as_view(), name='teacher_assignment_list'),
     path('assignments/add/', views.TeacherAssignmentCreateView.as_view(), name='teacher_assignment_add'),
 ]

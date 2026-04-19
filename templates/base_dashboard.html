@@ -40,7 +40,23 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
 .card { border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); background: #fff; }
 .card-header { background: #fff; border-bottom: 1px solid #e2e8f0; font-weight: 600; padding: .85rem 1.25rem; border-radius: 12px 12px 0 0 !important; }
 /* Stat cards */
-.stat-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; }
+.stat-card { 
+  background: #fff; 
+  border: 1px solid #e2e8f0; 
+  border-radius: 12px; 
+  padding: 1.25rem; 
+  cursor: pointer; 
+  transition: all .2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 10px 25px rgba(0,0,0,.1);
+  border-color: var(--primary);
+}
+.stat-card:hover .stat-number { text-shadow: 0 1px 2px rgba(0,0,0,.1); }
+.stat-card:active { transform: translateY(0); }
 .stat-card .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
 .stat-card .stat-number { font-size: 1.75rem; font-weight: 700; line-height: 1; }
 .stat-card .stat-label { font-size: .78rem; color: #64748b; margin-top: 2px; }
@@ -143,7 +159,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     </a>
     {% elif school_role == 'admin' %}
     <div class="nav-section">Analytics</div>
-    <a href="{% url 'analytics:dashboard_admin' %}" class="nav-link {% if 'dashboard_admin' in request.path %}active{% endif %}">
+    <a href="{% url 'analytics:dashboard' %}#admin" class="nav-link {% if 'dashboard' in request.path %}active{% endif %}">
       <i class="bi bi-graph-up"></i> Admin Stats
     </a>
     <a href="{% url 'attendance:report' %}" class="nav-link {% if 'attendance_report' in request.path %}active{% endif %}">
@@ -161,7 +177,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
 
       <i class="bi bi-house-door"></i> Admin Panel
     </a>
-    {% endif %}
+  
 
     {% if school_role in 'headmaster,admin' %}
     <div class="nav-section">Fees</div>

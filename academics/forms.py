@@ -66,6 +66,33 @@ class StudentForm(forms.ModelForm):
             self.fields['current_class'].queryset = ClassSection.objects.filter(school=school)
 
 
+class TeacherForm(forms.ModelForm):
+    first_name = forms.CharField(max_length=100)
+    last_name = forms.CharField(max_length=100)
+    email = forms.EmailField()
+    phone = forms.CharField(max_length=20, required=False)
+    gender = forms.ChoiceField(choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')])
+    address = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=False)
+
+    class Meta:
+        model = SchoolUser
+        fields = []
+
+    def __init__(self, school=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if school:
+            self.fields['subjects'] = forms.ModelMultipleChoiceField(
+                queryset=Subject.objects.filter(school=school),
+                widget=forms.CheckboxSelectMultiple,
+                required=False
+            )
+            self.fields['classes'] = forms.ModelMultipleChoiceField(
+                queryset=ClassSection.objects.filter(school=school),
+                widget=forms.CheckboxSelectMultiple,
+                required=False
+            )
+
+
 class TeacherAssignmentForm(forms.ModelForm):
     class Meta:
         model = TeacherSubjectAssignment

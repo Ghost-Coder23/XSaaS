@@ -35,7 +35,8 @@ class TermCreateView(CreateView):
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        form.fields['academic_year'].queryset = AcademicYear.objects.filter(school=self.request.school)
+        if hasattr(form, 'fields') and 'academic_year' in form.fields:
+            form.fields['academic_year'].queryset = AcademicYear.objects.filter(school=self.request.school)
         return form
 
     def form_valid(self, form):
