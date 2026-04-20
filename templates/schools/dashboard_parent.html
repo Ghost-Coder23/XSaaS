@@ -4,20 +4,38 @@
 {% block content %}
 <h5 class="fw-bold mb-3">My Children</h5>
 {% if children %}
-<div class="row g-3">
 {% for child in children %}
-<div class="col-md-4">
-<div class="card">
-<div class="card-body">
-<h6 class="fw-bold">{{ child.user.get_full_name }}</h6>
-<p class="text-muted small mb-1">Admission: {{ child.admission_number }}</p>
-<p class="text-muted small mb-3">Class: {{ child.current_class|default:'Not assigned' }}</p>
-<a href="{% url 'results:student_results' child.id %}" class="btn btn-sm btn-primary">View Results</a>
-</div>
-</div>
+<div class="col-md-6 col-lg-4 mb-4">
+  <div class="card h-100">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <span><i class="bi bi-person-circle me-2"></i>{{ child.user.get_full_name }}</span>
+      <span class="text-muted small">Adm: {{ child.admission_number }}</span>
+    </div>
+    <div class="card-body">
+      <p class="text-muted small mb-3">Class: {{ child.current_class|default:'Not assigned' }}</p>
+      <div class="row g-2 mb-3">
+        <div class="col-6">
+          <div class="stat-card text-center">
+            <div class="stat-label">Fee Balance</div>
+            {% with child_id=child.id %}
+              {% with invoices=child.fee_invoices.all %}
+                {% with total_owed=invoices|sum:"amount" total_paid=invoices|sum:"amount_paid" balance=total_owed|add:"-:"|add:total_paid %}
+                  <div class="stat-number {% if balance > 0 %}text-danger{% else %}text-success{% endif %}">${{ balance|floatformat:2 }}</div>
+                  <small class="text-muted">{{ total_owed|floatformat:2 }} owed</small>
+                {% endwith %}
+              {% endwith %}
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{% url 'fees:student_statement' child.id %}" class="btn btn-sm btn-outline-primary flex-fill"><i class="bi bi-receipt me-1"></i>Fee Statement</a>
+        <a href="{% url 'results:student_results' child.id %}" class="btn btn-sm btn-primary"><i class="bi bi-award me-1"></i>Results</a>
+      </div>
+    </div>
+  </div>
 </div>
 {% endfor %}
-</div>
 {% else %}
 <div class="card"><div class="card-body text-center py-5 text-muted">
 <i class="bi bi-people fs-1 d-block mb-2"></i>No children linked to your account. Contact your school admin.

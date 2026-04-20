@@ -15,6 +15,7 @@ from .models import FeeStructure, FeeInvoice, FeePayment, PaymentConfig
 from .forms import FeeStructureForm, FeeInvoiceForm, FeePaymentForm, PaymentConfigForm
 from academics.models import Student, ClassLevel, AcademicYear
 from schools.models import SchoolUser
+from django.contrib import messages
 
 
 def require_role(roles):
@@ -85,7 +86,10 @@ def fee_structure_list(request):
 @login_required
 def invoice_list(request):
     school = request.school
+    school_user = SchoolUser.objects.filter(user=request.user, school=school).first()
     qs = FeeInvoice.objects.filter(school=school).select_related('student__user', 'fee_structure')
+    if school_user and school_user.role == 'parent':
+        qs = qs.filter(student__parent_email=request.user.email)
 
     status_filter = request.GET.get('status')
     search = request.GET.get('search')
@@ -130,6 +134,10 @@ def create_invoice(request):
 def invoice_detail(request, pk):
     school = request.school
     invoice = get_object_or_404(FeeInvoice, pk=pk, school=school)
+    school_user = SchoolUser.objects.filter(user=request.user, school=school).first()
+    if school_user and school_user.role == 'parent' and invoice.student.parent_email != request.user.email:
+        messages.error(request, "You can only view invoices for your own children.")
+        return redirect('dashboard')
     payments = invoice.payments.order_by('-payment_date')
     payment_form = FeePaymentForm()
     return render(request, 'fees/invoice_detail.html', {
@@ -165,6 +173,10 @@ def record_payment(request, invoice_pk):
 def student_fee_statement(request, student_id):
     school = request.school
     student = get_object_or_404(Student, id=student_id, school=school)
+    school_user = SchoolUser.objects.filter(user=request.user, school=school).first()
+    if school_user and school_user.role == 'parent' and student.parent_email != request.user.email:
+        messages.error(request, "You can only view statements for your own children.")
+        return redirect('dashboard')
     invoices = FeeInvoice.objects.filter(student=student).prefetch_related('payments')
     total_owed = invoices.aggregate(t=Sum('amount'))['t'] or 0
     total_paid = invoices.aggregate(t=Sum('amount_paid'))['t'] or 0
