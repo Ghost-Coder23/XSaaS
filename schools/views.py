@@ -356,7 +356,7 @@ def school_user_edit(request, pk):
             
             school_user_form.save()
             messages.success(request, f'User {school_user.user.get_full_name()} updated successfully!')
-            return redirect('schools:user_management')
+            return redirect('user_management')
     else:
         user_form = UserForm(initial={
             'first_name': school_user.user.first_name,
@@ -378,11 +378,13 @@ def school_user_edit(request, pk):
 def school_user_deactivate(request, pk):
     """Toggle school user active status"""
     school_user = get_object_or_404(SchoolUser, pk=pk, school=request.school)
+
     school_user.is_active = not school_user.is_active
     action = 'deactivated' if not school_user.is_active else 'reactivated'
     school_user.save()
-    messages.success(request, f'User {school_user.user.get_full_name()} {action} successfully!')
-    return redirect('schools:user_management')
+    messages.success(request, f"User {school_user.user.get_full_name()} {action} successfully!")
+    return redirect('user_management')
+
 
 
 class ParentRegistrationView(CreateView):
