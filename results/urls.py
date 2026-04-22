@@ -9,12 +9,16 @@ urlpatterns = [
     path('terms/', views.TermListView.as_view(), name='term_list'),
     path('terms/add/', views.TermCreateView.as_view(), name='term_add'),
 
+
     # Grade Scales
     path('grade-scales/', views.GradeScaleListView.as_view(), name='grade_scale_list'),
     path('grade-scales/add/', views.GradeScaleCreateView.as_view(), name='grade_scale_add'),
+    path('grade-scales/<int:pk>/edit/', views.GradeScaleUpdateView.as_view(), name='grade_scale_edit'),
+    path('grade-scales/<int:pk>/delete/', views.GradeScaleDeleteView.as_view(), name='grade_scale_delete'),
 
     # Result Entry
     path('entry/', views.ResultEntryView.as_view(), name='result_entry'),
+
     path('entry/bulk/', views.ResultEntryView.as_view(), name='bulk_entry'),
 
     # Approvals

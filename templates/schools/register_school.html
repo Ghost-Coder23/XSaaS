@@ -59,7 +59,7 @@
 <div class="alert alert-danger">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
 {% endif %}
 <button type="submit" class="btn btn-primary w-100 btn-lg">Register School</button>
-<p class="text-center text-muted mt-3 small">Already registered? <a href="{% url 'login' %}">Login here</a></p>
+<p class="text-center text-muted mt-3 small">Already registered? <a href="{% url 'accounts:login' %}">Login here</a></p>
 </form>
 </div>
 </div>

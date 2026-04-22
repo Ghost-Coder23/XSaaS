@@ -4,9 +4,12 @@ Welcome to {{ school.name }} on EduCore!
 
 To set your password and access your account, please click the link below:
 
+The link expire after 30minutes 
+
 {{ reset_link }}
 
 If you did not expect this email, you can ignore it.
+
 
 Best regards,
 EduCore Team

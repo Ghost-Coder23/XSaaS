@@ -2,7 +2,7 @@
 Results views - Marks entry, approval, and management
 """
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, CreateView, UpdateView, DetailView, TemplateView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, TemplateView
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -65,6 +65,35 @@ class GradeScaleCreateView(CreateView):
         form.instance.school = self.request.school
         messages.success(self.request, 'Grade scale added successfully!')
         return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class GradeScaleUpdateView(UpdateView):
+    model = GradeScale
+    form_class = GradeScaleForm
+    template_name = 'results/grade_scale_form.html'
+    success_url = reverse_lazy('results:grade_scale_list')
+
+    def get_queryset(self):
+        return GradeScale.objects.filter(school=self.request.school)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Grade scale updated successfully!')
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class GradeScaleDeleteView(DeleteView):
+    model = GradeScale
+    template_name = 'results/grade_scale_confirm_delete.html'
+    success_url = reverse_lazy('results:grade_scale_list')
+
+    def get_queryset(self):
+        return GradeScale.objects.filter(school=self.request.school)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, 'Grade scale deleted successfully!')
+        return super().delete(request, *args, **kwargs)
 
 
 @method_decorator(login_required, name='dispatch')

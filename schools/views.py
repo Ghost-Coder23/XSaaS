@@ -18,7 +18,7 @@ from .forms import SchoolRegistrationForm, SchoolBrandingForm, AddSchoolUserForm
 
 
 class HomeView(TemplateView):
-    """Landing page for EduCore"""
+    #Landing page for schools where theye register their schools and get the credential for their space
     template_name = 'schools/home.html'
 
     def get_context_data(self, **kwargs):
