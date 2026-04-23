@@ -13,6 +13,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;}
 .text-primary{color:var(--primary)!important;}
 .card{border:1px solid #e5e7eb;border-radius:12px;}
 .alert{border-radius:10px;border:none;}
+.site-footer{background:#0f172a;color:#cbd5e1;}
+.site-footer .brand{color:#fff;font-weight:700;}
+.site-footer .footer-title{color:#fff;font-size:.88rem;font-weight:700;margin-bottom:.6rem;}
+.site-footer a{color:#cbd5e1;text-decoration:none;}
+.site-footer a:hover{color:#fff;}
+.site-footer .legal-note{border-top:1px solid rgba(148,163,184,.2);font-size:.8rem;color:#94a3b8;}
 </style>
 {% block extra_css %}{% endblock %}
 </head>
@@ -34,7 +40,46 @@ body{font-family:'Segoe UI',system-ui,sans-serif;}
 </nav>
 {% if messages %}<div class="container mt-3">{% for message in messages %}<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}</div>{% endif %}
 {% block content %}{% endblock %}
-<footer class="bg-dark text-light py-4 mt-5"><div class="container text-center"><p class="mb-1"><strong>EduCore</strong> — School Management System</p><small class="text-muted">&copy; {% now "Y" %} EduCore.</small></div></footer>
+<footer class="site-footer py-5 mt-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="brand mb-2"><i class="bi bi-mortarboard-fill me-2"></i>EduCore</div>
+        <p class="mb-2">Multi-tenant school management platform for academics, attendance, results, parent engagement, and finance operations.</p>
+        <small class="text-secondary">Built for secure, role-based school operations.</small>
+      </div>
+      <div class="col-6 col-lg-2">
+        <div class="footer-title">Product</div>
+        <div class="d-grid gap-1">
+          <a href="{% url 'features' %}">Features</a>
+          <a href="{% url 'pricing' %}">Pricing</a>
+          <a href="{% url 'register_school' %}">Register School</a>
+          <a href="{% url 'accounts:login' %}">Login</a>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2">
+        <div class="footer-title">Legal</div>
+        <div class="d-grid gap-1">
+          <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
+          <a href="{% url 'terms_and_conditions' %}">Terms & Conditions</a>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="footer-title">Contact</div>
+        <div class="d-grid gap-1">
+          <span><i class="bi bi-envelope-fill me-2"></i>hello@educore.com</span>
+          <span><i class="bi bi-telephone-fill me-2"></i>+263 774487666</span>
+          <span><i class="bi bi-clock-fill me-2"></i>Mon-Fri, 9:00 AM-5:00 PM</span>
+          <a href="{% url 'contact' %}"><i class="bi bi-chat-left-text-fill me-2"></i>Contact Form</a>
+        </div>
+      </div>
+    </div>
+    <div class="legal-note mt-4 pt-3 d-flex flex-column flex-md-row justify-content-between gap-2">
+      <span>&copy; {% now "Y" %} EduCore. All rights reserved.</span>
+      <span>By using this site, you agree to our terms and privacy practices.</span>
+    </div>
+  </div>
+</footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 {% block extra_js %}{% endblock %}
 </body>
