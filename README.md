@@ -1,6 +1,6 @@
 # EduCore — Multi-Tenant School Management SaaS
 
-A complete school management system built for Zimbabwe, designed to work on low bandwidth and offline.
+A complete school management system built for Zimbabwe, designed to work well on low bandwidth.
 
 ---
 
@@ -47,7 +47,7 @@ Or use subdomain routing in production: `greenwood.educore.com`
 |--------|-------------|
 | **Students** | Registration, admissions, profiles, IDs |
 | **Academics** | Classes, subjects, academic years, terms |
-| **Attendance** | Daily marking, bulk entry, offline sync |
+| **Attendance** | Daily marking, bulk entry |
 | **Results** | Mark entry, grading, approval workflow |
 | **Report Cards** | PDF generation with school branding |
 | **Fees** | Fee structures, invoices, payment recording |
@@ -56,7 +56,6 @@ Or use subdomain routing in production: `greenwood.educore.com`
 | **Parent Portal** | View results, attendance, fee balance |
 | **Student Portal** | View own results and attendance |
 | **Superadmin** | Platform-level school management |
-| **PWA** | Installable, works offline |
 
 ---
 
@@ -139,12 +138,6 @@ Supported: Paynow, EcoCash, OneMoney, Bank Transfer (Zimswitch), Cash
 
 ---
 
-## PWA
-
-The app installs to home screen on Android/iOS. Service worker caches pages for offline use. Attendance marked offline syncs automatically when connection is restored.
-
----
-
 ## File Structure
 
 ```
@@ -154,13 +147,13 @@ educore_project/
 ├── academics/         # Students, classes, subjects
 ├── results/           # Marks, grades, report cards
 ├── reports/           # PDF generation
-├── attendance/        # Daily attendance + offline sync
+├── attendance/        # Daily attendance
 ├── fees/              # Fee management + payments
 ├── notifications/     # In-app notifications + SMS stub
 ├── analytics/         # Role-based dashboards
 ├── superadmin/        # Platform management
 ├── middleware/        # Tenant detection
-├── static/            # CSS, JS, PWA icons, service worker
+├── static/            # CSS, JS, and image assets
 ├── templates/         # All HTML templates
 └── manage.py
 ```

@@ -1,15 +1,11 @@
 """
 Attendance views - Mark and view attendance
 """
-import json
 from datetime import date, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
 from django.db import transaction
-from django.utils import timezone
 
 from .models import AttendanceSession, AttendanceRecord
 from .forms import AttendanceSessionForm
@@ -166,34 +162,3 @@ def session_detail(request, session_id):
     records = session.records.select_related('student__user').order_by('student__user__last_name')
     context = {'session': session, 'records': records, 'summary': session.get_summary()}
     return render(request, 'attendance/session_detail.html', context)
-
-
-@login_required
-@require_POST
-def api_sync_attendance(request):
-    """API endpoint for PWA offline sync"""
-    school = request.school
-    school_user = SchoolUser.objects.filter(user=request.user, school=school).first()
-    try:
-        data = json.loads(request.body)
-        sessions_data = data.get('sessions', [])
-        synced = 0
-        for s in sessions_data:
-            class_section = ClassSection.objects.get(id=s['class_section_id'], school=school)
-            session, _ = AttendanceSession.objects.get_or_create(
-                class_section=class_section,
-                date=s['date'],
-                defaults={'school': school, 'marked_by': school_user}
-            )
-            for r in s.get('records', []):
-                student = Student.objects.get(id=r['student_id'], school=school)
-                AttendanceRecord.objects.update_or_create(
-                    session=session, student=student,
-                    defaults={'status': r['status'], 'notes': r.get('notes', '')}
-                )
-            session.is_finalized = True
-            session.save()
-            synced += 1
-        return JsonResponse({'status': 'ok', 'synced': synced})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

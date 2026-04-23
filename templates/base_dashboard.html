@@ -4,11 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="{{ current_school.theme_color|default:'#4F46E5' }}">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>{% block title %}EduCore{% endblock %} | {{ current_school.name|default:"EduCore" }}</title>
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 <style>
@@ -69,10 +65,6 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
 /* Table */
 .table th { font-size: .75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid #e2e8f0; }
 .table td { font-size: .875rem; vertical-align: middle; }
-/* PWA install banner */
-#pwa-install-banner { background: var(--primary); color: #fff; padding: .75rem 1rem; font-size: .85rem; display: none; align-items: center; justify-content: space-between; gap: 1rem; position: sticky; top: 0; z-index: 300; }
-/* Offline indicator */
-#offline-indicator { background: #f59e0b; color: #fff; text-align: center; padding: .4rem; font-size: .8rem; display: none; }
 /* Mobile */
 @media (max-width: 768px) {
   .sidebar { transform: translateX(-100%); }
@@ -110,15 +102,6 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
 {% block extra_css %}{% endblock %}
 </head>
 <body>
-
-<div id="offline-indicator"><i class="bi bi-wifi-off me-1"></i> You are offline. Changes will sync when reconnected.</div>
-<div id="pwa-install-banner">
-  <span><i class="bi bi-phone me-2"></i>Install EduCore on your device for offline access</span>
-  <div class="d-flex gap-2">
-    <button class="btn btn-sm btn-light" onclick="installPWA()">Install</button>
-    <button class="btn btn-sm btn-outline-light" onclick="document.getElementById('pwa-install-banner').style.display='none'">×</button>
-  </div>
-</div>
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
@@ -292,35 +275,6 @@ function toggleSidebar() {
 function closeSidebar() {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('show');
-}
-
-// Offline indicator
-window.addEventListener('online', () => { document.getElementById('offline-indicator').style.display = 'none'; });
-window.addEventListener('offline', () => { document.getElementById('offline-indicator').style.display = 'block'; });
-if (!navigator.onLine) document.getElementById('offline-indicator').style.display = 'block';
-
-// PWA install prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  document.getElementById('pwa-install-banner').style.display = 'flex';
-});
-function installPWA() {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => {
-      deferredPrompt = null;
-      document.getElementById('pwa-install-banner').style.display = 'none';
-    });
-  }
-}
-
-// Service Worker registration
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js', {scope: '/'})
-    .then(reg => console.log('SW registered:', reg.scope))
-    .catch(err => console.log('SW error:', err));
 }
 
 // Notification count

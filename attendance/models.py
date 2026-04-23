@@ -1,5 +1,5 @@
 """
-Attendance models - Daily attendance tracking with offline support
+Attendance models - Daily attendance tracking
 """
 from django.db import models
 from django.utils import timezone
@@ -16,7 +16,6 @@ class AttendanceSession(models.Model):
     is_finalized = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    client_id = models.CharField(max_length=100, blank=True)
 
     class Meta:
         unique_together = ['class_section', 'date']

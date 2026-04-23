@@ -32,10 +32,6 @@ urlpatterns = [
     path('analytics/', include('analytics.urls')),
     # Platform superadmin
     path('platform/', include('superadmin.urls')),
-    # PWA
-    path('manifest.json', school_views.pwa_manifest, name='pwa_manifest'),
-    path('sw.js', school_views.service_worker, name='service_worker'),
-    path('offline/', TemplateView.as_view(template_name='pwa/offline.html'), name='offline'),
 ]
 
 if settings.DEBUG:
