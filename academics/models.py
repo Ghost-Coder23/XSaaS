@@ -112,6 +112,37 @@ class Student(models.Model):
         return f"{self.user.get_full_name()} ({self.admission_number})"
 
 
+class ParentStudentLink(models.Model):
+    """Explicit link between a parent account and one or more students."""
+    RELATIONSHIP_CHOICES = [
+        ('parent', 'Parent'),
+        ('guardian', 'Guardian'),
+    ]
+
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='parent_student_links')
+    parent = models.ForeignKey(
+        SchoolUser,
+        on_delete=models.CASCADE,
+        related_name='child_links',
+        limit_choices_to={'role': 'parent'},
+    )
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='parent_links')
+    relationship = models.CharField(max_length=20, choices=RELATIONSHIP_CHOICES, default='parent')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['parent', 'student']
+        ordering = ['student__admission_number']
+
+    def __str__(self):
+        return f"{self.parent.user.get_full_name()} -> {self.student}"
+
+    def save(self, *args, **kwargs):
+        if self.student_id and not self.school_id:
+            self.school = self.student.school
+        super().save(*args, **kwargs)
+
+
 class TeacherSubjectAssignment(models.Model):
     """Assign teachers to subjects in specific classes"""
     teacher = models.ForeignKey(SchoolUser, on_delete=models.CASCADE, related_name='subject_assignments')

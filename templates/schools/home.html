@@ -1,59 +1,326 @@
 {% extends 'base.html' %}
 {% block title %}EduCore — School Management System{% endblock %}
+{% block extra_css %}
+<style>
+  .home-wrap {
+    background:
+      radial-gradient(900px 460px at 95% -10%, rgba(99, 102, 241, 0.2), transparent 60%),
+      radial-gradient(700px 380px at -15% 15%, rgba(6, 182, 212, 0.12), transparent 60%),
+      #f8fafc;
+  }
+  .hero-shell {
+    background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 45%, #312e81 100%);
+    border-radius: 22px;
+    color: #f8fafc;
+    padding: 2.4rem;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.28);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-shell::before {
+    content: "";
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    right: -90px;
+    top: -130px;
+    background: radial-gradient(circle, rgba(250, 204, 21, 0.36) 0%, rgba(250, 204, 21, 0) 72%);
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #cbd5e1;
+    border: 1px solid rgba(203, 213, 225, 0.35);
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+    margin-bottom: 0.9rem;
+  }
+  .hero-title {
+    font-size: clamp(2rem, 3.8vw, 3.25rem);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  .hero-sub {
+    color: #cbd5e1;
+    font-size: 1.04rem;
+    max-width: 54ch;
+  }
+  .hero-panel {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 16px;
+    padding: 1rem;
+    backdrop-filter: blur(6px);
+  }
+  .hero-mini {
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 12px;
+    padding: 0.8rem;
+    background: rgba(30, 41, 59, 0.62);
+  }
+  .hero-mini .n {
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #f8fafc;
+  }
+  .hero-mini .l {
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    color: #cbd5e1;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .trust-strip {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+  }
+  .trust-item {
+    border-right: 1px dashed #e2e8f0;
+    padding-right: 0.9rem;
+    margin-right: 0.9rem;
+  }
+  .trust-item:last-child {
+    border-right: none;
+    margin-right: 0;
+    padding-right: 0;
+  }
+  .trust-item .n {
+    font-weight: 800;
+    font-size: 1.25rem;
+    line-height: 1;
+    color: #0f172a;
+  }
+  .trust-item .l {
+    color: #64748b;
+    font-size: 0.75rem;
+  }
+  .section-title {
+    font-size: clamp(1.45rem, 3vw, 2rem);
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+  .feature-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 1rem;
+    height: 100%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .feature-card:hover {
+    transform: translateY(-4px);
+    border-color: #c7d2fe;
+    box-shadow: 0 16px 28px rgba(15, 23, 42, 0.1);
+  }
+  .feature-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary) 0%, #0ea5e9 100%);
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+  }
+  .feature-card h5 {
+    margin-top: 0.9rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .feature-card p {
+    color: #64748b;
+    margin-bottom: 0;
+    font-size: 0.92rem;
+  }
+  .step-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1rem;
+    height: 100%;
+  }
+  .step-chip {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-weight: 700;
+    color: #ffffff;
+    background: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.7rem;
+    font-size: 0.8rem;
+  }
+  .cta-band {
+    border-radius: 18px;
+    border: 1px solid #c7d2fe;
+    background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
+    padding: 1.7rem;
+  }
+  @media (max-width: 992px) {
+    .hero-shell {
+      padding: 1.6rem;
+    }
+  }
+</style>
+{% endblock %}
 {% block content %}
-
-<section class="py-5" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); color: white;">
-    <div class="container py-4">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-3">Modern School Management</h1>
-                <p class="lead mb-4 opacity-75">EduCore gives every school its own private portal — manage students, enter results, generate report cards, and keep parents informed. All in one place.</p>
-                <div class="d-flex gap-3 flex-wrap">
-                    <a href="{% url 'register_school' %}" class="btn btn-warning btn-lg px-4 fw-bold">
-                        <i class="bi bi-building-add me-2"></i>Register Your School
-                    </a>
-                    <a href="{% url 'features' %}" class="btn btn-outline-light btn-lg px-4">See Features</a>
-                </div>
-                {% if active_schools_count %}
-                <p class="mt-4 opacity-50 small"><i class="bi bi-check-circle me-1"></i>{{ active_schools_count }} school{{ active_schools_count|pluralize }} already using EduCore</p>
-                {% endif %}
-            </div>
-            <div class="col-lg-6 d-none d-lg-block text-center">
-                <i class="bi bi-mortarboard-fill" style="font-size: 10rem; opacity: 0.15;"></i>
-            </div>
+<div class="home-wrap py-4 py-lg-5">
+  <div class="container">
+    <section class="hero-shell mb-4 mb-lg-5">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+          <div class="eyebrow">
+            <i class="bi bi-shield-check"></i>
+            Multi-Tenant School Platform
+          </div>
+          <h1 class="hero-title fw-bold">Run your entire school from one modern control center.</h1>
+          <p class="hero-sub mb-4">
+            EduCore gives each school a private portal for students, attendance, results, reports, fees, and parent communication.
+            Fast setup, role-based access, and built for real school operations.
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'register_school' %}" class="btn btn-warning btn-lg px-4 fw-semibold">
+              <i class="bi bi-building-add me-2"></i>Register Your School
+            </a>
+            <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-lg px-4">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Login
+            </a>
+            <a href="{% url 'features' %}" class="btn btn-outline-light btn-lg px-4">
+              Explore Features
+            </a>
+          </div>
         </div>
-    </div>
-</section>
-
-<section class="py-5">
-    <div class="container">
-        <h2 class="text-center fw-bold mb-2">Everything your school needs</h2>
-        <p class="text-center text-muted mb-5">Built for African schools with multi-term systems</p>
-        <div class="row g-4">
-            {% for feature in features %}
-            <div class="col-md-4">
-                <div class="card h-100 border-0" style="border-radius:16px; background:#f8fafc;">
-                    <div class="card-body p-4">
-                        <div class="mb-3" style="width:48px;height:48px;border-radius:12px;background:var(--primary);display:flex;align-items:center;justify-content:center;">
-                            <i class="bi {{ feature.icon }} text-white fs-5"></i>
-                        </div>
-                        <h5 class="fw-bold">{{ feature.title }}</h5>
-                        <p class="text-muted mb-0">{{ feature.description }}</p>
-                    </div>
-                </div>
+        <div class="col-lg-5">
+          <div class="hero-panel">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <strong class="small text-uppercase" style="letter-spacing:.08em;">Live Snapshot</strong>
+              <span class="badge bg-success">Online</span>
             </div>
-            {% endfor %}
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="hero-mini">
+                  <div class="n">{{ active_schools_count|default:"0" }}</div>
+                  <div class="l">Active Schools</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="hero-mini">
+                  <div class="n">5</div>
+                  <div class="l">Role Dashboards</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="hero-mini">
+                  <div class="n">12+</div>
+                  <div class="l">Core Modules</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="hero-mini">
+                  <div class="n">24/7</div>
+                  <div class="l">Cloud Access</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-    </div>
-</section>
+      </div>
+    </section>
 
-<section class="py-5 bg-white">
-    <div class="container text-center">
-        <h2 class="fw-bold mb-3">Ready to get started?</h2>
-        <p class="text-muted mb-4">Register your school in minutes. Free trial, no credit card required.</p>
-        <a href="{% url 'register_school' %}" class="btn btn-primary btn-lg px-5">
-            <i class="bi bi-arrow-right-circle me-2"></i>Register Your School
+    <section class="trust-strip mb-4 mb-lg-5 d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="d-flex flex-wrap align-items-center">
+        <div class="trust-item">
+          <div class="n">{{ active_schools_count|default:"0" }}</div>
+          <div class="l">Schools using EduCore</div>
+        </div>
+        <div class="trust-item">
+          <div class="n">100%</div>
+          <div class="l">Role-based access control</div>
+        </div>
+        <div class="trust-item">
+          <div class="n">1</div>
+          <div class="l">Unified system for academics + finance</div>
+        </div>
+      </div>
+      <a href="{% url 'pricing' %}" class="btn btn-sm btn-outline-primary">
+        View Pricing
+      </a>
+    </section>
+
+    <section class="mb-4 mb-lg-5">
+      <div class="text-center mb-4">
+        <h2 class="section-title fw-bold mb-2">Everything Your School Team Needs</h2>
+        <p class="text-muted mb-0">Designed for admins, teachers, parents, and students to work in one connected workflow.</p>
+      </div>
+      <div class="row g-3 g-lg-4">
+        {% for feature in features %}
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <span class="feature-badge"><i class="bi {{ feature.icon }}"></i></span>
+            <h5>{{ feature.title }}</h5>
+            <p>{{ feature.description }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="mb-4 mb-lg-5">
+      <div class="text-center mb-4">
+        <h2 class="section-title fw-bold mb-2">Get Started In 3 Steps</h2>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="step-card">
+            <span class="step-chip">01</span>
+            <h6 class="fw-bold">Register School</h6>
+            <p class="text-muted mb-0">Create your school workspace and submit onboarding details.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="step-card">
+            <span class="step-chip">02</span>
+            <h6 class="fw-bold">Set Up Structure</h6>
+            <p class="text-muted mb-0">Add classes, subjects, staff, and student records in minutes.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="step-card">
+            <span class="step-chip">03</span>
+            <h6 class="fw-bold">Go Live</h6>
+            <p class="text-muted mb-0">Start attendance, publish results, and keep parents informed.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-band text-center">
+      <h3 class="fw-bold mb-2">Ready To Modernize Your School Operations?</h3>
+      <p class="text-muted mb-3">Launch your school portal with EduCore and centralize administration, academics, and parent communication.</p>
+      <div class="d-flex justify-content-center flex-wrap gap-2">
+        <a href="{% url 'register_school' %}" class="btn btn-primary btn-lg px-4">
+          <i class="bi bi-rocket-takeoff me-2"></i>Start Registration
         </a>
-    </div>
-</section>
+        <a href="{% url 'contact' %}" class="btn btn-outline-secondary btn-lg px-4">
+          Talk To Us
+        </a>
+      </div>
+    </section>
+  </div>
+</div>
 {% endblock %}

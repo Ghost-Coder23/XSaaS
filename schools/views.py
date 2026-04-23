@@ -77,6 +77,16 @@ class ContactView(TemplateView):
     template_name = 'schools/contact.html'
 
 
+class PrivacyPolicyView(TemplateView):
+    """Privacy policy page"""
+    template_name = 'schools/privacy_policy.html'
+
+
+class TermsAndConditionsView(TemplateView):
+    """Terms and conditions page"""
+    template_name = 'schools/terms_and_conditions.html'
+
+
 class SchoolRegistrationView(CreateView):
     """School self-registration view"""
     model = School
@@ -439,32 +449,58 @@ class ParentRegistrationView(CreateView):
 
     def form_valid(self, form):
         school = self.request.school
-        from academics.models import Student
-        Student.objects.get(school=school, admission_number=form.cleaned_data['student_admission'])
-
-        # Create user
-        user = User.objects.create_user(
-            username=form.cleaned_data['parent_email'],
-            email=form.cleaned_data['parent_email'],
-            password=form.cleaned_data['password1'],
-            first_name=form.cleaned_data['parent_first_name'],
-            last_name=form.cleaned_data['parent_last_name']
-        )
-
-        # Create SchoolUser
-        SchoolUser.objects.create(
-            user=user,
+        from academics.models import Student, ParentStudentLink
+        student = Student.objects.get(
             school=school,
-            role='parent',
-            is_active=True
+            admission_number=form.cleaned_data['student_admission']
         )
 
-        # Optional: update student.parent_phone if provided
-        # student.parent_phone = form.cleaned_data.get('parent_phone')
+        with transaction.atomic():
+            # Create user
+            user = User.objects.create_user(
+                username=form.cleaned_data['parent_email'],
+                email=form.cleaned_data['parent_email'],
+                password=form.cleaned_data['password1'],
+                first_name=form.cleaned_data['parent_first_name'],
+                last_name=form.cleaned_data['parent_last_name']
+            )
+
+            # Create SchoolUser
+            parent_membership = SchoolUser.objects.create(
+                user=user,
+                school=school,
+                role='parent',
+                is_active=True
+            )
+
+            # Explicitly link parent to selected child.
+            ParentStudentLink.objects.get_or_create(
+                school=school,
+                parent=parent_membership,
+                student=student,
+                defaults={'relationship': 'parent'},
+            )
+
+            # Auto-link additional children sharing the same parent email in this school.
+            sibling_students = Student.objects.filter(
+                school=school,
+                parent_email__iexact=form.cleaned_data['parent_email'],
+                is_active=True,
+            ).exclude(pk=student.pk)
+            linked_count = 1
+            for sibling in sibling_students:
+                _, created = ParentStudentLink.objects.get_or_create(
+                    school=school,
+                    parent=parent_membership,
+                    student=sibling,
+                    defaults={'relationship': 'parent'},
+                )
+                if created:
+                    linked_count += 1
 
         messages.success(
             self.request,
-            f'Welcome {user.get_full_name()}! You can now access your child\'s results.'
+            f'Welcome {user.get_full_name()}! Your account is linked to {linked_count} child record(s).'
         )
         # Auto-login the new parent
         user = authenticate(self.request, username=user.username, password=form.cleaned_data['password1'])

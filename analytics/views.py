@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 
 from schools.models import SchoolUser, School
-from academics.models import Student, ClassSection, AcademicYear
+from academics.models import Student, ClassSection, AcademicYear, ParentStudentLink
 from results.models import StudentResult, TermSummary, Term
 from attendance.models import AttendanceSession, AttendanceRecord
 from fees.models import FeeInvoice, FeePayment
@@ -332,9 +332,27 @@ def teacher_dashboard(request, school, membership):
 def parent_dashboard(request, school, membership):
     today = date.today()
     current_term = Term.objects.filter(academic_year__school=school, is_current=True).first()
-    children = Student.objects.filter(
-        school=school, parent_email=request.user.email, is_active=True
+    # Backward compatibility and auto-sync for records where only parent_email was set.
+    legacy_children = Student.objects.filter(
+        school=school,
+        parent_email__iexact=request.user.email,
+        is_active=True,
     ).select_related('user', 'current_class')
+    for child in legacy_children:
+        ParentStudentLink.objects.get_or_create(
+            school=school,
+            parent=membership,
+            student=child,
+            defaults={'relationship': 'parent'},
+        )
+
+    parent_links = ParentStudentLink.objects.filter(
+        school=school,
+        parent=membership,
+        student__is_active=True,
+    ).select_related('student__user', 'student__current_class')
+
+    children = [link.student for link in parent_links]
 
     children_data = []
     total_fee_balance = 0

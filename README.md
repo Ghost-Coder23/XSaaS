@@ -71,6 +71,24 @@ Or use subdomain routing in production: `greenwood.educore.com`
 
 ---
 
+## Parent-Child Linking (Many Children Per Parent)
+
+EduCore now uses an explicit parent-to-student link table so one parent account can be linked to multiple children safely.
+
+- New model: `academics.ParentStudentLink` (`parent` -> `student`, scoped to `school`)
+- Unique constraint prevents duplicate links for the same parent/student pair
+- Parent self-registration now creates a link to the selected child and auto-links same-email sibling records in that school
+- Parent dashboard reads linked children from `ParentStudentLink` (not only email matching)
+- A migration backfills links from existing `Student.parent_email` data for already-created parent accounts
+
+After pulling changes, run:
+
+```bash
+python manage.py migrate
+```
+
+---
+
 ## Switch to PostgreSQL
 
 Edit `settings.py`, uncomment the PostgreSQL section and set your credentials:
