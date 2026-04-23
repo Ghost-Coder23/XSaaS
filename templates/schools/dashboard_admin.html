@@ -1,24 +1,225 @@
 {% extends 'base_dashboard.html' %}
 {% block title %}Dashboard — {{ school.name }}{% endblock %}
 {% block page_title %}Admin Dashboard{% endblock %}
+{% block extra_css %}
+<style>
+  .admin-hero {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.86));
+    border-radius: 14px;
+    color: #f8fafc;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    padding: 1.25rem;
+  }
+  .admin-hero .meta {
+    color: #cbd5e1;
+    font-size: 0.82rem;
+  }
+  .kpi-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+    background: #fff;
+    height: 100%;
+  }
+  .kpi-card .kpi-label {
+    color: #64748b;
+    font-size: 0.78rem;
+    margin-bottom: 0.25rem;
+  }
+  .kpi-card .kpi-value {
+    font-size: 1.55rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #0f172a;
+  }
+  .kpi-card .kpi-note {
+    margin-top: 0.45rem;
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+  .action-group .btn {
+    text-align: left;
+    justify-content: flex-start;
+    font-size: 0.84rem;
+    padding: 0.6rem 0.7rem;
+  }
+  .health-list {
+    display: grid;
+    gap: 0.7rem;
+  }
+  .health-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.75rem;
+    background: #f8fafc;
+  }
+  .health-item .label {
+    color: #475569;
+    font-size: 0.78rem;
+    margin-bottom: 0.2rem;
+  }
+  .health-item .value {
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .module-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    padding: 1rem;
+    height: 100%;
+  }
+  .module-card h6 {
+    margin-bottom: 0.35rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .module-card p {
+    margin-bottom: 0.8rem;
+    color: #64748b;
+    font-size: 0.82rem;
+  }
+</style>
+{% endblock %}
 {% block content %}
-<div class="row g-3 mb-4">
-<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number text-primary">{{ total_students }}</div><div class="stat-label">Students</div></div></div>
-<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number text-success">{{ total_teachers }}</div><div class="stat-label">Teachers</div></div></div>
-<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-number text-info">{{ total_classes }}</div><div class="stat-label">Classes</div></div></div>
+<div class="admin-hero mb-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+    <div>
+      <h4 class="mb-1">Operations Command Center</h4>
+      <div class="meta">Run day-to-day administration for {{ school.name }} from one place.</div>
+      <div class="meta mt-1">Today: {% now "l, j F Y" %}</div>
+    </div>
+    <div class="d-flex gap-2 align-self-start">
+      <a href="{% url 'analytics:dashboard' %}" class="btn btn-sm btn-light">
+        <i class="bi bi-graph-up me-1"></i> Analytics View
+      </a>
+      <a href="{% url 'user_management' %}" class="btn btn-sm btn-outline-light">
+        <i class="bi bi-people me-1"></i> Manage Users
+      </a>
+    </div>
+  </div>
 </div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="kpi-card">
+      <div class="kpi-label">Students</div>
+      <div class="kpi-value text-primary">{{ total_students }}</div>
+      <div class="kpi-note">Active learners</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="kpi-card">
+      <div class="kpi-label">Teachers</div>
+      <div class="kpi-value text-success">{{ total_teachers }}</div>
+      <div class="kpi-note">Active teaching staff</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="kpi-card">
+      <div class="kpi-label">Parents</div>
+      <div class="kpi-value text-info">{{ total_parents }}</div>
+      <div class="kpi-note">Portal users</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="kpi-card">
+      <div class="kpi-label">Classes</div>
+      <div class="kpi-value" style="color:#d97706;">{{ total_classes }}</div>
+      <div class="kpi-note">Configured sections</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="kpi-card">
+      <div class="kpi-label">School Users</div>
+      <div class="kpi-value" style="color:#7c3aed;">{{ total_users }}</div>
+      <div class="kpi-note">Active accounts</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="kpi-card">
+      <div class="kpi-label">Student/Teacher</div>
+      <div class="kpi-value" style="color:#0f766e;">{% if student_teacher_ratio %}{{ student_teacher_ratio }}{% else %}-{% endif %}</div>
+      <div class="kpi-note">Capacity ratio</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Quick Actions</div>
+      <div class="card-body action-group d-grid gap-2">
+        <a href="{% url 'academics:teacher_add' %}" class="btn btn-outline-success btn-sm"><i class="bi bi-person-badge me-2"></i>Add Teacher</a>
+        <a href="{% url 'academics:student_add' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-person-plus me-2"></i>Add Student</a>
+        <a href="{% url 'academics:class_section_add' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-building-add me-2"></i>Add Class</a>
+        <a href="{% url 'academics:subject_add' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-book me-2"></i>Add Subject</a>
+        <a href="{% url 'fees:home' %}" class="btn btn-outline-success btn-sm"><i class="bi bi-cash-coin me-2"></i>Manage Fees</a>
+        <a href="{% url 'attendance:report' %}" class="btn btn-outline-warning btn-sm"><i class="bi bi-calendar-check me-2"></i>Attendance Report</a>
+        <a href="{% url 'results:term_list' %}" class="btn btn-outline-info btn-sm"><i class="bi bi-clipboard-data me-2"></i>Results & Grades</a>
+        <a href="{% url 'notifications:list' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-bell me-2"></i>Notifications</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">School Health</div>
+      <div class="card-body">
+        <div class="health-list">
+          <div class="health-item">
+            <div class="label"><i class="bi bi-calendar-check me-1"></i>Attendance Completion Today</div>
+            <div class="value">{{ classes_marked_today }}/{{ total_classes }} classes ({{ attendance_completion_pct }}%)</div>
+          </div>
+          <div class="health-item">
+            <div class="label"><i class="bi bi-cash-coin me-1"></i>Total Invoiced</div>
+            <div class="value">${{ total_invoiced|floatformat:2 }}</div>
+          </div>
+          <div class="health-item">
+            <div class="label"><i class="bi bi-wallet2 me-1"></i>Total Collected</div>
+            <div class="value text-success">${{ total_collected|floatformat:2 }}</div>
+          </div>
+          <div class="health-item">
+            <div class="label"><i class="bi bi-exclamation-triangle me-1"></i>Outstanding Balance</div>
+            <div class="value {% if outstanding_balance > 0 %}text-danger{% else %}text-success{% endif %}">${{ outstanding_balance|floatformat:2 }}</div>
+          </div>
+          <div class="health-item">
+            <div class="label"><i class="bi bi-receipt-cutoff me-1"></i>Overdue Invoices</div>
+            <div class="value {% if overdue_invoices > 0 %}text-danger{% else %}text-success{% endif %}">{{ overdue_invoices }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="row g-3">
-  <div class="col-md-6"><div class="card"><div class="card-header">Quick Actions</div><div class="card-body d-grid gap-2">
-    <a href="{% url 'academics:teacher_add' %}" class="btn btn-outline-success btn-sm"><i class="bi bi-person-badge me-1"></i>Add Teacher</a>
-    <a href="{% url 'academics:student_add' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-person-plus me-1"></i>Add Student</a>
-    <a href="{% url 'academics:class_section_add' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-building-add me-1"></i>Add Class</a>
-    <a href="{% url 'academics:subject_add' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-book me-1"></i>Add Subject</a>
-    <a href="{% url 'user_management' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-people me-1"></i>Manage Users</a>
-    <a href="{% url 'fees:home' %}" class="btn btn-outline-success btn-sm"><i class="bi bi-cash-coin me-1"></i>Manage Fees</a>
-    <a href="{% url 'attendance:report' %}" class="btn btn-outline-warning btn-sm"><i class="bi bi-calendar-check me-1"></i>Attendance Report</a>
-    <a href="{% url 'results:term_list' %}" class="btn btn-outline-info btn-sm"><i class="bi bi-clipboard-data me-1"></i>Results/Grades</a>
-    <a href="{% url 'notifications:list' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-bell me-1"></i>Notifications</a>
-    <a href="{% url 'analytics:dashboard' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-graph-up me-1"></i>Analytics</a>
-  </div></div></div>
+  <div class="col-md-6 col-xl-3">
+    <div class="module-card">
+      <h6><i class="bi bi-mortarboard me-1"></i>Academics</h6>
+      <p>Manage students, classes, subjects, and teacher assignments.</p>
+      <a href="{% url 'academics:student_list' %}" class="btn btn-sm btn-outline-primary w-100">Open Academics</a>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="module-card">
+      <h6><i class="bi bi-cash-stack me-1"></i>Finance</h6>
+      <p>Control fee structures, invoices, and payment settings.</p>
+      <a href="{% url 'fees:home' %}" class="btn btn-sm btn-outline-success w-100">Open Finance</a>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="module-card">
+      <h6><i class="bi bi-clipboard2-check me-1"></i>Attendance</h6>
+      <p>Track attendance quality and investigate low reporting days.</p>
+      <a href="{% url 'attendance:report' %}" class="btn btn-sm btn-outline-warning w-100">Open Attendance</a>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="module-card">
+      <h6><i class="bi bi-graph-up-arrow me-1"></i>Analytics</h6>
+      <p>View trends, spot risk areas, and plan interventions.</p>
+      <a href="{% url 'analytics:dashboard' %}" class="btn btn-sm btn-outline-info w-100">Open Analytics</a>
+    </div>
+  </div>
 </div>
 {% endblock %}

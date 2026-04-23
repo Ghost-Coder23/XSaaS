@@ -1,6 +1,8 @@
 """
 Schools views - Public website and school management
 """
+from datetime import date
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView, CreateView, ListView, UpdateView
 from django.contrib.auth import login, authenticate
@@ -10,6 +12,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django import forms
 from django.db import transaction
+from django.db.models import Sum
 from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
 
@@ -140,31 +143,12 @@ class SchoolRegistrationView(CreateView):
 # School Admin Views (require login and school membership)
 @method_decorator(login_required, name='dispatch')
 class DashboardView(TemplateView):
-    """Main dashboard - redirects based on role"""
+    """Legacy dashboard endpoint; forwards to unified analytics dashboard"""
     template_name = 'schools/dashboard.html'
 
     def get(self, request, *_, **__):
-        # Determine which dashboard to show based on user's role in school
-        school = getattr(request, 'school', None)
-        if not school:
-            messages.error(request, "No school context found.")
-            return redirect('home')
-
-        try:
-            membership = SchoolUser.objects.get(user=request.user, school=school)
-            if membership.role == 'headmaster':
-                return self.render_headmaster_dashboard(request, school)
-            elif membership.role == 'admin':
-                return self.render_admin_dashboard(request, school)
-            elif membership.role == 'teacher':
-                return self.render_teacher_dashboard(request, school)
-            elif membership.role == 'student':
-                return self.render_student_dashboard(request, school)
-            elif membership.role == 'parent':
-                return self.render_parent_dashboard(request, school)
-        except SchoolUser.DoesNotExist:
-            messages.error(request, "You don't have access to this school.")
-            return redirect('home')
+        # Single source of truth for role-based dashboards lives in analytics.views.dashboard
+        return redirect('analytics:dashboard')
 
     def render_headmaster_dashboard(self, request, school):
         from results.models import TermSummary, StudentResult
@@ -187,12 +171,58 @@ class DashboardView(TemplateView):
 
     def render_admin_dashboard(self, request, school):
         from academics.models import Student, ClassSection
+        from attendance.models import AttendanceSession
+        from fees.models import FeeInvoice
+
+        today = date.today()
+        total_students = Student.objects.filter(school=school, is_active=True).count()
+        total_teachers = SchoolUser.objects.filter(
+            school=school, role='teacher', is_active=True
+        ).count()
+        total_classes = ClassSection.objects.filter(school=school).count()
+        total_parents = SchoolUser.objects.filter(
+            school=school, role='parent', is_active=True
+        ).count()
+        total_users = SchoolUser.objects.filter(school=school, is_active=True).count()
+
+        total_invoiced = FeeInvoice.objects.filter(school=school).aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+        total_collected = FeeInvoice.objects.filter(school=school).aggregate(
+            total=Sum('amount_paid')
+        )['total'] or 0
+        outstanding_balance = total_invoiced - total_collected
+        overdue_invoices = FeeInvoice.objects.filter(
+            school=school,
+            status__in=['unpaid', 'partial', 'overdue'],
+            due_date__lt=today
+        ).count()
+
+        classes_marked_today = AttendanceSession.objects.filter(
+            school=school, date=today, is_finalized=True
+        ).count()
+        attendance_completion_pct = round(
+            (classes_marked_today / total_classes) * 100, 1
+        ) if total_classes else 0
+        student_teacher_ratio = round(
+            total_students / total_teachers, 1
+        ) if total_teachers else None
 
         context = {
             'school': school,
-            'total_students': Student.objects.filter(school=school, is_active=True).count(),
-            'total_teachers': SchoolUser.objects.filter(school=school, role='teacher').count(),
-            'total_classes': ClassSection.objects.filter(school=school).count(),
+            'today': today,
+            'total_students': total_students,
+            'total_teachers': total_teachers,
+            'total_classes': total_classes,
+            'total_parents': total_parents,
+            'total_users': total_users,
+            'total_invoiced': total_invoiced,
+            'total_collected': total_collected,
+            'outstanding_balance': outstanding_balance,
+            'overdue_invoices': overdue_invoices,
+            'classes_marked_today': classes_marked_today,
+            'attendance_completion_pct': attendance_completion_pct,
+            'student_teacher_ratio': student_teacher_ratio,
         }
         return render(request, 'schools/dashboard_admin.html', context)
 

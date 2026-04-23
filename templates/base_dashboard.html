@@ -180,7 +180,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     <a href="{% url 'results:term_list' %}" class="nav-link {% if 'terms' in request.path %}active{% endif %}">
       <i class="bi bi-calendar3"></i> Terms
     </a>
-
+    <a href="{% url 'dashboard' %}" class="nav-link {% if '/school/dashboard/' in request.path %}active{% endif %}">
       <i class="bi bi-house-door"></i> Admin Panel
     </a>
   
