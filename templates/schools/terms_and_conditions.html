@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Terms & Conditions — EduCore{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <h1 class="fw-bold mb-2">Terms & Conditions</h1>
+      <p class="text-muted mb-4">Last updated: {% now "F j, Y" %}</p>
+
+      <div class="card p-4 p-md-5">
+        <h5 class="fw-bold">1. Acceptance of Terms</h5>
+        <p class="text-muted">By using EduCore, you agree to these terms. If you do not agree, you should not use the service.</p>
+
+        <h5 class="fw-bold mt-4">2. Service Scope</h5>
+        <p class="text-muted">EduCore provides school management tools including student records, attendance, results, communication, and fee tracking modules.</p>
+
+        <h5 class="fw-bold mt-4">3. Account Responsibilities</h5>
+        <p class="text-muted">Schools are responsible for user access, account security, and ensuring staff use the platform according to institutional and legal requirements.</p>
+
+        <h5 class="fw-bold mt-4">4. Data Responsibility</h5>
+        <p class="text-muted">Schools remain the primary data controllers for information entered into EduCore and are responsible for its accuracy and lawful processing.</p>
+
+        <h5 class="fw-bold mt-4">5. Acceptable Use</h5>
+        <p class="text-muted">Users must not misuse the service, attempt unauthorized access, distribute harmful code, or violate applicable laws.</p>
+
+        <h5 class="fw-bold mt-4">6. Payments and Billing</h5>
+        <p class="text-muted">Paid plans, if applicable, are billed according to your selected package and cycle. Fees are non-refundable unless otherwise stated in writing.</p>
+
+        <h5 class="fw-bold mt-4">7. Availability and Changes</h5>
+        <p class="text-muted">We may update, improve, or modify features over time. We aim for high availability but cannot guarantee uninterrupted service at all times.</p>
+
+        <h5 class="fw-bold mt-4">8. Limitation of Liability</h5>
+        <p class="text-muted">To the maximum extent permitted by law, EduCore is not liable for indirect or consequential losses arising from use of the platform.</p>
+
+        <h5 class="fw-bold mt-4">9. Termination</h5>
+        <p class="text-muted">We may suspend or terminate access for misuse, non-payment, or legal compliance reasons. Schools may request account closure at any time.</p>
+
+        <h5 class="fw-bold mt-4">10. Contact</h5>
+        <p class="text-muted mb-0">For legal or terms questions, contact <a href="mailto:legal@educore.com">legal@educore.com</a>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

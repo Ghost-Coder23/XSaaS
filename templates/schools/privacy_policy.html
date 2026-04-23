@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Privacy Policy — EduCore{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <h1 class="fw-bold mb-2">Privacy Policy</h1>
+      <p class="text-muted mb-4">Last updated: {% now "F j, Y" %}</p>
+
+      <div class="card p-4 p-md-5">
+        <h5 class="fw-bold">1. Information We Collect</h5>
+        <p class="text-muted">We collect account, school, student, parent, and usage information required to operate EduCore securely and provide school management services.</p>
+
+        <h5 class="fw-bold mt-4">2. How We Use Information</h5>
+        <p class="text-muted">We use data to provide dashboards, attendance, results, communication, billing, and support. We only process data for legitimate educational and operational purposes.</p>
+
+        <h5 class="fw-bold mt-4">3. Data Sharing</h5>
+        <p class="text-muted">We do not sell personal data. Information may be shared only with trusted infrastructure providers necessary to operate the platform, or where required by law.</p>
+
+        <h5 class="fw-bold mt-4">4. Data Security</h5>
+        <p class="text-muted">We apply administrative and technical safeguards to protect data. Schools are responsible for maintaining secure credentials and role access policies.</p>
+
+        <h5 class="fw-bold mt-4">5. Data Retention</h5>
+        <p class="text-muted">Data is retained for as long as needed to deliver services, meet legal obligations, and resolve disputes. Schools may request export or deletion subject to legal requirements.</p>
+
+        <h5 class="fw-bold mt-4">6. Children's Data</h5>
+        <p class="text-muted">EduCore processes student data under school authority for educational administration. Schools remain responsible for obtaining any required parental or guardian consent.</p>
+
+        <h5 class="fw-bold mt-4">7. Your Rights</h5>
+        <p class="text-muted">Authorized schools may request updates, corrections, exports, or deletion requests for account data by contacting support.</p>
+
+        <h5 class="fw-bold mt-4">8. Contact</h5>
+        <p class="text-muted mb-0">For privacy questions, contact <a href="mailto:privacy@educore.com">privacy@educore.com</a>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

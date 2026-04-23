@@ -13,6 +13,8 @@ urlpatterns = [
     path('features/', school_views.FeaturesView.as_view(), name='features'),
     path('pricing/', school_views.PricingView.as_view(), name='pricing'),
     path('contact/', school_views.ContactView.as_view(), name='contact'),
+    path('privacy-policy/', school_views.PrivacyPolicyView.as_view(), name='privacy_policy'),
+    path('terms-and-conditions/', school_views.TermsAndConditionsView.as_view(), name='terms_and_conditions'),
     path('register-school/', school_views.SchoolRegistrationView.as_view(), name='register_school'),
     path('registration-pending/', TemplateView.as_view(template_name='schools/registration_pending.html'), name='registration_pending'),
     # Auth
