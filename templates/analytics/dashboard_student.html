@@ -1,78 +1,223 @@
 {% extends "base_dashboard.html" %}
 {% block title %}Student Dashboard{% endblock %}
 {% block page_title %}My Dashboard{% endblock %}
+{% block extra_css %}
+<style>
+  .student-dashboard .hero {
+    background: linear-gradient(125deg, #0f172a 0%, #0f766e 60%, #14b8a6 100%);
+    color: #ecfeff;
+    border-radius: 14px;
+    padding: 1.05rem 1.2rem;
+    border: 1px solid rgba(94, 234, 212, 0.35);
+    box-shadow: 0 8px 24px rgba(15, 118, 110, 0.2);
+  }
+  .student-dashboard .hero h5 {
+    margin: 0;
+    color: #ffffff;
+    font-weight: 700;
+  }
+  .student-dashboard .hero small {
+    color: #ccfbf1;
+  }
+  .student-dashboard .metric {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.95rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    height: 100%;
+  }
+  .student-dashboard .metric .label {
+    color: #64748b;
+    font-size: 0.76rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+  }
+  .student-dashboard .metric .value {
+    font-size: 1.55rem;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .student-dashboard .dashboard-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+  }
+  .student-dashboard .dashboard-card .card-header {
+    font-size: 0.88rem;
+    color: #0f172a;
+  }
+  .student-dashboard .soft-table tbody tr:hover {
+    background: #f8fafc;
+  }
+</style>
+{% endblock %}
 {% block content %}
-<div class="row g-3 mb-4">
-  <div class="col-6 col-md-3"><div class="stat-card text-center">
-    <div class="stat-label mb-1">Attendance</div>
-    {% if att_pct is not None %}
-      <div class="stat-number {% if att_pct >= 80 %}text-success{% elif att_pct >= 60 %}text-warning{% else %}text-danger{% endif %}">{{ att_pct }}%</div>
-    {% else %}<div class="text-muted">-</div>{% endif %}
-    <small class="text-muted">This term</small>
-  </div></div>
-  <div class="col-6 col-md-3"><div class="stat-card text-center">
-    <div class="stat-label mb-1">Fee Balance</div>
-    <div class="stat-number {% if fee_balance > 0 %}text-danger{% else %}text-success{% endif %}">${{ fee_balance|floatformat:2 }}</div>
-    <small class="text-muted">{% if fee_balance > 0 %}Outstanding{% else %}Clear{% endif %}</small>
-  </div></div>
+<div class="student-dashboard">
+  <div class="hero mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+    <div>
+      <h5>My Learning Dashboard</h5>
+      <small>Stay on top of your attendance, results, and report progress every term.</small>
+    </div>
+    {% if current_term %}
+    <span class="badge bg-light text-dark">{{ current_term.name }}</span>
+    {% endif %}
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="metric">
+        <div class="label">Attendance</div>
+        {% if att_pct is not None %}
+        <div class="value {% if att_pct >= 80 %}text-success{% elif att_pct >= 60 %}text-warning{% else %}text-danger{% endif %}">{{ att_pct }}%</div>
+        <small class="text-muted">{{ att_present }}/{{ att_total }} sessions present</small>
+        {% else %}
+        <div class="value text-muted">-</div>
+        <small class="text-muted">No attendance data yet</small>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="metric">
+        <div class="label">Current Average</div>
+        <div class="value {% if current_average is not None %}text-primary{% else %}text-muted{% endif %}">
+          {% if current_average is not None %}{{ current_average }}%{% else %}-{% endif %}
+        </div>
+        <small class="text-muted">{{ subject_count }} subject{{ subject_count|pluralize }}</small>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="metric">
+        <div class="label">Pass/Fail</div>
+        <div class="value text-success">{{ pass_count }}</div>
+        <small class="text-muted">{{ fail_count }} below pass mark</small>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="metric">
+        <div class="label">Fee Balance</div>
+        <div class="value {% if fee_balance > 0 %}text-danger{% else %}text-success{% endif %}">${{ fee_balance|floatformat:2 }}</div>
+        <small class="text-muted">{% if overdue_invoices > 0 %}{{ overdue_invoices }} overdue invoice{{ overdue_invoices|pluralize }}{% else %}No overdue invoices{% endif %}</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-lg-8">
+      {% if current_results %}
+      <div class="card dashboard-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-award me-2"></i>{% if current_term %}{{ current_term.name }}{% endif %} Subject Results</span>
+          <span class="text-muted small">{{ subject_count }} subject{{ subject_count|pluralize }}</span>
+        </div>
+        <div class="card-body p-0">
+          <table class="table soft-table table-hover mb-0">
+            <thead><tr><th>Subject</th><th>CA</th><th>Exam</th><th>Total</th><th>Grade</th><th>Position</th></tr></thead>
+            <tbody>
+              {% for r in current_results %}
+              <tr>
+                <td>{{ r.subject.name }}</td>
+                <td>{{ r.continuous_assessment|floatformat:1 }}</td>
+                <td>{{ r.exam_score|floatformat:1 }}</td>
+                <td><strong>{{ r.total_score|floatformat:1 }}</strong></td>
+                <td><span class="badge bg-secondary">{{ r.grade|default:"-" }}</span></td>
+                <td>{{ r.position|default:"-" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <div class="alert alert-info mb-0">No approved results published for the current term yet.</div>
+      {% endif %}
+    </div>
+    <div class="col-lg-4">
+      <div class="card dashboard-card mb-3">
+        <div class="card-header"><i class="bi bi-graph-up-arrow me-2"></i>Performance Trend</div>
+        <div class="card-body">
+          {% if latest_summary %}
+          <div class="mb-2">
+            <small class="text-muted d-block">Latest Term</small>
+            <div class="fw-semibold">{{ latest_summary.term.name }}</div>
+            <div class="text-primary fw-bold">{{ latest_summary.average|floatformat:1 }}%</div>
+          </div>
+          {% if trend_delta is not None %}
+          <div class="mb-2">
+            <small class="text-muted d-block">Change From Previous</small>
+            <div class="fw-semibold {% if trend_delta >= 0 %}text-success{% else %}text-danger{% endif %}">
+              {% if trend_delta >= 0 %}+{% endif %}{{ trend_delta }}%
+            </div>
+          </div>
+          {% endif %}
+          {% else %}
+          <div class="text-muted">Trend will appear after term summaries are generated.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card dashboard-card">
+        <div class="card-header"><i class="bi bi-lightbulb me-2"></i>Subject Insight</div>
+        <div class="card-body">
+          {% if best_subject %}
+          <div class="mb-3">
+            <small class="text-muted d-block mb-1">Strongest Subject</small>
+            <div class="fw-semibold">{{ best_subject.subject.name }}</div>
+            <div class="text-success fw-bold">{{ best_subject.total_score|floatformat:1 }}%</div>
+          </div>
+          {% endif %}
+          {% if weak_subject %}
+          <div>
+            <small class="text-muted d-block mb-1">Focus Subject</small>
+            <div class="fw-semibold">{{ weak_subject.subject.name }}</div>
+            <div class="{% if weak_subject.total_score < 50 %}text-danger{% else %}text-warning{% endif %} fw-bold">{{ weak_subject.total_score|floatformat:1 }}%</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
   {% if term_summaries %}
-  {% with term_summaries.first as ts %}
-  <div class="col-6 col-md-3"><div class="stat-card text-center">
-    <div class="stat-label mb-1">Last Average</div>
-    <div class="stat-number text-primary">{{ ts.average|floatformat:1 }}%</div>
-    <small class="text-muted">{{ ts.term.name }}</small>
-  </div></div>
-  <div class="col-6 col-md-3"><div class="stat-card text-center">
-    <div class="stat-label mb-1">Class Position</div>
-    <div class="stat-number text-primary">{{ ts.class_position|default:"-" }}</div>
-    <small class="text-muted">{{ ts.term.name }}</small>
-  </div></div>
-  {% endwith %}
+  <div class="card dashboard-card mb-4">
+    <div class="card-header"><i class="bi bi-clock-history me-2"></i>Past Terms</div>
+    <div class="card-body p-0">
+      <table class="table soft-table table-hover mb-0">
+        <thead><tr><th>Term</th><th>Average</th><th>Position</th><th>Grade</th><th></th></tr></thead>
+        <tbody>
+          {% for ts in term_summaries %}
+          <tr>
+            <td>{{ ts.term.name }}</td>
+            <td>{{ ts.average|floatformat:1 }}%</td>
+            <td>{{ ts.class_position|default:"-" }}</td>
+            <td>{{ ts.overall_grade|default:"-" }}</td>
+            <td><a href="{% url 'reports:generate' student.pk ts.term.pk %}" class="btn btn-sm btn-outline-secondary py-0 px-2">Report</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if announcements %}
+  <div class="card dashboard-card">
+    <div class="card-header"><i class="bi bi-megaphone me-2"></i>Announcements</div>
+    <div class="card-body">
+      <div class="row g-3">
+        {% for item in announcements %}
+        <div class="col-md-6">
+          <div class="border rounded-3 p-3 h-100 bg-light">
+            <div class="fw-semibold mb-1">{{ item.title }}</div>
+            <small class="text-muted d-block mb-2">{{ item.created_at|date:"d M Y" }}</small>
+            <div style="font-size:.84rem;color:#334155;">{{ item.content|truncatechars:150 }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
   {% endif %}
 </div>
-
-{% if current_results %}
-<div class="card mb-3">
-  <div class="card-header"><i class="bi bi-award me-2"></i>{% if current_term %}{{ current_term.name }}{% endif %} Results</div>
-  <div class="card-body p-0">
-    <table class="table table-hover mb-0">
-      <thead><tr><th>Subject</th><th>CA</th><th>Exam</th><th>Total</th><th>Grade</th><th>Position</th></tr></thead>
-      <tbody>
-        {% for r in current_results %}
-        <tr>
-          <td>{{ r.subject.name }}</td>
-          <td>{{ r.continuous_assessment|floatformat:1 }}</td>
-          <td>{{ r.exam_score|floatformat:1 }}</td>
-          <td><strong>{{ r.total_score|floatformat:1 }}</strong></td>
-          <td><span class="badge bg-secondary">{{ r.grade|default:"-" }}</span></td>
-          <td>{{ r.position|default:"-" }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-{% endif %}
-
-{% if term_summaries %}
-<div class="card">
-  <div class="card-header"><i class="bi bi-clock-history me-2"></i>Past Terms</div>
-  <div class="card-body p-0">
-    <table class="table table-hover mb-0">
-      <thead><tr><th>Term</th><th>Average</th><th>Position</th><th>Grade</th><th></th></tr></thead>
-      <tbody>
-        {% for ts in term_summaries %}
-        <tr>
-          <td>{{ ts.term.name }}</td>
-          <td>{{ ts.average|floatformat:1 }}%</td>
-          <td>{{ ts.class_position|default:"-" }}</td>
-          <td>{{ ts.overall_grade|default:"-" }}</td>
-          <td><a href="{% url 'reports:generate' student.pk ts.term.pk %}" class="btn btn-xs btn-outline-secondary" style="font-size:.7rem;padding:2px 8px;"><i class="bi bi-download me-1"></i>Report</a></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-{% endif %}
 {% endblock %}

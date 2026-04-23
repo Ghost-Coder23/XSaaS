@@ -1,85 +1,256 @@
 {% extends "base_dashboard.html" %}
 {% block title %}Teacher Dashboard{% endblock %}
 {% block page_title %}Teacher Dashboard{% endblock %}
+{% block extra_css %}
+<style>
+  .teacher-dashboard .hero {
+    background: linear-gradient(125deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+    color: #eff6ff;
+    border-radius: 14px;
+    padding: 1.05rem 1.2rem;
+    border: 1px solid rgba(147, 197, 253, 0.35);
+    box-shadow: 0 8px 24px rgba(30, 64, 175, 0.2);
+  }
+  .teacher-dashboard .hero h5 {
+    margin: 0;
+    color: #ffffff;
+    font-weight: 700;
+  }
+  .teacher-dashboard .hero small {
+    color: #dbeafe;
+  }
+  .teacher-dashboard .metric-tile {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.95rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    height: 100%;
+  }
+  .teacher-dashboard .metric-tile .label {
+    color: #64748b;
+    font-size: 0.76rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+  }
+  .teacher-dashboard .metric-tile .value {
+    font-size: 1.55rem;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .teacher-dashboard .class-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 0.9rem;
+    height: 100%;
+  }
+  .teacher-dashboard .dashboard-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+  }
+  .teacher-dashboard .dashboard-card .card-header {
+    font-size: 0.88rem;
+    color: #0f172a;
+  }
+  .teacher-dashboard .soft-table tbody tr:hover {
+    background: #f8fafc;
+  }
+  .teacher-dashboard .badge-soft {
+    background: #eef2ff;
+    color: #3730a3;
+    border-radius: 999px;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+</style>
+{% endblock %}
 {% block content %}
-<div class="row g-3 mb-4">
-  {% for ca in class_attendance %}
-  <div class="col-md-4">
-    <div class="stat-card">
-      <div class="d-flex justify-content-between align-items-start">
-        <div>
-          <div class="fw-600" style="font-size:.95rem;">{{ ca.class }}</div>
-          <div class="stat-label">{{ ca.student_count }} students</div>
-        </div>
-        {% if ca.marked %}
-          <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Marked</span>
-        {% else %}
-          <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle me-1"></i>Pending</span>
-        {% endif %}
+<div class="teacher-dashboard">
+  <div class="hero mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+    <div>
+      <h5>Teaching Command Center</h5>
+      <small>Track attendance, complete results, and monitor class outcomes quickly.</small>
+    </div>
+    <a href="{% url 'results:result_entry' %}" class="btn btn-sm btn-light">
+      <i class="bi bi-pencil-square me-1"></i> Enter Results
+    </a>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="metric-tile">
+        <div class="label">Assigned Classes</div>
+        <div class="value text-primary">{{ classes_assigned }}</div>
       </div>
-      <div class="mt-2">
-        {% if not ca.marked %}
-        <a href="{% url 'attendance:mark' ca.class.id %}" class="btn btn-sm btn-primary w-100">Mark Attendance</a>
-        {% else %}
-        <a href="{% url 'attendance:session_detail' ca.session.id %}" class="btn btn-sm btn-outline-secondary w-100">View Session</a>
-        {% endif %}
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="metric-tile">
+        <div class="label">Attendance Complete</div>
+        <div class="value text-success">{{ classes_marked_today }}</div>
+        <small class="text-muted">{{ attendance_completion_pct }}% today</small>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="metric-tile">
+        <div class="label">Pending Attendance</div>
+        <div class="value text-warning">{{ classes_pending_today }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="metric-tile">
+        <div class="label">Pending Result Entries</div>
+        <div class="value text-danger">{{ pending_results_total }}</div>
+        <small class="text-muted">{{ results_entry_pct }}% completion</small>
       </div>
     </div>
   </div>
-  {% empty %}
-  <div class="col-12"><div class="alert alert-info">No classes assigned yet. Ask admin to set up teacher assignments.</div></div>
-  {% endfor %}
-</div>
 
-{% if pending_entry %}
-<div class="card mb-3">
-  <div class="card-header"><i class="bi bi-pencil-square me-2"></i>Result Entry Status {% if current_term %}&mdash; {{ current_term.name }}{% endif %}</div>
-  <div class="card-body p-0">
-    <table class="table table-hover mb-0">
-      <thead><tr><th>Class</th><th>Subject</th><th>Progress</th><th></th></tr></thead>
-      <tbody>
-        {% for pe in pending_entry %}
-        <tr>
-          <td>{{ pe.assignment.class_section }}</td>
-          <td>{{ pe.assignment.subject.name }}</td>
-          <td>
-            <div class="d-flex align-items-center gap-2">
-              <div class="progress flex-grow-1" style="height:6px;">
-                <div class="progress-bar {% if pe.complete %}bg-success{% else %}bg-warning{% endif %}"
-                     style="width:{% if pe.total > 0 %}{% widthratio pe.entered pe.total 100 %}{% else %}0{% endif %}%"></div>
-              </div>
-              <small class="text-muted">{{ pe.entered }}/{{ pe.total }}</small>
-            </div>
-          </td>
-          <td>
-            <a href="{% url 'results:result_entry' %}?class={{ pe.assignment.class_section.id }}&subject={{ pe.assignment.subject.id }}{% if current_term %}&term={{ current_term.id }}{% endif %}"
-               class="btn btn-xs btn-outline-primary" style="font-size:.75rem;padding:3px 8px;">Enter</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="row g-3 mb-4">
+    {% for ca in class_attendance %}
+    <div class="col-md-6 col-xl-4">
+      <div class="class-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <div class="fw-semibold">{{ ca.class }}</div>
+            <small class="text-muted">{{ ca.student_count }} students</small>
+          </div>
+          {% if ca.marked %}
+            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Marked</span>
+          {% else %}
+            <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Pending</span>
+          {% endif %}
+        </div>
+        <div class="d-grid gap-2">
+          {% if not ca.marked %}
+          <a href="{% url 'attendance:mark' ca.class.id %}" class="btn btn-sm btn-primary">Mark Attendance</a>
+          {% else %}
+          <a href="{% url 'attendance:session_detail' ca.session.id %}" class="btn btn-sm btn-outline-secondary">View Session</a>
+          {% endif %}
+          <a href="{% url 'results:result_entry' %}?class={{ ca.class.id }}{% if current_term %}&term={{ current_term.id }}{% endif %}" class="btn btn-sm btn-outline-primary">Enter Results</a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="alert alert-info mb-0">
+        No class assignments found yet. Ask your admin to assign subjects/classes.
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="row g-3">
+    <div class="col-xl-8">
+      {% if pending_entry %}
+      <div class="card dashboard-card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-pencil-square me-2"></i>Result Entry Status {% if current_term %}- {{ current_term.name }}{% endif %}</span>
+          <span class="badge-soft">{{ results_entry_pct }}% complete</span>
+        </div>
+        <div class="card-body p-0">
+          <table class="table soft-table table-hover mb-0">
+            <thead><tr><th>Class</th><th>Subject</th><th>Progress</th><th>Remaining</th><th></th></tr></thead>
+            <tbody>
+              {% for pe in pending_entry %}
+              <tr>
+                <td>{{ pe.assignment.class_section }}</td>
+                <td>{{ pe.assignment.subject.name }}</td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="progress flex-grow-1" style="height:6px;">
+                      <div class="progress-bar {% if pe.complete %}bg-success{% else %}bg-warning{% endif %}"
+                           style="width:{% if pe.total > 0 %}{% widthratio pe.entered pe.total 100 %}{% else %}0{% endif %}%"></div>
+                    </div>
+                    <small class="text-muted">{{ pe.entered }}/{{ pe.total }}</small>
+                  </div>
+                </td>
+                <td>
+                  {% if pe.remaining > 0 %}
+                    <span class="text-danger fw-semibold">{{ pe.remaining }}</span>
+                  {% else %}
+                    <span class="text-success fw-semibold">0</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'results:result_entry' %}?class={{ pe.assignment.class_section.id }}&subject={{ pe.assignment.subject.id }}{% if current_term %}&term={{ current_term.id }}{% endif %}"
+                     class="btn btn-sm btn-outline-primary py-0 px-2">Open</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if class_averages %}
+      <div class="card dashboard-card">
+        <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Class Averages</div>
+        <div class="card-body p-0">
+          <table class="table soft-table table-hover mb-0">
+            <thead><tr><th>Class</th><th>Subject</th><th>Average</th></tr></thead>
+            <tbody>
+              {% for ca in class_averages %}
+              <tr>
+                <td>{{ ca.class }}</td>
+                <td>{{ ca.subject.name }}</td>
+                <td>
+                  <span class="fw-semibold {% if ca.average >= 70 %}text-success{% elif ca.average >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                    {{ ca.average }}%
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-xl-4">
+      <div class="card dashboard-card mb-3">
+        <div class="card-header"><i class="bi bi-lightning-charge me-2"></i>Performance Insight</div>
+        <div class="card-body">
+          {% if best_class %}
+          <div class="mb-3">
+            <small class="text-muted d-block mb-1">Best Performing</small>
+            <div class="fw-semibold">{{ best_class.class }} - {{ best_class.subject.name }}</div>
+            <div class="text-success fw-bold">{{ best_class.average }}%</div>
+          </div>
+          {% endif %}
+          {% if weakest_class %}
+          <div>
+            <small class="text-muted d-block mb-1">Needs Attention</small>
+            <div class="fw-semibold">{{ weakest_class.class }} - {{ weakest_class.subject.name }}</div>
+            <div class="text-danger fw-bold">{{ weakest_class.average }}%</div>
+          </div>
+          {% else %}
+          <div class="text-muted">No graded averages yet.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if announcements %}
+      <div class="card dashboard-card">
+        <div class="card-header"><i class="bi bi-megaphone me-2"></i>Latest Announcements</div>
+        <div class="card-body">
+          {% for item in announcements %}
+          <div class="{% if not forloop.last %}mb-3 pb-2 border-bottom{% endif %}">
+            <div class="fw-semibold">{{ item.title }}</div>
+            <small class="text-muted d-block mb-1">{{ item.created_at|date:"d M Y" }}</small>
+            <div style="font-size:.84rem;color:#334155;">{{ item.content|truncatechars:140 }}</div>
+          </div>
+          {% endfor %}
+          <a href="{% url 'notifications:announcements' %}" class="btn btn-sm btn-outline-secondary w-100 mt-2">View All</a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
   </div>
 </div>
-{% endif %}
-
-{% if class_averages %}
-<div class="card">
-  <div class="card-header"><i class="bi bi-bar-chart me-2"></i>My Class Averages</div>
-  <div class="card-body p-0">
-    <table class="table table-hover mb-0">
-      <thead><tr><th>Class</th><th>Subject</th><th>Average</th></tr></thead>
-      <tbody>
-        {% for ca in class_averages %}
-        <tr>
-          <td>{{ ca.class }}</td>
-          <td>{{ ca.subject.name }}</td>
-          <td><span class="fw-bold {% if ca.average >= 70 %}text-success{% elif ca.average >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ ca.average }}%</span></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-{% endif %}
 {% endblock %}

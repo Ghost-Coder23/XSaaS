@@ -6,13 +6,26 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Avg, Sum, Q
 from django.http import JsonResponse
+from django.utils import timezone
 
 from schools.models import SchoolUser, School
 from academics.models import Student, ClassSection, AcademicYear
 from results.models import StudentResult, TermSummary, Term
 from attendance.models import AttendanceSession, AttendanceRecord
 from fees.models import FeeInvoice, FeePayment
-from notifications.models import Notification
+from notifications.models import Notification, Announcement
+
+
+def get_recent_announcements(school, audiences, limit=5):
+    """Fetch active announcements for the supplied role audiences."""
+    return Announcement.objects.filter(
+        school=school,
+        is_active=True
+    ).filter(
+        Q(audience='all') | Q(audience__in=audiences)
+    ).filter(
+        Q(expires_at__isnull=True) | Q(expires_at__gte=timezone.now())
+    ).order_by('-created_at')[:limit]
 
 
 @login_required
@@ -55,6 +68,11 @@ def headmaster_dashboard(request, school, membership):
     today_absent = AttendanceRecord.objects.filter(session__in=today_sessions, status='absent').count()
     today_total = today_present + today_absent
     today_attendance_pct = round((today_present / today_total) * 100, 1) if today_total > 0 else 0
+    classes_marked_today = today_sessions.filter(is_finalized=True).count()
+    classes_unmarked_today = max(total_classes - classes_marked_today, 0)
+    attendance_entry_pct = round(
+        (classes_marked_today / total_classes) * 100, 1
+    ) if total_classes else 0
 
     # Attendance this week
     week_start = today - timedelta(days=today.weekday())
@@ -68,6 +86,10 @@ def headmaster_dashboard(request, school, membership):
     total_collected = FeeInvoice.objects.filter(school=school).aggregate(t=Sum('amount_paid'))['t'] or 0
     collection_pct = round((total_collected / total_invoiced) * 100, 1) if total_invoiced > 0 else 0
     overdue_count = FeeInvoice.objects.filter(school=school, status__in=['unpaid','partial'], due_date__lt=today).count()
+    outstanding_balance = total_invoiced - total_collected
+    overdue_amount = FeeInvoice.objects.filter(
+        school=school, status__in=['unpaid', 'partial', 'overdue'], due_date__lt=today
+    ).aggregate(t=Sum('balance'))['t'] or 0
 
     # At-risk students (attendance < 80% this month)
     month_start = today.replace(day=1)
@@ -98,10 +120,20 @@ def headmaster_dashboard(request, school, membership):
         class_section__school=school, status='submitted'
     ).select_related('student__user', 'subject', 'term').order_by('-updated_at')[:8]
 
+    # Top performers (current term)
+    top_performers = []
+    if current_term:
+        top_performers = TermSummary.objects.filter(
+            class_section__school=school, term=current_term
+        ).select_related('student__user', 'class_section').order_by('-average')[:8]
+
     # Notifications
     unread_notifications = Notification.objects.filter(
         recipient=request.user, school=school, is_read=False
     ).order_by('-created_at')[:5]
+    announcements = get_recent_announcements(
+        school, ['teachers', 'parents', 'students'], limit=5
+    )
 
     context = {
         'role': 'headmaster',
@@ -112,15 +144,23 @@ def headmaster_dashboard(request, school, membership):
         'today_attendance_pct': today_attendance_pct,
         'today_present': today_present,
         'today_absent': today_absent,
+        'classes_marked_today': classes_marked_today,
+        'classes_unmarked_today': classes_unmarked_today,
+        'attendance_entry_pct': attendance_entry_pct,
         'week_attendance_pct': week_attendance_pct,
         'total_invoiced': total_invoiced,
         'total_collected': total_collected,
+        'outstanding_balance': outstanding_balance,
         'collection_pct': collection_pct,
         'overdue_count': overdue_count,
+        'overdue_amount': overdue_amount,
         'at_risk': at_risk,
         'class_performance': class_performance,
         'recent_pending': recent_pending,
+        'top_performers': top_performers,
+        'announcements': announcements,
         'current_term': current_term,
+        'current_year': current_year,
         'unread_notifications': unread_notifications,
         'today': today,
     }
@@ -220,6 +260,7 @@ def teacher_dashboard(request, school, membership):
                 'assignment': a,
                 'entered': entered,
                 'total': total_students,
+                'remaining': max(total_students - entered, 0),
                 'complete': entered >= total_students and total_students > 0,
             })
 
@@ -244,12 +285,43 @@ def teacher_dashboard(request, school, membership):
         recipient=request.user, school=school, is_read=False
     ).order_by('-created_at')[:5]
 
+    classes_assigned = len(my_classes)
+    classes_marked_today = sum(1 for c in class_attendance if c['marked'])
+    classes_pending_today = max(classes_assigned - classes_marked_today, 0)
+    attendance_completion_pct = round(
+        (classes_marked_today / classes_assigned) * 100, 1
+    ) if classes_assigned else 0
+
+    total_result_slots = sum(pe['total'] for pe in pending_entry)
+    total_result_entered = sum(pe['entered'] for pe in pending_entry)
+    results_entry_pct = round(
+        (total_result_entered / total_result_slots) * 100, 1
+    ) if total_result_slots else 0
+    pending_results_total = sum(pe['remaining'] for pe in pending_entry)
+
+    best_class = None
+    weakest_class = None
+    if class_averages:
+        best_class = max(class_averages, key=lambda x: x['average'])
+        weakest_class = min(class_averages, key=lambda x: x['average'])
+
+    announcements = get_recent_announcements(school, ['teachers'], limit=4)
+
     context = {
         'role': 'teacher',
         'assignments': assignments,
         'class_attendance': class_attendance,
+        'classes_assigned': classes_assigned,
+        'classes_marked_today': classes_marked_today,
+        'classes_pending_today': classes_pending_today,
+        'attendance_completion_pct': attendance_completion_pct,
         'pending_entry': pending_entry,
+        'pending_results_total': pending_results_total,
+        'results_entry_pct': results_entry_pct,
         'class_averages': class_averages,
+        'best_class': best_class,
+        'weakest_class': weakest_class,
+        'announcements': announcements,
         'current_term': current_term,
         'unread_notifications': unread_notifications,
         'today': today,
@@ -259,11 +331,15 @@ def teacher_dashboard(request, school, membership):
 
 def parent_dashboard(request, school, membership):
     today = date.today()
+    current_term = Term.objects.filter(academic_year__school=school, is_current=True).first()
     children = Student.objects.filter(
         school=school, parent_email=request.user.email, is_active=True
     ).select_related('user', 'current_class')
 
     children_data = []
+    total_fee_balance = 0
+    low_attendance_count = 0
+    outstanding_fee_children = 0
     for child in children:
         # Attendance this month
         month_start = today.replace(day=1)
@@ -273,9 +349,10 @@ def parent_dashboard(request, school, membership):
         att_total = records.count()
         att_present = records.filter(status='present').count()
         att_pct = round((att_present / att_total) * 100, 1) if att_total > 0 else None
+        if att_pct is not None and att_pct < 80:
+            low_attendance_count += 1
 
         # Latest term results
-        current_term = Term.objects.filter(academic_year__school=school, is_current=True).first()
         latest_summary = TermSummary.objects.filter(student=child).select_related('term').order_by('-term__term_number').first()
         latest_results = []
         if current_term:
@@ -284,10 +361,22 @@ def parent_dashboard(request, school, membership):
             ).select_related('subject').order_by('subject__name')
 
         # Fee balance
-        invoices = FeeInvoice.objects.filter(student=child)
+        invoices = FeeInvoice.objects.filter(student=child, school=school)
         total_owed = invoices.aggregate(t=Sum('amount'))['t'] or 0
         total_paid_amt = invoices.aggregate(t=Sum('amount_paid'))['t'] or 0
         balance = total_owed - total_paid_amt
+        overdue_invoices = invoices.filter(
+            status__in=['unpaid', 'partial', 'overdue'], due_date__lt=today
+        ).count()
+        if balance > 0:
+            outstanding_fee_children += 1
+        total_fee_balance += balance
+
+        best_result = None
+        weak_result = None
+        if latest_results:
+            best_result = max(latest_results, key=lambda r: r.total_score)
+            weak_result = min(latest_results, key=lambda r: r.total_score)
 
         children_data.append({
             'student': child,
@@ -296,17 +385,30 @@ def parent_dashboard(request, school, membership):
             'att_total': att_total,
             'latest_summary': latest_summary,
             'latest_results': latest_results,
+            'best_result': best_result,
+            'weak_result': weak_result,
+            'results_count': len(latest_results),
             'fee_balance': balance,
+            'overdue_invoices': overdue_invoices,
             'current_term': current_term,
         })
 
     unread_notifications = Notification.objects.filter(
         recipient=request.user, school=school, is_read=False
     ).order_by('-created_at')[:5]
+    announcements = get_recent_announcements(school, ['parents'], limit=4)
+
+    children_count = len(children_data)
 
     context = {
         'role': 'parent',
         'children_data': children_data,
+        'children_count': children_count,
+        'low_attendance_count': low_attendance_count,
+        'outstanding_fee_children': outstanding_fee_children,
+        'total_fee_balance': total_fee_balance,
+        'announcements': announcements,
+        'current_term': current_term,
         'unread_notifications': unread_notifications,
         'today': today,
     }
@@ -325,6 +427,10 @@ def student_dashboard(request, school, membership):
     # Attendance this term
     term_records = []
     att_pct = None
+    att_total = 0
+    att_present = 0
+    att_absent = 0
+    att_late = 0
     if current_term:
         term_records = AttendanceRecord.objects.filter(
             student=student,
@@ -333,6 +439,8 @@ def student_dashboard(request, school, membership):
         )
         att_total = term_records.count()
         att_present = term_records.filter(status='present').count()
+        att_absent = term_records.filter(status='absent').count()
+        att_late = term_records.filter(status='late').count()
         att_pct = round((att_present / att_total) * 100, 1) if att_total > 0 else None
 
     # Results
@@ -343,24 +451,58 @@ def student_dashboard(request, school, membership):
             student=student, term=current_term, status__in=['approved', 'locked']
         ).select_related('subject').order_by('subject__name')
 
+    subject_count = len(current_results)
+    pass_count = sum(1 for r in current_results if r.total_score >= 50)
+    fail_count = max(subject_count - pass_count, 0)
+    best_subject = max(current_results, key=lambda r: r.total_score) if current_results else None
+    weak_subject = min(current_results, key=lambda r: r.total_score) if current_results else None
+    current_average = round(
+        sum(r.total_score for r in current_results) / subject_count, 1
+    ) if subject_count else None
+
+    trend_delta = None
+    latest_summary = term_summaries[0] if term_summaries else None
+    previous_summary = term_summaries[1] if term_summaries and len(term_summaries) > 1 else None
+    if latest_summary and previous_summary:
+        trend_delta = round(latest_summary.average - previous_summary.average, 1)
+
     # Fee balance
     invoices = FeeInvoice.objects.filter(student=student)
     total_owed = invoices.aggregate(t=Sum('amount'))['t'] or 0
     total_paid_amt = invoices.aggregate(t=Sum('amount_paid'))['t'] or 0
     fee_balance = total_owed - total_paid_amt
+    overdue_invoices = invoices.filter(
+        status__in=['unpaid', 'partial', 'overdue'], due_date__lt=today
+    ).count()
 
     unread_notifications = Notification.objects.filter(
         recipient=request.user, school=school, is_read=False
     ).order_by('-created_at')[:5]
+    announcements = get_recent_announcements(school, ['students'], limit=4)
 
     context = {
         'role': 'student',
         'student': student,
         'current_term': current_term,
         'current_results': current_results,
+        'subject_count': subject_count,
+        'pass_count': pass_count,
+        'fail_count': fail_count,
+        'best_subject': best_subject,
+        'weak_subject': weak_subject,
+        'current_average': current_average,
+        'latest_summary': latest_summary,
+        'previous_summary': previous_summary,
+        'trend_delta': trend_delta,
         'term_summaries': term_summaries,
         'att_pct': att_pct,
+        'att_total': att_total,
+        'att_present': att_present,
+        'att_absent': att_absent,
+        'att_late': att_late,
         'fee_balance': fee_balance,
+        'overdue_invoices': overdue_invoices,
+        'announcements': announcements,
         'unread_notifications': unread_notifications,
         'today': today,
     }

@@ -1,182 +1,323 @@
 {% extends "base_dashboard.html" %}
 {% block title %}Headmaster Dashboard{% endblock %}
 {% block page_title %}Headmaster Dashboard{% endblock %}
+{% block extra_css %}
+<style>
+  .headmaster-dashboard .hero {
+    background: linear-gradient(125deg, #111827 0%, #1f2937 52%, #374151 100%);
+    color: #f9fafb;
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid rgba(156, 163, 175, 0.35);
+    box-shadow: 0 10px 28px rgba(17, 24, 39, 0.22);
+  }
+  .headmaster-dashboard .hero h5 {
+    margin: 0;
+    font-weight: 700;
+  }
+  .headmaster-dashboard .hero small {
+    color: #d1d5db;
+  }
+  .headmaster-dashboard .tile {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    height: 100%;
+  }
+  .headmaster-dashboard .tile .label {
+    color: #64748b;
+    font-size: 0.76rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  .headmaster-dashboard .tile .value {
+    font-size: 1.55rem;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .headmaster-dashboard .dashboard-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+  }
+  .headmaster-dashboard .dashboard-card .card-header {
+    font-size: 0.88rem;
+    color: #0f172a;
+  }
+  .headmaster-dashboard .soft-table tbody tr:hover {
+    background: #f8fafc;
+  }
+  .headmaster-dashboard .mini-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    padding: 0.75rem;
+    text-align: center;
+    height: 100%;
+  }
+  .headmaster-dashboard .mini-box .mini-value {
+    font-weight: 800;
+    font-size: 1.05rem;
+  }
+  .headmaster-dashboard .mini-box .mini-label {
+    color: #64748b;
+    font-size: 0.72rem;
+    margin-top: 0.2rem;
+  }
+</style>
+{% endblock %}
 {% block content %}
-<div class="row g-3 mb-4">
-  <div class="col-6 col-md-3">
-    <div class="stat-card">
-      <div class="d-flex align-items-start justify-content-between">
-        <div>
-          <div class="stat-number text-primary">{{ total_students }}</div>
-          <div class="stat-label">Total Students</div>
-        </div>
-        <div class="stat-icon" style="background:#ede9fe;color:#5b21b6;"><i class="bi bi-people"></i></div>
-      </div>
+<div class="headmaster-dashboard">
+  <div class="hero mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+    <div>
+      <h5>School Leadership Dashboard</h5>
+      <small>Track academic health, finance, attendance, and urgent interventions in real time.</small>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'results:pending_approvals' %}" class="btn btn-sm btn-light">
+        <i class="bi bi-check2-square me-1"></i> Approvals
+      </a>
+      <a href="{% url 'user_management' %}" class="btn btn-sm btn-outline-light">
+        <i class="bi bi-people me-1"></i> Users
+      </a>
     </div>
   </div>
-  <div class="col-6 col-md-3">
-    <div class="stat-card">
-      <div class="d-flex align-items-start justify-content-between">
-        <div>
-          <div class="stat-number" style="color:#059669;">{{ total_teachers }}</div>
-          <div class="stat-label">Teachers</div>
-        </div>
-        <div class="stat-icon" style="background:#d1fae5;color:#065f46;"><i class="bi bi-person-badge"></i></div>
-      </div>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="stat-card">
-      <div class="d-flex align-items-start justify-content-between">
-        <div>
-          <div class="stat-number" style="color:#d97706;">{{ today_attendance_pct }}%</div>
-          <div class="stat-label">Attendance Today</div>
-          <div class="stat-change text-muted">{{ today_present }} present, {{ today_absent }} absent</div>
-        </div>
-        <div class="stat-icon" style="background:#fef9c3;color:#854d0e;"><i class="bi bi-calendar-check"></i></div>
-      </div>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="stat-card">
-      <div class="d-flex align-items-start justify-content-between">
-        <div>
-          <div class="stat-number" style="color:#dc2626;">{{ pending_approvals }}</div>
-          <div class="stat-label">Pending Approvals</div>
-        </div>
-        <div class="stat-icon" style="background:#fee2e2;color:#991b1b;"><i class="bi bi-clock-history"></i></div>
-      </div>
-      {% if pending_approvals > 0 %}
-      <a href="{% url 'results:pending_approvals' %}" class="btn btn-sm btn-danger w-100 mt-2">Review Now</a>
-      {% endif %}
-    </div>
-  </div>
-</div>
 
-<div class="row g-3 mb-4">
-  <div class="col-md-4">
-    <div class="stat-card">
-      <div class="stat-label mb-1">Fee Collection</div>
-      <div class="stat-number text-success">{{ collection_pct }}%</div>
-      <div class="progress mt-2" style="height:6px;">
-        <div class="progress-bar bg-success" style="width:{{ collection_pct }}%"></div>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="tile">
+        <div class="label">Students</div>
+        <div class="value text-primary">{{ total_students }}</div>
       </div>
-      <div class="d-flex justify-content-between mt-1">
-        <small class="text-muted">Collected: ${{ total_collected|floatformat:2 }}</small>
-        <small class="text-muted">Total: ${{ total_invoiced|floatformat:2 }}</small>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="tile">
+        <div class="label">Teachers</div>
+        <div class="value text-success">{{ total_teachers }}</div>
       </div>
-      {% if overdue_count > 0 %}<div class="mt-2"><span class="badge bg-danger">{{ overdue_count }} overdue</span></div>{% endif %}
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="tile">
+        <div class="label">Attendance Today</div>
+        <div class="value {% if today_attendance_pct >= 80 %}text-success{% elif today_attendance_pct >= 60 %}text-warning{% else %}text-danger{% endif %}">
+          {{ today_attendance_pct }}%
+        </div>
+        <small class="text-muted">{{ today_present }} present, {{ today_absent }} absent</small>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="tile">
+        <div class="label">Pending Result Approvals</div>
+        <div class="value {% if pending_approvals > 0 %}text-danger{% else %}text-success{% endif %}">{{ pending_approvals }}</div>
+      </div>
     </div>
   </div>
-  <div class="col-md-4">
-    <div class="stat-card">
-      <div class="stat-label mb-1">This Week Attendance</div>
-      <div class="stat-number" style="color:#2563eb;">{{ week_attendance_pct }}%</div>
-      <div class="progress mt-2" style="height:6px;">
-        <div class="progress-bar" style="width:{{ week_attendance_pct }}%;background:var(--primary);"></div>
-      </div>
-      <small class="text-muted">7-day rolling average</small>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="stat-card">
-      <div class="stat-label mb-1">Classes</div>
-      <div class="stat-number text-primary">{{ total_classes }}</div>
-      {% if current_term %}<small class="text-muted">Current term: {{ current_term.name }}</small>{% endif %}
-    </div>
-  </div>
-</div>
 
-<div class="row g-3">
-  {% if at_risk %}
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-header d-flex align-items-center gap-2">
-        <i class="bi bi-exclamation-triangle text-warning"></i> At-Risk Students
-        <span class="badge bg-warning text-dark ms-auto">{{ at_risk|length }}</span>
+  <div class="row g-3 mb-4">
+    <div class="col-lg-4">
+      <div class="card dashboard-card h-100">
+        <div class="card-header"><i class="bi bi-wallet2 me-2"></i>Finance Health</div>
+        <div class="card-body">
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="mini-box">
+                <div class="mini-value text-success">${{ total_collected|floatformat:2 }}</div>
+                <div class="mini-label">Collected</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="mini-box">
+                <div class="mini-value text-danger">${{ outstanding_balance|floatformat:2 }}</div>
+                <div class="mini-label">Outstanding</div>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between small text-muted mb-1">
+            <span>Collection</span>
+            <span>{{ collection_pct }}%</span>
+          </div>
+          <div class="progress mb-2" style="height:7px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width:{{ collection_pct }}%"></div>
+          </div>
+          <div class="small">
+            {% if overdue_count > 0 %}
+            <span class="badge bg-danger">{{ overdue_count }} overdue</span>
+            <span class="text-muted ms-2">${{ overdue_amount|floatformat:2 }} at risk</span>
+            {% else %}
+            <span class="text-success">No overdue invoices</span>
+            {% endif %}
+          </div>
+        </div>
       </div>
-      <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-          <thead><tr><th>Student</th><th>Class</th><th>Attendance</th></tr></thead>
-          <tbody>
-            {% for student, pct in at_risk %}
-            <tr>
-              <td><a href="{% url 'academics:student_detail' student.pk %}">{{ student.user.get_full_name }}</a></td>
-              <td>{{ student.current_class }}</td>
-              <td><span class="badge {% if pct < 60 %}bg-danger{% else %}bg-warning text-dark{% endif %}">{{ pct }}%</span></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    </div>
+    <div class="col-lg-4">
+      <div class="card dashboard-card h-100">
+        <div class="card-header"><i class="bi bi-calendar-check me-2"></i>Attendance Operations</div>
+        <div class="card-body">
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="mini-box">
+                <div class="mini-value text-success">{{ classes_marked_today }}</div>
+                <div class="mini-label">Classes Marked</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="mini-box">
+                <div class="mini-value text-warning">{{ classes_unmarked_today }}</div>
+                <div class="mini-label">Unmarked</div>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between small text-muted mb-1">
+            <span>Entry Completion</span>
+            <span>{{ attendance_entry_pct }}%</span>
+          </div>
+          <div class="progress mb-2" style="height:7px;">
+            <div class="progress-bar" role="progressbar" style="width:{{ attendance_entry_pct }}%;background:var(--primary);"></div>
+          </div>
+          <small class="text-muted">Week average attendance: {{ week_attendance_pct }}%</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card dashboard-card h-100">
+        <div class="card-header"><i class="bi bi-lightning-charge me-2"></i>Quick Actions</div>
+        <div class="card-body d-grid gap-2">
+          <a href="{% url 'results:pending_approvals' %}" class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-check2-all me-1"></i> Review Pending Results
+          </a>
+          <a href="{% url 'attendance:report' %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-bar-chart me-1"></i> Attendance Report
+          </a>
+          <a href="{% url 'fees:home' %}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-cash-coin me-1"></i> Fee Overview
+          </a>
+          <a href="{% url 'notifications:create_announcement' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-megaphone me-1"></i> Create Announcement
+          </a>
+        </div>
       </div>
     </div>
   </div>
-  {% endif %}
 
-  {% if class_performance %}
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Class Performance</div>
-      <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-          <thead><tr><th>Class</th><th>Average</th><th></th></tr></thead>
-          <tbody>
-            {% for cp in class_performance %}
-            <tr>
-              <td>{{ cp.class }}</td>
-              <td><strong>{{ cp.average }}%</strong></td>
-              <td>
-                <div class="progress" style="height:6px;min-width:80px;">
-                  <div class="progress-bar {% if cp.average >= 70 %}bg-success{% elif cp.average >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width:{{ cp.average }}%"></div>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  <div class="row g-3">
+    {% if at_risk %}
+    <div class="col-xl-6">
+      <div class="card dashboard-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-exclamation-triangle me-2 text-warning"></i>At-Risk Students</span>
+          <span class="badge bg-warning text-dark">{{ at_risk|length }}</span>
+        </div>
+        <div class="card-body p-0">
+          <table class="table soft-table table-hover mb-0">
+            <thead><tr><th>Student</th><th>Class</th><th>Attendance</th></tr></thead>
+            <tbody>
+              {% for student, pct in at_risk %}
+              <tr>
+                <td><a href="{% url 'academics:student_detail' student.pk %}">{{ student.user.get_full_name }}</a></td>
+                <td>{{ student.current_class }}</td>
+                <td><span class="badge {% if pct < 60 %}bg-danger{% else %}bg-warning text-dark{% endif %}">{{ pct }}%</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
-  {% endif %}
+    {% endif %}
 
-  <div class="col-md-4">
-    <div class="card">
-      <div class="card-header">Quick Actions</div>
-      <div class="card-body d-grid gap-2">
-        <a href="{% url 'user_management' %}" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-people me-1"></i>Manage Staff/Users
-        </a>
-        <a href="{% url 'school_settings' %}" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-gear me-1"></i>School Settings
-        </a>
-        <a href="{% url 'academics:student_add' %}" class="btn btn-outline-primary btn-sm">
-          <i class="bi bi-person-plus me-1"></i>Add Student
-        </a>
+    {% if top_performers %}
+    <div class="col-xl-6">
+      <div class="card dashboard-card">
+        <div class="card-header"><i class="bi bi-trophy me-2"></i>Top Performers {% if current_term %}- {{ current_term.name }}{% endif %}</div>
+        <div class="card-body p-0">
+          <table class="table soft-table table-hover mb-0">
+            <thead><tr><th>Student</th><th>Class</th><th>Average</th></tr></thead>
+            <tbody>
+              {% for summary in top_performers %}
+              <tr>
+                <td>{{ summary.student.user.get_full_name }}</td>
+                <td>{{ summary.class_section }}</td>
+                <td><span class="fw-semibold text-success">{{ summary.average|floatformat:1 }}%</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
-  {% if recent_pending %}
-  <div class="col-md-8">
-    <div class="card">
-      <div class="card-header d-flex align-items-center justify-content-between">
-        <span><i class="bi bi-clock me-2"></i>Recent Pending Results</span>
-        <a href="{% url 'results:pending_approvals' %}" class="btn btn-sm btn-primary">View All</a>
+    {% endif %}
+
+    {% if class_performance %}
+    <div class="col-xl-6">
+      <div class="card dashboard-card">
+        <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Class Performance</div>
+        <div class="card-body p-0">
+          <table class="table soft-table table-hover mb-0">
+            <thead><tr><th>Class</th><th>Average</th><th></th></tr></thead>
+            <tbody>
+              {% for cp in class_performance %}
+              <tr>
+                <td>{{ cp.class }}</td>
+                <td><strong>{{ cp.average }}%</strong></td>
+                <td>
+                  <div class="progress" style="height:6px;min-width:100px;">
+                    <div class="progress-bar {% if cp.average >= 70 %}bg-success{% elif cp.average >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width:{{ cp.average }}%"></div>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-          <thead><tr><th>Student</th><th>Subject</th><th>Term</th><th>Score</th><th>Grade</th></tr></thead>
-          <tbody>
-            {% for r in recent_pending %}
-            <tr>
-              <td>{{ r.student.user.get_full_name }}</td>
-              <td>{{ r.subject.name }}</td>
-              <td>{{ r.term.name }}</td>
-              <td>{{ r.total_score|floatformat:1 }}</td>
-              <td><span class="badge bg-secondary">{{ r.grade|default:"-" }}</span></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    </div>
+    {% endif %}
+
+    {% if recent_pending %}
+    <div class="col-xl-6">
+      <div class="card dashboard-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-clock-history me-2"></i>Recent Pending Results</span>
+          <a href="{% url 'results:pending_approvals' %}" class="btn btn-sm btn-outline-primary py-0 px-2">View All</a>
+        </div>
+        <div class="card-body p-0">
+          <table class="table soft-table table-hover mb-0">
+            <thead><tr><th>Student</th><th>Subject</th><th>Score</th><th>Grade</th></tr></thead>
+            <tbody>
+              {% for r in recent_pending %}
+              <tr>
+                <td>{{ r.student.user.get_full_name }}</td>
+                <td>{{ r.subject.name }}</td>
+                <td>{{ r.total_score|floatformat:1 }}</td>
+                <td>{{ r.grade|default:"-" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if announcements %}
+  <div class="card dashboard-card mt-4">
+    <div class="card-header"><i class="bi bi-megaphone me-2"></i>Active Announcements</div>
+    <div class="card-body">
+      <div class="row g-3">
+        {% for item in announcements %}
+        <div class="col-md-6 col-xl-4">
+          <div class="border rounded-3 p-3 h-100 bg-light">
+            <div class="fw-semibold mb-1">{{ item.title }}</div>
+            <small class="text-muted d-block mb-2">{{ item.created_at|date:"d M Y" }}</small>
+            <div style="font-size:.84rem;color:#334155;">{{ item.content|truncatechars:130 }}</div>
+          </div>
+        </div>
+        {% endfor %}
       </div>
     </div>
   </div>

@@ -1,75 +1,252 @@
 {% extends "base_dashboard.html" %}
 {% block title %}Parent Dashboard{% endblock %}
 {% block page_title %}Parent Dashboard{% endblock %}
+{% block extra_css %}
+<style>
+  .parent-dashboard .hero {
+    background: linear-gradient(130deg, #0f172a 0%, #1f2937 60%, #334155 100%);
+    color: #f8fafc;
+    border-radius: 14px;
+    padding: 1.05rem 1.2rem;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+  }
+  .parent-dashboard .hero h5 {
+    margin: 0;
+    font-weight: 700;
+  }
+  .parent-dashboard .hero small {
+    color: #cbd5e1;
+  }
+  .parent-dashboard .metric-tile {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.95rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    height: 100%;
+  }
+  .parent-dashboard .metric-tile .label {
+    color: #64748b;
+    font-size: 0.76rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+  }
+  .parent-dashboard .metric-tile .value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .parent-dashboard .child-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    height: 100%;
+    overflow: hidden;
+  }
+  .parent-dashboard .child-head {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.75rem 0.9rem;
+  }
+  .parent-dashboard .micro-stat {
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 0.6rem 0.55rem;
+    text-align: center;
+    height: 100%;
+  }
+  .parent-dashboard .micro-stat .micro-value {
+    font-weight: 800;
+    font-size: 1.05rem;
+    line-height: 1.1;
+  }
+  .parent-dashboard .micro-stat .micro-label {
+    color: #64748b;
+    font-size: 0.71rem;
+    margin-top: 0.15rem;
+  }
+  .parent-dashboard .dashboard-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+  }
+</style>
+{% endblock %}
 {% block content %}
-{% for cd in children_data %}
-<div class="card mb-4">
-  <div class="card-header d-flex align-items-center justify-content-between">
-    <span><i class="bi bi-person-circle me-2"></i>{{ cd.student.user.get_full_name }}</span>
-    <span class="text-muted" style="font-size:.82rem;">{{ cd.student.current_class }} &middot; Adm: {{ cd.student.admission_number }}</span>
+<div class="parent-dashboard">
+  <div class="hero mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+    <div>
+      <h5>Parent Dashboard</h5>
+      <small>Monitor your children's attendance, results, and school fees in one place.</small>
+    </div>
+    <a href="{% url 'notifications:announcements' %}" class="btn btn-sm btn-light">
+      <i class="bi bi-megaphone me-1"></i> School Announcements
+    </a>
   </div>
-  <div class="card-body">
-    <div class="row g-3 mb-3">
-      <div class="col-md-4">
-        <div class="stat-card text-center">
-          <div class="stat-label mb-1">Attendance This Month</div>
-          {% if cd.att_pct is not None %}
-            <div class="stat-number {% if cd.att_pct >= 80 %}text-success{% elif cd.att_pct >= 60 %}text-warning{% else %}text-danger{% endif %}">{{ cd.att_pct }}%</div>
-            <small class="text-muted">{{ cd.att_present }} / {{ cd.att_total }} days</small>
-          {% else %}
-            <div class="text-muted">No data</div>
-          {% endif %}
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="metric-tile">
+        <div class="label">Children Linked</div>
+        <div class="value text-primary">{{ children_count }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="metric-tile">
+        <div class="label">Total Fee Balance</div>
+        <div class="value {% if total_fee_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+          ${{ total_fee_balance|floatformat:2 }}
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="stat-card text-center">
-          <div class="stat-label mb-1">Fee Balance</div>
-          <div class="stat-number {% if cd.fee_balance > 0 %}text-danger{% else %}text-success{% endif %}">
-            ${{ cd.fee_balance|floatformat:2 }}
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="metric-tile">
+        <div class="label">Children With Low Attendance</div>
+        <div class="value {% if low_attendance_count > 0 %}text-warning{% else %}text-success{% endif %}">
+          {{ low_attendance_count }}
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="metric-tile">
+        <div class="label">Children With Outstanding Fees</div>
+        <div class="value {% if outstanding_fee_children > 0 %}text-danger{% else %}text-success{% endif %}">
+          {{ outstanding_fee_children }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if children_data %}
+  <div class="row g-3">
+    {% for cd in children_data %}
+    <div class="col-xl-6">
+      <div class="child-card">
+        <div class="child-head d-flex justify-content-between align-items-start">
+          <div>
+            <div class="fw-semibold">{{ cd.student.user.get_full_name }}</div>
+            <small class="text-muted">Adm: {{ cd.student.admission_number }}</small>
           </div>
-          <small class="text-muted">{% if cd.fee_balance > 0 %}Outstanding{% else %}All paid{% endif %}</small>
+          <small class="text-muted">{{ cd.student.current_class|default:"No class set" }}</small>
         </div>
-      </div>
-      <div class="col-md-4">
-        <div class="stat-card text-center">
-          <div class="stat-label mb-1">Last Term Position</div>
-          {% if cd.latest_summary %}
-            <div class="stat-number text-primary">{{ cd.latest_summary.class_position|default:"-" }}</div>
-            <small class="text-muted">{{ cd.latest_summary.term.name }} &mdash; {{ cd.latest_summary.average|floatformat:1 }}%</small>
-          {% else %}
-            <div class="text-muted">No results yet</div>
+        <div class="p-3">
+          <div class="row g-2 mb-3">
+            <div class="col-4">
+              <div class="micro-stat">
+                {% if cd.att_pct is not None %}
+                <div class="micro-value {% if cd.att_pct >= 80 %}text-success{% elif cd.att_pct >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                  {{ cd.att_pct }}%
+                </div>
+                {% else %}
+                <div class="micro-value text-muted">-</div>
+                {% endif %}
+                <div class="micro-label">Attendance</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="micro-stat">
+                <div class="micro-value {% if cd.fee_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                  ${{ cd.fee_balance|floatformat:2 }}
+                </div>
+                <div class="micro-label">Fee Balance</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="micro-stat">
+                {% if cd.latest_summary %}
+                <div class="micro-value text-primary">{{ cd.latest_summary.average|floatformat:1 }}%</div>
+                {% else %}
+                <div class="micro-value text-muted">-</div>
+                {% endif %}
+                <div class="micro-label">Last Average</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            {% if cd.best_result %}
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">Best Subject</small>
+              <small class="fw-semibold text-success">{{ cd.best_result.subject.name }} ({{ cd.best_result.total_score|floatformat:1 }}%)</small>
+            </div>
+            {% endif %}
+            {% if cd.weak_result %}
+            <div class="d-flex justify-content-between align-items-center mt-1">
+              <small class="text-muted">Needs Support</small>
+              <small class="fw-semibold {% if cd.weak_result.total_score < 50 %}text-danger{% else %}text-warning{% endif %}">
+                {{ cd.weak_result.subject.name }} ({{ cd.weak_result.total_score|floatformat:1 }}%)
+              </small>
+            </div>
+            {% endif %}
+            {% if cd.overdue_invoices > 0 %}
+            <div class="mt-2">
+              <span class="badge bg-danger">{{ cd.overdue_invoices }} overdue invoice{{ cd.overdue_invoices|pluralize }}</span>
+            </div>
+            {% endif %}
+          </div>
+
+          {% if cd.latest_results %}
+          <div class="mb-3">
+            <small class="text-muted d-block mb-1">{% if cd.current_term %}{{ cd.current_term.name }}{% endif %} Result Snapshot</small>
+            <div class="table-responsive">
+              <table class="table table-sm mb-0">
+                <thead>
+                  <tr><th>Subject</th><th>Total</th><th>Grade</th></tr>
+                </thead>
+                <tbody>
+                  {% for r in cd.latest_results|slice:":4" %}
+                  <tr>
+                    <td>{{ r.subject.name }}</td>
+                    <td>{{ r.total_score|floatformat:1 }}%</td>
+                    <td>{{ r.grade|default:"-" }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
           {% endif %}
+
+          <div class="d-flex gap-2">
+            <a href="{% url 'results:student_results' cd.student.pk %}" class="btn btn-sm btn-outline-secondary flex-fill">
+              <i class="bi bi-award me-1"></i> Full Results
+            </a>
+            <a href="{% url 'fees:student_statement' cd.student.pk %}" class="btn btn-sm btn-outline-primary flex-fill">
+              <i class="bi bi-receipt me-1"></i> Fee Statement
+            </a>
+          </div>
         </div>
       </div>
     </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-info">
+    No children are linked to this account yet. Contact the school admin to connect your child record.
+  </div>
+  {% endif %}
 
-    {% if cd.latest_results %}
-    <h6 class="fw-semibold mb-2">{% if cd.current_term %}{{ cd.current_term.name }}{% endif %} Results</h6>
-    <div class="table-responsive">
-      <table class="table table-sm table-hover mb-0">
-        <thead><tr><th>Subject</th><th>CA</th><th>Exam</th><th>Total</th><th>Grade</th></tr></thead>
-        <tbody>
-          {% for r in cd.latest_results %}
-          <tr>
-            <td>{{ r.subject.name }}</td>
-            <td>{{ r.continuous_assessment|floatformat:1 }}</td>
-            <td>{{ r.exam_score|floatformat:1 }}</td>
-            <td><strong>{{ r.total_score|floatformat:1 }}</strong></td>
-            <td><span class="badge bg-secondary">{{ r.grade|default:"-" }}</span></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% endif %}
-
-    <div class="d-flex gap-2 mt-3">
-      <a href="{% url 'fees:student_statement' cd.student.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-receipt me-1"></i>Fee Statement</a>
-      <a href="{% url 'results:student_results' cd.student.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-award me-1"></i>Full Results</a>
+  {% if announcements %}
+  <div class="card dashboard-card mt-4">
+    <div class="card-header"><i class="bi bi-megaphone me-2"></i>Recent Parent Announcements</div>
+    <div class="card-body">
+      <div class="row g-3">
+        {% for item in announcements %}
+        <div class="col-md-6">
+          <div class="border rounded-3 p-3 h-100 bg-light">
+            <div class="fw-semibold mb-1">{{ item.title }}</div>
+            <small class="text-muted d-block mb-2">{{ item.created_at|date:"d M Y" }}</small>
+            <div style="font-size:.84rem;color:#334155;">{{ item.content|truncatechars:150 }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
     </div>
   </div>
+  {% endif %}
 </div>
-{% empty %}
-<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No children linked to your account. Contact the school admin to link your child.</div>
-{% endfor %}
 {% endblock %}
