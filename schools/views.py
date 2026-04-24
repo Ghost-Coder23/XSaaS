@@ -13,8 +13,11 @@ from django.urls import reverse_lazy
 from django import forms
 from django.db import transaction
 from django.db.models import Sum
+from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
+from django.views.decorators.cache import cache_control
+from django.views.decorators.http import require_GET
 
 from .models import School, SchoolUser
 from .forms import SchoolRegistrationForm, SchoolBrandingForm, AddSchoolUserForm, ParentRegistrationForm, SchoolUserEditForm
@@ -507,3 +510,31 @@ class ParentRegistrationView(CreateView):
         if user:
             login(self.request, user)
         return redirect('/school/dashboard/')
+
+
+@require_GET
+@cache_control(max_age=0, no_cache=True, no_store=True, must_revalidate=True)
+def service_worker_cleanup(_request):
+    """
+    Legacy SW cleanup endpoint.
+    Keeps /sw.js available so browsers with older PWA registrations can fetch
+    this script, clear old caches, and unregister themselves.
+    """
+    content = """
+self.addEventListener('install', event => {
+  event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.map(key => caches.delete(key))))
+      .then(() => self.registration.unregister())
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then(clients => {
+        clients.forEach(client => client.navigate(client.url));
+      })
+  );
+});
+"""
+    return HttpResponse(content, content_type='application/javascript')
