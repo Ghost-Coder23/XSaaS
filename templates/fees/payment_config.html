@@ -16,29 +16,6 @@
             <label class="form-check-label" for="{{ form.accept_cash.id_for_label }}">Accept Cash Payments (manually recorded)</label>
           </div>
           <hr>
-          <h6 class="fw-semibold mb-3 text-muted">Paynow</h6>
-          <div class="mb-2 form-check">
-            {{ form.accept_paynow }}
-            <label class="form-check-label" for="{{ form.accept_paynow.id_for_label }}">Enable Paynow</label>
-          </div>
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="font-size:.82rem;">Integration ID</label>
-            {{ form.paynow_integration_id }}
-          </div>
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="font-size:.82rem;">Integration Key</label>
-            {{ form.paynow_integration_key }}
-          </div>
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="font-size:.82rem;">Result URL</label>
-            {{ form.paynow_result_url }}
-            <div class="text-muted" style="font-size:.75rem;">e.g. https://yourschool.educore.com/fees/paynow/result/</div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold" style="font-size:.82rem;">Return URL</label>
-            {{ form.paynow_return_url }}
-          </div>
-          <hr>
           <h6 class="fw-semibold mb-3 text-muted">EcoCash</h6>
           <div class="mb-2 form-check">
             {{ form.accept_ecocash }}
