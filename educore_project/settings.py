@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-change-this-in-production-use-env-var')
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*'] if DEBUG else ['.educore.com', 'www.educore.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*'] if DEBUG else ['.educore.com', 'www.educore.com', 'localhost', '127.0.0.1','https://techflex.pythonanywhere.com/']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
