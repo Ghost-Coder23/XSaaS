@@ -14,6 +14,7 @@ from results.models import StudentResult, TermSummary, Term
 from attendance.models import AttendanceSession, AttendanceRecord
 from fees.models import FeeInvoice, FeePayment
 from notifications.models import Notification, Announcement
+from academics.models import Subject
 
 
 def get_recent_announcements(school, audiences, limit=5):
@@ -135,6 +136,12 @@ def headmaster_dashboard(request, school, membership):
         school, ['teachers', 'parents', 'students'], limit=5
     )
 
+    # Get teachers, students, subjects, class sections for management
+    teachers = SchoolUser.objects.filter(school=school, role='teacher', is_active=True).select_related('user')
+    students = Student.objects.filter(school=school, is_active=True).select_related('user')[:10]
+    subjects = Subject.objects.filter(school=school)
+    class_sections = ClassSection.objects.filter(school=school).select_related('class_level', 'academic_year')
+
     context = {
         'role': 'headmaster',
         'total_students': total_students,
@@ -158,6 +165,10 @@ def headmaster_dashboard(request, school, membership):
         'class_performance': class_performance,
         'recent_pending': recent_pending,
         'top_performers': top_performers,
+        'teachers': teachers,
+        'students': students,
+        'subjects': subjects,
+        'class_sections': class_sections,
         'announcements': announcements,
         'current_term': current_term,
         'current_year': current_year,

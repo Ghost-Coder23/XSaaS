@@ -2,7 +2,7 @@
 Academics views - Classes, subjects, students management
 """
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, CreateView, UpdateView, DetailView
+from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -325,3 +325,123 @@ class TeacherAssignmentCreateView(CreateView):
     def form_valid(self, form):
         messages.success(self.request, 'Teacher assigned successfully!')
         return super().form_valid(form)
+
+
+# Student Edit/Delete Views
+@method_decorator(login_required, name='dispatch')
+class StudentUpdateView(UpdateView):
+    model = Student
+    form_class = StudentForm
+    template_name = 'academics/student_form.html'
+    success_url = reverse_lazy('academics:student_list')
+
+    def get_queryset(self):
+        return Student.objects.filter(school=self.request.school)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Student updated successfully!')
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class StudentDeleteView(DeleteView):
+    model = Student
+    template_name = 'academics/student_confirm_delete.html'
+    success_url = reverse_lazy('academics:student_list')
+
+    def get_queryset(self):
+        return Student.objects.filter(school=self.request.school)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Student deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+
+# Subject Edit/Delete Views
+@method_decorator(login_required, name='dispatch')
+class SubjectUpdateView(UpdateView):
+    model = Subject
+    form_class = SubjectForm
+    template_name = 'academics/subject_form.html'
+    success_url = reverse_lazy('academics:subject_list')
+
+    def get_queryset(self):
+        return Subject.objects.filter(school=self.request.school)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Subject updated successfully!')
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class SubjectDeleteView(DeleteView):
+    model = Subject
+    template_name = 'academics/subject_confirm_delete.html'
+    success_url = reverse_lazy('academics:subject_list')
+
+    def get_queryset(self):
+        return Subject.objects.filter(school=self.request.school)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Subject deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+
+# Class Section Edit/Delete Views
+@method_decorator(login_required, name='dispatch')
+class ClassSectionUpdateView(UpdateView):
+    model = ClassSection
+    form_class = ClassSectionForm
+    template_name = 'academics/class_section_form.html'
+    success_url = reverse_lazy('academics:class_section_list')
+
+    def get_queryset(self):
+        return ClassSection.objects.filter(school=self.request.school)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Class section updated successfully!')
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class ClassSectionDeleteView(DeleteView):
+    model = ClassSection
+    template_name = 'academics/class_section_confirm_delete.html'
+    success_url = reverse_lazy('academics:class_section_list')
+
+    def get_queryset(self):
+        return ClassSection.objects.filter(school=self.request.school)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Class section deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+
+# Teacher Edit/Delete Views
+@method_decorator(login_required, name='dispatch')
+class TeacherUpdateView(UpdateView):
+    model = SchoolUser
+    form_class = TeacherForm
+    template_name = 'academics/teacher_form.html'
+    success_url = reverse_lazy('academics:teacher_list')
+
+    def get_queryset(self):
+        return SchoolUser.objects.filter(school=self.request.school, role='teacher')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Teacher updated successfully!')
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class TeacherDeleteView(DeleteView):
+    model = SchoolUser
+    template_name = 'academics/teacher_confirm_delete.html'
+    success_url = reverse_lazy('academics:teacher_list')
+
+    def get_queryset(self):
+        return SchoolUser.objects.filter(school=self.request.school, role='teacher')
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Teacher deleted successfully!')
+        return super().delete(request, *args, **kwargs)
