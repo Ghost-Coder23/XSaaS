@@ -427,6 +427,10 @@ def parent_dashboard(request, school, membership):
     ).order_by('-created_at')[:5]
     announcements = get_recent_announcements(school, ['parents'], limit=4)
 
+    # Get payment configuration
+    from fees.models import PaymentConfig
+    payment_config = PaymentConfig.objects.filter(school=school).first()
+
     children_count = len(children_data)
 
     context = {
@@ -439,6 +443,7 @@ def parent_dashboard(request, school, membership):
         'announcements': announcements,
         'current_term': current_term,
         'unread_notifications': unread_notifications,
+        'payment_config': payment_config,
         'today': today,
     }
     return render(request, 'analytics/dashboard_parent.html', context)

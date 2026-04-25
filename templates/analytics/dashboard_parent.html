@@ -230,6 +230,45 @@
   </div>
   {% endif %}
 
+  {% if payment_config %}
+  <div class="card dashboard-card mt-4">
+    <div class="card-header"><i class="bi bi-credit-card me-2"></i>Payment Methods Available</div>
+    <div class="card-body">
+      <div class="row g-3">
+        {% if payment_config.accept_cash %}
+        <div class="col-md-4">
+          <div class="border rounded-3 p-3 h-100">
+            <div class="fw-semibold mb-2"><i class="bi bi-cash-coin text-success me-1"></i>Cash Payment</div>
+            <small class="text-muted d-block">Pay fees directly at the school office. Bring your child's admission number.</small>
+          </div>
+        </div>
+        {% endif %}
+        {% if payment_config.accept_ecocash and payment_config.ecocash_merchant_code %}
+        <div class="col-md-4">
+          <div class="border rounded-3 p-3 h-100 bg-light">
+            <div class="fw-semibold mb-2"><i class="bi bi-phone text-primary me-1"></i>EcoCash Payment</div>
+            <small class="text-muted d-block">Send payment via EcoCash to:</small>
+            <div class="fw-bold text-primary mt-2" style="font-size: 1.1rem;">{{ payment_config.ecocash_merchant_code }}</div>
+            <small class="text-muted d-block mt-2">Include your child's admission number as reference.</small>
+          </div>
+        </div>
+        {% endif %}
+        {% if payment_config.accept_bank_transfer and payment_config.bank_account_number %}
+        <div class="col-md-4">
+          <div class="border rounded-3 p-3 h-100">
+            <div class="fw-semibold mb-2"><i class="bi bi-bank text-info me-1"></i>Bank Transfer</div>
+            <small class="text-muted d-block"><strong>Bank:</strong> {{ payment_config.bank_name }}</small>
+            <small class="text-muted d-block"><strong>Account:</strong> {{ payment_config.bank_account_number }}</small>
+            {% if payment_config.bank_branch %}<small class="text-muted d-block"><strong>Branch:</strong> {{ payment_config.bank_branch }}</small>{% endif %}
+            <small class="text-muted d-block mt-2">Use your child's admission number as reference.</small>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   {% if announcements %}
   <div class="card dashboard-card mt-4">
     <div class="card-header"><i class="bi bi-megaphone me-2"></i>Recent Parent Announcements</div>
