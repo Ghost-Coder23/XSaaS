@@ -166,6 +166,8 @@ class StudentCreateView(CreateView):
         # Create user for student
         import string
         import random
+        from datetime import datetime
+        from .models import Student
         password_chars = string.ascii_letters + string.digits
         password = ''.join(random.choice(password_chars) for _ in range(12))
         user = User.objects.create_user(
@@ -184,11 +186,24 @@ class StudentCreateView(CreateView):
             is_active=True
         )
 
+        # Generate admission number: YYYY###
+        current_year = datetime.now().year
+        last_student = Student.objects.filter(
+            school=self.request.school,
+            admission_number__startswith=str(current_year)
+        ).order_by('-admission_number').first()
+        if last_student and last_student.admission_number[4:].isdigit():
+            next_seq = int(last_student.admission_number[4:]) + 1
+        else:
+            next_seq = 1
+        admission_number = f"{current_year}{next_seq:03d}"
+        form.instance.admission_number = admission_number
+
         form.instance.user = user
         form.instance.school = self.request.school
         form.instance.school_user = school_user
 
-        messages.success(self.request, f'Student {user.get_full_name()} created successfully!')
+        messages.success(self.request, f'Student {user.get_full_name()} created successfully! Admission Number: {admission_number}')
         return super().form_valid(form)
 
 

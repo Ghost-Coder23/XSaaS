@@ -52,7 +52,7 @@ class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
         fields = [
-            'admission_number', 'date_of_birth', 'gender', 'address', 'phone',
+            'date_of_birth', 'gender', 'address', 'phone',
             'current_class', 'parent_name', 'parent_phone', 'parent_email', 'photo'
         ]
         widgets = {
