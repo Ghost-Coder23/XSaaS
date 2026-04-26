@@ -161,24 +161,44 @@
           <a href="{% url 'fees:home' %}" class="btn btn-sm btn-outline-primary">Manage Fees</a>
         </div>
         <div class="card-body">
-          <div class="section-note mb-3">Collections and outstanding balances at a glance.</div>
-          <div class="row g-2">
-            <div class="col-4">
+          <div class="section-note mb-3">Collections, outstanding balances, and reconciliation status.</div>
+          <div class="row g-2 mb-3">
+            <div class="col-3">
               <div class="mini-metric">
                 <div class="mini-value text-success">${{ total_paid|floatformat:2 }}</div>
                 <div class="mini-label">Collected</div>
               </div>
             </div>
-            <div class="col-4">
+            <div class="col-3">
               <div class="mini-metric">
                 <div class="mini-value text-danger">${{ outstanding|floatformat:2 }}</div>
                 <div class="mini-label">Outstanding</div>
               </div>
             </div>
-            <div class="col-4">
+            <div class="col-3">
               <div class="mini-metric">
                 <div class="mini-value text-warning">{{ unpaid_invoices }}</div>
-                <div class="mini-label">Unpaid Invoices</div>
+                <div class="mini-label">Unpaid</div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="mini-metric">
+                <div class="mini-value text-info">{{ partial_invoices }}</div>
+                <div class="mini-label">Partial</div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="d-flex justify-content-between small text-muted mb-1">
+                <span><i class="bi bi-exclamation-triangle me-1"></i>Overdue Invoices</span>
+                <span class="{% if overdue_invoices > 0 %}text-danger fw-bold{% endif %}">{{ overdue_invoices }}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="d-flex justify-content-between small text-muted mb-1">
+                <span><i class="bi bi-hourglass-split me-1"></i>Pending Reconciliation</span>
+                <span class="{% if pending_payments_count > 0 %}text-warning fw-bold{% endif %}">{{ pending_payments_count }}</span>
               </div>
             </div>
           </div>
@@ -223,8 +243,56 @@
     </div>
   </div>
 
+  <div class="row g-3 mb-4">
+    <div class="col-12">
+      <div class="card dashboard-card">
+        <div class="card-header"><i class="bi bi-lightning-charge me-2"></i>Quick Actions</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="{% url 'academics:student_add' %}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center gap-1 py-3">
+                <i class="bi bi-person-plus fs-5"></i>
+                <span class="small">Enroll Student</span>
+              </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="{% url 'academics:teacher_add' %}" class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center gap-1 py-3">
+                <i class="bi bi-person-badge fs-5"></i>
+                <span class="small">Add Teacher</span>
+              </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="{% url 'fees:create_invoice' %}" class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center gap-1 py-3">
+                <i class="bi bi-receipt fs-5"></i>
+                <span class="small">Create Invoice</span>
+              </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="{% url 'fees:bulk_invoice' %}" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center gap-1 py-3">
+                <i class="bi bi-stack fs-5"></i>
+                <span class="small">Bulk Invoices</span>
+              </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="{% url 'fees:invoice_list' %}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center gap-1 py-3">
+                <i class="bi bi-cash-coin fs-5"></i>
+                <span class="small">Record Payment</span>
+              </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="{% url 'fees:payment_config' %}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center gap-1 py-3">
+                <i class="bi bi-gear fs-5"></i>
+                <span class="small">Payment Config</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row g-3">
-    <div class="col-lg-6">
+    <div class="col-lg-4">
       <div class="card dashboard-card">
         <div class="card-header"><i class="bi bi-building me-2"></i>Students Per Class</div>
         <div class="card-body p-0">
@@ -245,9 +313,12 @@
         </div>
       </div>
     </div>
-    <div class="col-lg-6">
+    <div class="col-lg-4">
       <div class="card dashboard-card">
-        <div class="card-header"><i class="bi bi-receipt me-2"></i>Recent Invoices</div>
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-receipt me-2"></i>Recent Invoices</span>
+          <a href="{% url 'fees:invoice_list' %}" class="btn btn-sm btn-outline-primary py-0 px-2">All</a>
+        </div>
         <div class="card-body p-0">
           <table class="table soft-table table-hover mb-0">
             <thead><tr><th>Student</th><th>Amount</th><th>Status</th></tr></thead>
@@ -260,6 +331,30 @@
               </tr>
               {% empty %}
               <tr><td colspan="3" class="text-muted text-center py-3">No invoices yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card dashboard-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-cash-stack me-2"></i>Recent Payments</span>
+          <a href="{% url 'fees:home' %}" class="btn btn-sm btn-outline-primary py-0 px-2">All</a>
+        </div>
+        <div class="card-body p-0">
+          <table class="table soft-table table-hover mb-0">
+            <thead><tr><th>Student</th><th>Amount</th><th>Method</th></tr></thead>
+            <tbody>
+              {% for pay in recent_payments %}
+              <tr>
+                <td><a href="{% url 'fees:invoice_detail' pay.invoice.pk %}">{{ pay.invoice.student.user.get_full_name }}</a></td>
+                <td>{{ pay.currency }} {{ pay.amount }}</td>
+                <td><span class="badge {% if pay.status == 'confirmed' %}bg-success{% elif pay.status == 'pending' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ pay.get_method_display }}</span></td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" class="text-muted text-center py-3">No payments yet.</td></tr>
               {% endfor %}
             </tbody>
           </table>

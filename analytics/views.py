@@ -82,7 +82,7 @@ def headmaster_dashboard(request, school, membership):
     week_total = AttendanceRecord.objects.filter(session__in=week_sessions).count()
     week_attendance_pct = round((week_present / week_total) * 100, 1) if week_total > 0 else 0
 
-    # Fee summary
+    # Fee summary (read-only overview for headmaster)
     total_invoiced = FeeInvoice.objects.filter(school=school).aggregate(t=Sum('amount'))['t'] or 0
     total_collected = FeeInvoice.objects.filter(school=school).aggregate(t=Sum('amount_paid'))['t'] or 0
     collection_pct = round((total_collected / total_invoiced) * 100, 1) if total_invoiced > 0 else 0
@@ -136,12 +136,6 @@ def headmaster_dashboard(request, school, membership):
         school, ['teachers', 'parents', 'students'], limit=5
     )
 
-    # Get teachers, students, subjects, class sections for management
-    teachers = SchoolUser.objects.filter(school=school, role='teacher', is_active=True).select_related('user')
-    students = Student.objects.filter(school=school, is_active=True).select_related('user')[:10]
-    subjects = Subject.objects.filter(school=school)
-    class_sections = ClassSection.objects.filter(school=school).select_related('class_level', 'academic_year')
-
     context = {
         'role': 'headmaster',
         'total_students': total_students,
@@ -155,20 +149,10 @@ def headmaster_dashboard(request, school, membership):
         'classes_unmarked_today': classes_unmarked_today,
         'attendance_entry_pct': attendance_entry_pct,
         'week_attendance_pct': week_attendance_pct,
-        'total_invoiced': total_invoiced,
-        'total_collected': total_collected,
-        'outstanding_balance': outstanding_balance,
-        'collection_pct': collection_pct,
-        'overdue_count': overdue_count,
-        'overdue_amount': overdue_amount,
         'at_risk': at_risk,
         'class_performance': class_performance,
         'recent_pending': recent_pending,
         'top_performers': top_performers,
-        'teachers': teachers,
-        'students': students,
-        'subjects': subjects,
-        'class_sections': class_sections,
         'announcements': announcements,
         'current_term': current_term,
         'current_year': current_year,
@@ -187,14 +171,26 @@ def admin_dashboard(request, school, membership):
     total_parents = SchoolUser.objects.filter(school=school, role='parent', is_active=True).count()
     total_classes = ClassSection.objects.filter(school=school).count()
 
-    # Fee overview
+    # Fee overview & actionable metrics
     total_invoiced = FeeInvoice.objects.filter(school=school).aggregate(t=Sum('amount'))['t'] or 0
     total_paid = FeeInvoice.objects.filter(school=school).aggregate(t=Sum('amount_paid'))['t'] or 0
     outstanding = total_invoiced - total_paid
     unpaid_invoices = FeeInvoice.objects.filter(school=school, status='unpaid').count()
+    partial_invoices = FeeInvoice.objects.filter(school=school, status='partial').count()
+    overdue_invoices = FeeInvoice.objects.filter(school=school, status='overdue').count()
     recent_invoices = FeeInvoice.objects.filter(school=school).select_related(
         'student__user'
     ).order_by('-created_at')[:8]
+
+    # Recent payments for reconciliation overview
+    recent_payments = FeePayment.objects.filter(
+        invoice__school=school
+    ).select_related('invoice__student__user').order_by('-payment_date')[:8]
+
+    # Pending reconciliation (cash payments that may need verification)
+    pending_payments_count = FeePayment.objects.filter(
+        invoice__school=school, status='pending'
+    ).count()
 
     # Attendance today
     today_sessions = AttendanceSession.objects.filter(school=school, date=today)
@@ -221,7 +217,11 @@ def admin_dashboard(request, school, membership):
         'total_paid': total_paid,
         'outstanding': outstanding,
         'unpaid_invoices': unpaid_invoices,
+        'partial_invoices': partial_invoices,
+        'overdue_invoices': overdue_invoices,
         'recent_invoices': recent_invoices,
+        'recent_payments': recent_payments,
+        'pending_payments_count': pending_payments_count,
         'classes_marked_today': classes_marked,
         'classes_not_marked': classes_not_marked,
         'classes_data': classes_data,
