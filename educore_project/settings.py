@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'notifications',
     'analytics',
     'superadmin',
+    'inventory',
 ]
 
 MIDDLEWARE = [

@@ -34,6 +34,7 @@ urlpatterns = [
     path('platform/', include('superadmin.urls')),
     # Legacy PWA cleanup endpoint (kept intentionally)
     path('sw.js', school_views.service_worker_cleanup, name='service_worker_cleanup'),
+    path('inventory/', include('inventory.urls')),
 ]
 
 if settings.DEBUG:

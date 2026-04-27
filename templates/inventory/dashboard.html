@@ -1,0 +1,53 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Inventory & Assets{% endblock %}
+{% block page_title %}Inventory & Assets{% endblock %}
+{% block content %}
+<div class="row mb-4">
+  <div class="col-md-6">
+    <a href="{% url 'inventory:add_category' %}" class="btn btn-outline-primary mb-2">Add Asset Category</a>
+    <a href="{% url 'inventory:add_item' %}" class="btn btn-outline-success mb-2">Add Asset Item</a>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-4">
+    <h5>Categories</h5>
+    <ul class="list-group mb-4">
+      {% for cat in categories %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        {{ cat.name }}
+        <span class="badge bg-secondary">{{ cat.items.count }}</span>
+      </li>
+      {% empty %}
+      <li class="list-group-item">No categories yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="col-md-8">
+    <h5>Assets</h5>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Quantity</th>
+          <th>Condition</th>
+          <th>Location</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for asset in assets %}
+        <tr>
+          <td>{{ asset.name }}</td>
+          <td>{{ asset.category.name }}</td>
+          <td>{{ asset.quantity }}</td>
+          <td>{{ asset.condition }}</td>
+          <td>{{ asset.location }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No assets yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
