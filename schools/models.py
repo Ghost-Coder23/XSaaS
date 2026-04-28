@@ -60,6 +60,7 @@ class SchoolUser(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    signature = models.ImageField(upload_to='signatures/', blank=True, null=True)
 
     class Meta:
         unique_together = ['user', 'school']

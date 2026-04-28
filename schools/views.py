@@ -20,7 +20,7 @@ from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
 
 from .models import School, SchoolUser
-from .forms import SchoolRegistrationForm, SchoolBrandingForm, AddSchoolUserForm, ParentRegistrationForm, SchoolUserEditForm
+from .forms import SchoolRegistrationForm, SchoolBrandingForm, AddSchoolUserForm, ParentRegistrationForm, SchoolUserEditForm, SchoolUserSignatureForm
 
 
 class HomeView(TemplateView):
@@ -510,6 +510,20 @@ class ParentRegistrationView(CreateView):
         if user:
             login(self.request, user)
         return redirect('/school/dashboard/')
+
+
+@login_required
+def upload_signature(request):
+    school_user = get_object_or_404(SchoolUser, user=request.user, school=request.school)
+    if request.method == 'POST':
+        form = SchoolUserSignatureForm(request.POST, request.FILES, instance=school_user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Signature uploaded successfully!')
+            return redirect('school_settings')
+    else:
+        form = SchoolUserSignatureForm(instance=school_user)
+    return render(request, 'schools/upload_signature.html', {'form': form, 'school': request.school})
 
 
 @require_GET

@@ -136,3 +136,10 @@ class ParentRegistrationForm(forms.Form):
             raise forms.ValidationError("Passwords do not match.")
         return cleaned_data
 
+
+class SchoolUserSignatureForm(forms.ModelForm):
+    """Form to upload a signature image for SchoolUser"""
+    class Meta:
+        model = SchoolUser
+        fields = ['signature']
+

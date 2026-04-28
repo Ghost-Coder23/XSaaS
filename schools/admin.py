@@ -31,3 +31,8 @@ class SchoolUserAdmin(admin.ModelAdmin):
     list_display = ['user', 'school', 'role', 'is_active', 'created_at']
     list_filter = ['role', 'is_active', 'school']
     search_fields = ['user__username', 'user__email', 'school__name']
+    fieldsets = (
+        (None, {'fields': ('user', 'school', 'role', 'is_active', 'signature')}),
+        ('Timestamps', {'fields': ('created_at',), 'classes': ('collapse',)}),
+    )
+    readonly_fields = ['created_at']

@@ -10,4 +10,5 @@ urlpatterns = [
     path('user/<int:pk>/edit/', views.school_user_edit, name='user_edit'),
     path('user/<int:pk>/deactivate/', views.school_user_deactivate, name='user_deactivate'),
     path('parent/register/', views.ParentRegistrationView.as_view(), name='parent_register'),
+    path('upload-signature/', views.upload_signature, name='upload_signature'),
 ]
