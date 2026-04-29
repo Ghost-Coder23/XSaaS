@@ -22,8 +22,8 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
 .sidebar-brand h5 { color: #fff; font-weight: 700; margin: 0; font-size: 1rem; line-height: 1.3; }
 .sidebar-brand small { color: rgba(255,255,255,.4); font-size: .7rem; }
 .nav-section { color: rgba(255,255,255,.3); font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; padding: .9rem 1rem .25rem; }
-.nav-link { color: rgba(255,255,255,.65); padding: .5rem .85rem; border-radius: 7px; margin: 1px 8px; font-size: .82rem; display: flex; align-items: center; gap: 9px; transition: all .15s; text-decoration: none; }
-.nav-link:hover, .nav-link.active { color: #fff; background: rgba(255,255,255,.12); }
+.nav-link { color: #222 !important; background: rgba(255,255,255,0.15); padding: .5rem .85rem; border-radius: 7px; margin: 1px 8px; font-size: .82rem; display: flex; align-items: center; gap: 9px; transition: all .15s; text-decoration: none; }
+.nav-link:hover, .nav-link.active { color: #fff !important; background: var(--primary); }
 .nav-link i { font-size: 1rem; width: 18px; text-align: center; flex-shrink: 0; }
 .sidebar-footer { margin-top: auto; padding: .75rem; border-top: 1px solid rgba(255,255,255,.08); }
 /* Main */
@@ -33,19 +33,27 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
 .topbar-right { display: flex; align-items: center; gap: .75rem; }
 .page-content { padding: 1.5rem; }
 /* Cards */
-.card { border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); background: #fff; }
+.card { border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); background: #fff; color: #222; }
 .card-header { background: #fff; border-bottom: 1px solid #e2e8f0; font-weight: 600; padding: .85rem 1.25rem; border-radius: 12px 12px 0 0 !important; }
 /* Stat cards */
-.stat-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; }
+.stat-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; color: #222; }
 .stat-card .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
-.stat-card .stat-number { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+.stat-card .stat-number { font-size: 1.75rem; font-weight: 700; line-height: 1; color: var(--primary) !important; }
 .stat-card .stat-label { font-size: .78rem; color: #64748b; margin-top: 2px; }
 .stat-card .stat-change { font-size: .75rem; margin-top: .4rem; }
 /* Buttons */
 .btn-primary { background: var(--primary); border-color: var(--primary); }
 .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
-.btn-outline-primary { color: var(--primary); border-color: var(--primary); }
-.btn-outline-primary:hover { background: var(--primary); border-color: var(--primary); }
+.btn-outline-primary, .btn-outline-secondary, .btn-outline-success, .btn-outline-warning, .btn-outline-info, .btn-outline-danger {
+  color: #222 !important;
+  border-width: 2px;
+  background: #fff;
+}
+.btn-outline-primary:hover, .btn-outline-secondary:hover, .btn-outline-success:hover, .btn-outline-warning:hover, .btn-outline-info:hover, .btn-outline-danger:hover {
+  color: #fff !important;
+  background: var(--primary);
+  border-color: var(--primary);
+}
 .text-primary { color: var(--primary) !important; }
 .bg-primary { background: var(--primary) !important; }
 /* Badges */
@@ -184,15 +192,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     <a href="{% url 'academics:academic_year_list' %}" class="nav-link {% if 'years' in request.path %}active{% endif %}">
       <i class="bi bi-calendar-range"></i> Academic Years
     </a>
-    <a href="{% url 'academics:teacher_assignment_list' %}" class="nav-link {% if 'assignments' in request.path %}active{% endif %}">
-      <i class="bi bi-person-badge"></i> Teacher Assignments
-    </a>
-    <a href="{% url 'results:grade_scale_list' %}" class="nav-link {% if 'grade-scale' in request.path %}active{% endif %}">
-      <i class="bi bi-bar-chart"></i> Grade Scales
-    </a>
-    <a href="{% url 'user_management' %}" class="nav-link {% if 'users' in request.path %}active{% endif %}">
-      <i class="bi bi-person-gear"></i> Users
-    </a>
+    <a href="{% url 'academics:teacher_assignment_list' %}" class="nav-link {% if 'assign
     <a href="{% url 'school_settings' %}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
       <i class="bi bi-gear"></i> Settings
     </a>
