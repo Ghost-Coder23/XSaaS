@@ -80,6 +80,10 @@ class CustomLogoutView(LogoutView):
 @login_required
 def profile_view(request):
     """User profile view"""
+    # Ensure profile exists
+    if not hasattr(request.user, 'profile'):
+        UserProfile.objects.create(user=request.user)
+    
     if request.method == 'POST':
         form = UserProfileForm(
             request.POST, 
@@ -96,7 +100,7 @@ def profile_view(request):
             # Update profile
             form.save()
             messages.success(request, 'Profile updated successfully!')
-            return redirect('profile')
+            return redirect('accounts:profile')
     else:
         form = UserProfileForm(instance=request.user.profile, initial={
             'first_name': request.user.first_name,
@@ -104,7 +108,14 @@ def profile_view(request):
             'email': request.user.email,
         })
 
-    return render(request, 'accounts/profile.html', {'form': form})
+    # Get user school roles
+    from schools.models import SchoolUser
+    school_memberships = SchoolUser.objects.filter(user=request.user, is_active=True)
+
+    return render(request, 'accounts/profile.html', {
+        'form': form,
+        'memberships': school_memberships
+    })
 
 
 @login_required

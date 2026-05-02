@@ -48,12 +48,17 @@ class SchoolLoginForm(forms.Form):
 
 
 class SchoolBrandingForm(forms.ModelForm):
-    """Form for customizing school branding"""
+    """Form for customizing school branding and details"""
     class Meta:
         model = School
-        fields = ['logo', 'theme_color', 'motto']
+        fields = ['name', 'logo', 'theme_color', 'motto', 'email', 'phone', 'address']
         widgets = {
-            'theme_color': forms.TextInput(attrs={'type': 'color'}),
+            'theme_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control form-control-color'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'School Name'}),
+            'motto': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Excellence in Education'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'school@example.com'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+263...'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'School Physical Address'}),
         }
 
 

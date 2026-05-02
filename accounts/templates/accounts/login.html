@@ -3,24 +3,47 @@
 {% block title %}Login - EduCore{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card border-0 shadow-lg" style="border-radius: 20px;">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        {% if school %}
-                            {% if school.logo %}
-                            <img src="{{ school.logo.url }}" alt="{{ school.name }}" class="img-fluid mb-3" style="max-height: 80px;">
-                            {% endif %}
-                            <h3 class="fw-bold">{{ school.name }}</h3>
-                            <p class="text-muted">Sign in to your account</p>
-                        {% else %}
-                            <i class="bi bi-mortarboard-fill text-primary" style="font-size: 3rem;"></i>
-                            <h3 class="fw-bold mt-3">Welcome Back</h3>
-                            <p class="text-muted">Sign in to EduCore</p>
-                        {% endif %}
-                    </div>
+<div class="min-vh-100 d-flex align-items-center py-5" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8 col-xl-7">
+                <div class="card border-0 shadow-2xl overflow-hidden" style="border-radius: 30px;">
+                    <div class="row g-0">
+                        <!-- Left Side: Branding/Visual -->
+                        <div class="col-md-5 d-none d-md-flex flex-column justify-content-center p-5 text-white" style="background: linear-gradient(135deg, #4F46E5 0%, #3730a3 100%);">
+                            <div class="mb-4">
+                                <i class="bi bi-mortarboard-fill" style="font-size: 4rem;"></i>
+                            </div>
+                            <h2 class="fw-bold mb-3">EduCore</h2>
+                            <p class="opacity-75">The complete school management ecosystem for modern institutions.</p>
+                            <div class="mt-4 pt-4 border-top border-white border-opacity-10">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="rounded-circle bg-white bg-opacity-10 p-2"><i class="bi bi-shield-check"></i></div>
+                                    <span class="small">Secure Data Encryption</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle bg-white bg-opacity-10 p-2"><i class="bi bi-cloud-check"></i></div>
+                                    <span class="small">Real-time Cloud Sync</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Side: Login Form -->
+                        <div class="col-md-7 bg-white p-4 p-lg-5">
+                            <div class="text-center text-md-start mb-4">
+                                {% if school %}
+                                    <div class="d-flex align-items-center gap-3 mb-3">
+                                        {% if school.logo %}
+                                        <img src="{{ school.logo.url }}" alt="{{ school.name }}" class="img-fluid" style="max-height: 40px;">
+                                        {% endif %}
+                                        <h4 class="fw-bold m-0">{{ school.name }}</h4>
+                                    </div>
+                                    <p class="text-muted">Welcome back! Please sign in to your portal.</p>
+                                {% else %}
+                                    <h3 class="fw-bold mb-1">Welcome Back</h3>
+                                    <p class="text-muted">Access your EduCore dashboard</p>
+                                {% endif %}
+                            </div>
 
                     <form method="post" novalidate>
                         {% csrf_token %}
@@ -69,6 +92,8 @@
                         </a>
                     </div>
                     {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

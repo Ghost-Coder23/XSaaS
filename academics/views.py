@@ -38,6 +38,35 @@ class AcademicYearCreateView(CreateView):
         return super().form_valid(form)
 
 
+@method_decorator(login_required, name='dispatch')
+class AcademicYearUpdateView(UpdateView):
+    model = AcademicYear
+    form_class = AcademicYearForm
+    template_name = 'academics/academic_year_form.html'
+    success_url = reverse_lazy('academics:academic_year_list')
+
+    def get_queryset(self):
+        return AcademicYear.objects.filter(school=self.request.school)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Academic year updated successfully!')
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class AcademicYearDeleteView(DeleteView):
+    model = AcademicYear
+    template_name = 'academics/academic_year_confirm_delete.html'
+    success_url = reverse_lazy('academics:academic_year_list')
+
+    def get_queryset(self):
+        return AcademicYear.objects.filter(school=self.request.school)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Academic year deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+
 # Class Level Views
 @method_decorator(login_required, name='dispatch')
 class ClassLevelListView(ListView):
@@ -60,6 +89,35 @@ class ClassLevelCreateView(CreateView):
         form.instance.school = self.request.school
         messages.success(self.request, 'Class level created successfully!')
         return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class ClassLevelUpdateView(UpdateView):
+    model = ClassLevel
+    form_class = ClassLevelForm
+    template_name = 'academics/class_level_form.html'
+    success_url = reverse_lazy('academics:class_level_list')
+
+    def get_queryset(self):
+        return ClassLevel.objects.filter(school=self.request.school)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Class level updated successfully!')
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class ClassLevelDeleteView(DeleteView):
+    model = ClassLevel
+    template_name = 'academics/class_level_confirm_delete.html'
+    success_url = reverse_lazy('academics:class_level_list')
+
+    def get_queryset(self):
+        return ClassLevel.objects.filter(school=self.request.school)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Class level deleted successfully!')
+        return super().delete(request, *args, **kwargs)
 
 
 # Subject Views

@@ -9,12 +9,12 @@
       #f8fafc;
   }
   .hero-shell {
-    background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 45%, #312e81 100%);
-    border-radius: 22px;
+    background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+    border-radius: 32px;
     color: #f8fafc;
-    padding: 2.4rem;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.28);
+    padding: 4rem 3rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     position: relative;
     overflow: hidden;
   }
@@ -42,15 +42,34 @@
     margin-bottom: 0.9rem;
   }
   .hero-title {
-    font-size: clamp(2rem, 3.8vw, 3.25rem);
-    line-height: 1.04;
-    letter-spacing: -0.02em;
-    margin-bottom: 1rem;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(to right, #fff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
   .hero-sub {
-    color: #cbd5e1;
-    font-size: 1.04rem;
-    max-width: 54ch;
+    color: #94a3b8;
+    font-size: 1.25rem;
+    max-width: 60ch;
+    margin-bottom: 2.5rem;
+  }
+  .btn-warning {
+    background: #f59e0b;
+    border: none;
+    color: #0f172a;
+    padding: 1rem 2rem;
+    font-weight: 700;
+    border-radius: 12px;
+    transition: all 0.3s;
+  }
+  .btn-warning:hover {
+    background: #fbbf24;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3);
   }
   .hero-panel {
     background: rgba(15, 23, 42, 0.5);
@@ -171,6 +190,37 @@
     background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
     padding: 1.7rem;
   }
+  .gallery-item {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+  }
+  .gallery-item:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  }
+  .gallery-item img, .gallery-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .gallery-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+    display: flex;
+    align-items: flex-end;
+    padding: 1.5rem;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .gallery-item:hover .gallery-overlay {
+    opacity: 1;
+  }
   @media (max-width: 992px) {
     .hero-shell {
       padding: 1.6rem;
@@ -262,21 +312,27 @@
       </a>
     </section>
 
-    <section class="mb-4 mb-lg-5">
-      <div class="text-center mb-4">
-        <h2 class="section-title fw-bold mb-2">Everything Your School Team Needs</h2>
-        <p class="text-muted mb-0">Designed for admins, teachers, parents, and students to work in one connected workflow.</p>
-      </div>
-      <div class="row g-3 g-lg-4">
-        {% for feature in features %}
-        <div class="col-md-6 col-lg-4">
-          <div class="feature-card">
-            <span class="feature-badge"><i class="bi {{ feature.icon }}"></i></span>
-            <h5>{{ feature.title }}</h5>
-            <p>{{ feature.description }}</p>
-          </div>
+    <section class="row g-4 mb-5">
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-badge"><i class="bi bi-people-fill"></i></div>
+          <h5>Student Management</h5>
+          <p>Complete lifecycle from admission to graduation with detailed profiles and parent linking.</p>
         </div>
-        {% endfor %}
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-badge" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"><i class="bi bi-cash-stack"></i></div>
+          <h5>Finance & Fees</h5>
+          <p>Automated invoicing, bulk processing, and secure payment tracking for all school fees.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"><i class="bi bi-journal-check"></i></div>
+          <h5>Results & Reports</h5>
+          <p>Instant grade calculation and professional PDF report cards with digital signatures.</p>
+        </div>
       </div>
     </section>
 
@@ -309,7 +365,71 @@
       </div>
     </section>
 
-    <section class="cta-band text-center">
+    <section class="mb-5">
+      <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+          <h2 class="section-title fw-bold mb-1">Campus Life & Gallery</h2>
+          <p class="text-muted mb-0">Experience the vibrant environment at EduCore partner schools.</p>
+        </div>
+      </div>
+      
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+          <div class="gallery-item">
+            <img src="https://images.unsplash.com/photo-1523050853063-913c3e009e53?auto=format&fit=crop&w=800&q=80" alt="Campus">
+            <div class="gallery-overlay">
+              <div class="small fw-semibold">Modern Classrooms</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="gallery-item">
+            <video muted loop onmouseover="this.play()" onmouseout="this.pause()">
+              <source src="https://assets.mixkit.co/videos/preview/mixkit-kids-playing-in-a-park-4431-large.mp4" type="video/mp4">
+            </video>
+            <div class="gallery-overlay">
+              <div class="small fw-semibold"><i class="bi bi-play-circle me-1"></i> Sports & Activities</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="gallery-item">
+            <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80" alt="Library">
+            <div class="gallery-overlay">
+              <div class="small fw-semibold">Student Library</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="gallery-item">
+            <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=800&q=80" alt="Science Lab">
+            <div class="gallery-overlay">
+              <div class="small fw-semibold">Science Laboratory</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="gallery-item">
+            <video muted loop onmouseover="this.play()" onmouseout="this.pause()">
+              <source src="https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-at-his-desk-34624-large.mp4" type="video/mp4">
+            </video>
+            <div class="gallery-overlay">
+              <div class="small fw-semibold"><i class="bi bi-play-circle me-1"></i> Computer Science</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="gallery-item">
+            <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80" alt="Art Room">
+            <div class="gallery-overlay">
+              <div class="small fw-semibold">Creative Arts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-band text-center mb-4">
       <h3 class="fw-bold mb-2">Ready To Modernize Your School Operations?</h3>
       <p class="text-muted mb-3">Launch your school portal with EduCore and centralize administration, academics, and parent communication.</p>
       <div class="d-flex justify-content-center flex-wrap gap-2">

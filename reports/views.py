@@ -12,14 +12,14 @@ from datetime import datetime
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import inch, cm
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, HRFlowable
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, HRFlowable, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
 from academics.models import Student, ClassSection
 from results.models import Term, StudentResult, TermSummary
 from .models import ReportCardTemplate, GeneratedReport
-from schools.models import SchoolUser
+from schools.models import SchoolUser, School
 
 
 def get_grade_color(grade):
@@ -194,15 +194,50 @@ def generate_report_card(request, student_id, term_id):
 
     # Signature section
     story.append(Spacer(1, 0.5*cm))
+
+    # Try to find class teacher and headmaster signatures
+    class_teacher_sig = None
+    headmaster_sig = None
+
+    if student.current_class and student.current_class.class_teacher:
+        if student.current_class.class_teacher.signature:
+            try:
+                sig_path = student.current_class.class_teacher.signature.path
+                if os.path.exists(sig_path):
+                    class_teacher_sig = Image(sig_path, width=2.5*cm, height=1.2*cm)
+            except Exception:
+                pass
+
+    headmaster = SchoolUser.objects.filter(school=school, role='headmaster', is_active=True).first()
+    if headmaster and headmaster.signature:
+        try:
+            sig_path = headmaster.signature.path
+            if os.path.exists(sig_path):
+                headmaster_sig = Image(sig_path, width=2.5*cm, height=1.2*cm)
+        except Exception:
+            pass
+
+    sig_row_1 = [
+        class_teacher_sig if class_teacher_sig else Paragraph('_____________________', center_style),
+        headmaster_sig if headmaster_sig else Paragraph('_____________________', center_style)
+    ]
+
     sig_data = [
-        [Paragraph('_____________________', center_style), Paragraph('_____________________', center_style)],
+        sig_row_1,
         [Paragraph("Class Teacher's Signature", center_style), Paragraph("Headmaster's Signature", center_style)],
     ]
+
     if template and template.headmaster_name:
         sig_data.append(['', Paragraph(f'<b>{template.headmaster_name}</b>', center_style)])
+    elif headmaster:
+        sig_data.append(['', Paragraph(f'<b>{headmaster.user.get_full_name()}</b>', center_style)])
 
     sig_table = Table(sig_data, colWidths=[9*cm, 9*cm])
-    sig_table.setStyle(TableStyle([('PADDING', (0, 0), (-1, -1), 4)]))
+    sig_table.setStyle(TableStyle([
+        ('PADDING', (0, 0), (-1, -1), 4),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
     story.append(sig_table)
 
     # Footer

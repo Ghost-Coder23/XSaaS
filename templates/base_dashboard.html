@@ -11,102 +11,135 @@
 :root {
   --primary: {{ current_school.theme_color|default:"#4F46E5" }};
   --primary-dark: #3730a3;
-  --sidebar-bg: #1e1b4b;
-  --sidebar-width: 256px;
+  --sidebar-bg: #0f172a;
+  --sidebar-width: 260px;
+  --topbar-height: 64px;
 }
 * { box-sizing: border-box; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; margin: 0; }
+body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: #f8fafc; margin: 0; color: #1e293b; }
+
 /* Sidebar */
-.sidebar { width: var(--sidebar-width); height: 100vh !important; background: var(--sidebar-bg); position: fixed; top: 0; left: 0; z-index: 200; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.2) transparent; transition: transform .25s ease; display: flex; flex-direction: column; scrollbar-gutter: stable; }
-.sidebar-brand { padding: 1.25rem 1rem; border-bottom: 1px solid rgba(255,255,255,.08); }
-.sidebar-brand h5 { color: #fff; font-weight: 700; margin: 0; font-size: 1rem; line-height: 1.3; }
-.sidebar-brand small { color: rgba(255,255,255,.4); font-size: .7rem; }
-.nav-section { color: rgba(255,255,255,.3); font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; padding: .9rem 1rem .25rem; }
-.nav-link { color: #222 !important; background: rgba(255,255,255,0.15); padding: .5rem .85rem; border-radius: 7px; margin: 1px 8px; font-size: .82rem; display: flex; align-items: center; gap: 9px; transition: all .15s; text-decoration: none; }
-.nav-link:hover, .nav-link.active { color: #fff !important; background: var(--primary); }
-.nav-link i { font-size: 1rem; width: 18px; text-align: center; flex-shrink: 0; }
-.sidebar-footer { margin-top: auto; padding: .75rem; border-top: 1px solid rgba(255,255,255,.08); }
-/* Main */
-.main-content { margin-left: var(--sidebar-width); min-height: 100vh; transition: margin .25s ease; }
-.topbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: .7rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 1rem; }
-.topbar-left { display: flex; align-items: center; gap: .75rem; }
-.topbar-right { display: flex; align-items: center; gap: .75rem; }
-.page-content { padding: 1.5rem; }
-/* Cards */
-.card { border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); background: #fff; color: #222; }
-.card-header { background: #fff; border-bottom: 1px solid #e2e8f0; font-weight: 600; padding: .85rem 1.25rem; border-radius: 12px 12px 0 0 !important; }
-/* Stat cards */
-.stat-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; color: #222; }
-.stat-card .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
-.stat-card .stat-number { font-size: 1.75rem; font-weight: 700; line-height: 1; color: var(--primary) !important; }
-.stat-card .stat-label { font-size: .78rem; color: #64748b; margin-top: 2px; }
-.stat-card .stat-change { font-size: .75rem; margin-top: .4rem; }
-/* Buttons */
-.btn-primary { background: var(--primary); border-color: var(--primary); }
-.btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
-.btn-outline-primary, .btn-outline-secondary, .btn-outline-success, .btn-outline-warning, .btn-outline-info, .btn-outline-danger {
-  color: #222 !important;
-  border-width: 2px;
-  background: #fff;
+.sidebar { 
+  width: var(--sidebar-width); 
+  height: 100vh !important; 
+  background: var(--sidebar-bg); 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  z-index: 200; 
+  overflow-y: auto; 
+  transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); 
+  display: flex; 
+  flex-direction: column;
+  box-shadow: 4px 0 10px rgba(0,0,0,0.1);
 }
-.btn-outline-primary:hover, .btn-outline-secondary:hover, .btn-outline-success:hover, .btn-outline-warning:hover, .btn-outline-info:hover, .btn-outline-danger:hover {
-  color: #fff !important;
-  background: var(--primary);
-  border-color: var(--primary);
+.sidebar-brand { 
+  padding: 1.5rem 1.25rem; 
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  background: rgba(255,255,255,0.02);
 }
-.text-primary { color: var(--primary) !important; }
-.bg-primary { background: var(--primary) !important; }
-/* Badges */
-.badge-present { background: #dcfce7; color: #166534; }
-.badge-absent { background: #fee2e2; color: #991b1b; }
-.badge-late { background: #fef9c3; color: #854d0e; }
-.badge-excused { background: #dbeafe; color: #1e40af; }
-.badge-role-headmaster { background: #ede9fe; color: #5b21b6; }
-.badge-role-admin { background: #dbeafe; color: #1d4ed8; }
-.badge-role-teacher { background: #d1fae5; color: #065f46; }
-.badge-role-student { background: #fef9c3; color: #854d0e; }
-.badge-role-parent { background: #fce7f3; color: #9d174d; }
-/* Notif bell */
-.notif-badge { position: absolute; top: -4px; right: -4px; background: #ef4444; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: .6rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-/* Alert */
-.alert { border-radius: 10px; border: none; font-size: .875rem; }
-/* Table */
-.table th { font-size: .75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid #e2e8f0; }
-.table td { font-size: .875rem; vertical-align: middle; }
-/* Mobile */
-@media (max-width: 768px) {
+.sidebar-brand h5 { color: #f8fafc; font-weight: 700; margin: 0; font-size: 1.1rem; letter-spacing: -0.01em; }
+.sidebar-brand small { color: #94a3b8; font-size: .75rem; font-weight: 500; }
+
+.nav-section { 
+  color: #64748b; 
+  font-size: .7rem; 
+  font-weight: 700; 
+  text-transform: uppercase; 
+  letter-spacing: .1em; 
+  padding: 1.5rem 1.25rem .5rem; 
+}
+.nav-link { 
+  color: #94a3b8 !important; 
+  padding: 0.75rem 1.25rem; 
+  margin: 0.125rem 0.75rem;
+  border-radius: 10px; 
+  font-size: .875rem; 
+  font-weight: 500;
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  transition: all .2s; 
+  text-decoration: none; 
+}
+.nav-link:hover { 
+  color: #f8fafc !important; 
+  background: rgba(255,255,255,0.05); 
+}
+.nav-link.active { 
+  color: #fff !important; 
+  background: var(--primary); 
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+.nav-link i { font-size: 1.1rem; width: 20px; text-align: center; }
+
+.sidebar-footer { 
+  margin-top: auto; 
+  padding: 1rem; 
+  background: rgba(0,0,0,0.2);
+}
+
+/* Main Content */
+.main-content { margin-left: var(--sidebar-width); min-height: 100vh; transition: all .3s; }
+.topbar { 
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #e2e8f0; 
+  height: var(--topbar-height);
+  padding: 0 1.5rem; 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  position: sticky; 
+  top: 0; 
+  z-index: 100; 
+}
+.page-content { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+.max-width-400 { max-width: 400px; }
+
+/* Components */
+.card { 
+  border: none; 
+  border-radius: 16px; 
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  background: #fff; 
+}
+.card-header { 
+  background: transparent; 
+  border-bottom: 1px solid #f1f5f9; 
+  font-weight: 600; 
+  padding: 1.25rem 1.5rem; 
+}
+.btn { border-radius: 10px; font-weight: 500; transition: all 0.2s; }
+.btn-primary { box-shadow: 0 2px 4px rgba(79, 70, 229, 0.1); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2); }
+
+/* Stats */
+.stat-card { padding: 1.5rem; }
+.stat-icon { 
+  width: 48px; 
+  height: 48px; 
+  border-radius: 12px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 1.25rem; 
+}
+.stat-number { font-size: 1.875rem; font-weight: 700; color: #0f172a; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+@media (max-width: 1024px) {
   .sidebar { transform: translateX(-100%); }
   .sidebar.open { transform: translateX(0); }
   .main-content { margin-left: 0; }
-  .page-content { padding: 1rem; }
-  .stat-card .stat-number { font-size: 1.5rem; }
 }
-/* Desktop sidebar - ensure scrolling */
-@media (min-width: 769px) {
-  .sidebar {
-    height: 100vh !important;
-    overflow-y: auto !important;
-    overflow-x: hidden;
-  }
-  .sidebar::-webkit-scrollbar {
-    width: 6px;
-  }
-  .sidebar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .sidebar::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,.3);
-    border-radius: 3px;
-  }
-  .sidebar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255,255,255,.5);
-  }
-}
-
-/* Sidebar overlay */
-.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 199; }
-.sidebar-overlay.show { display: block; }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -189,10 +222,15 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     </a>
 
     <div class="nav-section">Administration</div>
+    <a href="{% url 'inventory:dashboard' %}" class="nav-link {% if 'inventory' in request.path %}active{% endif %}">
+      <i class="bi bi-box-seam"></i> Inventory & Assets
+    </a>
     <a href="{% url 'academics:academic_year_list' %}" class="nav-link {% if 'years' in request.path %}active{% endif %}">
       <i class="bi bi-calendar-range"></i> Academic Years
     </a>
-    <a href="{% url 'academics:teacher_assignment_list' %}" class="nav-link {% if 'assign
+    <a href="{% url 'academics:teacher_assignment_list' %}" class="nav-link {% if 'assignments' in request.path %}active{% endif %}">
+      <i class="bi bi-person-check"></i> Teacher Assignments
+    </a>
     <a href="{% url 'school_settings' %}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
       <i class="bi bi-gear"></i> Settings
     </a>
@@ -229,11 +267,21 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
 
 <div class="main-content">
   <div class="topbar">
-    <div class="topbar-left">
-      <button class="btn btn-sm btn-light d-md-none" onclick="toggleSidebar()" aria-label="Menu">
+    <div class="topbar-left d-flex align-items-center flex-grow-1">
+      <button class="btn btn-sm btn-light d-md-none me-2" onclick="toggleSidebar()" aria-label="Menu">
         <i class="bi bi-list fs-5"></i>
       </button>
-      <nav aria-label="breadcrumb" class="d-none d-md-block">
+      
+      <!-- Global Search -->
+      <div class="search-container d-none d-lg-block flex-grow-1 max-width-400 ms-2 position-relative">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" class="form-control bg-light border-0" placeholder="Search students, teachers, or classes..." id="globalSearch" autocomplete="off">
+        </div>
+        <div id="search-results" class="dropdown-menu shadow border-0 w-100 mt-1" style="display: none; max-height: 400px; overflow-y: auto;"></div>
+      </div>
+
+      <nav aria-label="breadcrumb" class="d-none d-md-block ms-3">
         <span class="text-muted" style="font-size:.85rem;">{% block page_title %}{% endblock %}</span>
       </nav>
     </div>
@@ -301,12 +349,69 @@ function loadNotifCount() {
     .then(r => r.json())
     .then(d => {
       const el = document.getElementById('notif-count');
-      if (d.count > 0) { el.textContent = d.count; el.style.display = 'flex'; }
-      else el.style.display = 'none';
-    }).catch(() => {});
+      if (d.count > 0) {
+        el.innerText = d.count;
+        el.style.display = 'flex';
+      } else {
+        el.style.display = 'none';
+      }
+    });
 }
 loadNotifCount();
 setInterval(loadNotifCount, 60000);
+
+// Global Search Logic
+const searchInput = document.getElementById('globalSearch');
+const resultsBox = document.getElementById('search-results');
+let searchTimeout;
+
+if (searchInput) {
+  searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+      resultsBox.style.display = 'none';
+      return;
+    }
+
+    searchTimeout = setTimeout(() => {
+      fetch(`/analytics/search/?q=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(data => {
+          resultsBox.innerHTML = '';
+          if (data.results.length > 0) {
+            data.results.forEach(item => {
+              const div = document.createElement('a');
+              div.href = item.url;
+              div.className = 'dropdown-item d-flex align-items-center gap-3 py-2';
+              div.innerHTML = `
+                <div class="rounded-circle bg-light p-2 text-primary">
+                  <i class="bi ${item.icon}"></i>
+                </div>
+                <div>
+                  <div class="fw-bold small">${item.title}</div>
+                  <div class="text-muted" style="font-size: .75rem;">${item.subtitle}</div>
+                </div>
+              `;
+              resultsBox.appendChild(div);
+            });
+            resultsBox.style.display = 'block';
+          } else {
+            resultsBox.innerHTML = '<div class="dropdown-item text-muted small py-3 text-center">No results found</div>';
+            resultsBox.style.display = 'block';
+          }
+        });
+    }, 300);
+  });
+
+  // Close results when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
+      resultsBox.style.display = 'none';
+    }
+  });
+}
 </script>
 {% block extra_js %}{% endblock %}
 </body>

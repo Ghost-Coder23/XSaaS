@@ -162,6 +162,65 @@ def headmaster_dashboard(request, school, membership):
     return render(request, 'analytics/dashboard_headmaster.html', context)
 
 
+from django.urls import reverse
+
+@login_required
+def global_search(request):
+    """API for global search across students, teachers, and classes"""
+    query = request.GET.get('q', '').strip()
+    school = request.school
+    results = []
+
+    if len(query) >= 2:
+        # Search Students
+        students = Student.objects.filter(
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query) |
+            Q(admission_number__icontains=query),
+            school=school,
+            is_active=True
+        )[:5]
+        for s in students:
+            results.append({
+                'title': s.user.get_full_name(),
+                'subtitle': f"Student ({s.admission_number})",
+                'url': reverse('academics:student_detail', args=[s.pk]),
+                'icon': 'bi-person'
+            })
+
+        # Search Teachers
+        teachers = SchoolUser.objects.filter(
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query),
+            school=school,
+            role='teacher',
+            is_active=True
+        )[:5]
+        for t in teachers:
+            results.append({
+                'title': t.user.get_full_name(),
+                'subtitle': "Teacher",
+                'url': reverse('user_edit', args=[t.pk]),
+                'icon': 'bi-person-badge'
+            })
+
+        # Search Classes
+        sections = ClassSection.objects.filter(
+            Q(class_level__name__icontains=query) |
+            Q(section_name__icontains=query),
+            school=school
+        )[:5]
+        for sec in sections:
+            results.append({
+                'title': str(sec),
+                'subtitle': "Class Section",
+                'url': reverse('academics:class_section_list'),
+                'icon': 'bi-building'
+            })
+
+    return JsonResponse({'results': results})
+
+
 def admin_dashboard(request, school, membership):
     today = date.today()
     current_term = Term.objects.filter(academic_year__school=school, is_current=True).first()
@@ -197,6 +256,14 @@ def admin_dashboard(request, school, membership):
     classes_marked = today_sessions.filter(is_finalized=True).count()
     classes_not_marked = total_classes - classes_marked
 
+    # Inventory & Assets Summary
+    from inventory.models import AssetItem, AssetCategory
+    total_assets = AssetItem.objects.filter(school=school).aggregate(t=Sum('quantity'))['t'] or 0
+    total_asset_value = AssetItem.objects.filter(school=school).count() # Just count unique items for now
+    categories_count = AssetCategory.objects.filter(school=school).count()
+    low_stock_threshold = 5
+    low_stock_items = AssetItem.objects.filter(school=school, quantity__lte=low_stock_threshold).count()
+
     # Students per class
     classes_data = []
     for cs in ClassSection.objects.filter(school=school).select_related('class_level'):
@@ -224,6 +291,9 @@ def admin_dashboard(request, school, membership):
         'pending_payments_count': pending_payments_count,
         'classes_marked_today': classes_marked,
         'classes_not_marked': classes_not_marked,
+        'total_assets': total_assets,
+        'categories_count': categories_count,
+        'low_stock_items': low_stock_items,
         'classes_data': classes_data,
         'current_term': current_term,
         'unread_notifications': unread_notifications,

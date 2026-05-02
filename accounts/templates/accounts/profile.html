@@ -1,0 +1,260 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}My Profile - EduCore{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, var(--primary) 0%, #3730a3 100%);
+        border-radius: 20px;
+        padding: 2.5rem;
+        color: white;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .profile-header::after {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 200px;
+        height: 200px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+    }
+    .profile-img-container {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 4px solid rgba(255,255,255,0.3);
+        overflow: hidden;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .profile-img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .profile-img-placeholder {
+        font-size: 3rem;
+        color: var(--primary);
+        font-weight: 700;
+    }
+    .nav-pills-custom .nav-link {
+        color: #64748b;
+        font-weight: 600;
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        margin-bottom: 0.5rem;
+    }
+    .nav-pills-custom .nav-link:hover {
+        background: #f1f5f9;
+        color: var(--primary);
+    }
+    .nav-pills-custom .nav-link.active {
+        background: var(--primary-soft, #eef2ff);
+        color: var(--primary);
+        border-color: rgba(79, 70, 229, 0.1);
+    }
+    .membership-card {
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+    }
+    .membership-card:hover {
+        border-color: var(--primary);
+        background: #f8fafc;
+    }
+    .role-badge {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+        padding: 0.35em 0.8em;
+        border-radius: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Profile Sidebar -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
+            <div class="card-body p-4 text-center">
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="profile-img-container">
+                        {% if user.profile.profile_picture %}
+                            <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.get_full_name }}">
+                        {% else %}
+                            <div class="profile-img-placeholder">
+                                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <h4 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted small mb-3"><i class="bi bi-envelope me-1"></i>{{ user.email }}</p>
+                
+                <div class="d-flex justify-content-center gap-2 mb-4">
+                    {% for membership in memberships %}
+                        <span class="role-badge bg-primary text-white">{{ membership.get_role_display }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="nav flex-column nav-pills nav-pills-custom" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                    <button class="nav-link active w-100 text-start" id="v-pills-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-info" type="button" role="tab"><i class="bi bi-person me-2"></i>Personal Info</button>
+                    <button class="nav-link w-100 text-start" id="v-pills-schools-tab" data-bs-toggle="pill" data-bs-target="#v-pills-schools" type="button" role="tab"><i class="bi bi-building me-2"></i>School Access</button>
+                    <button class="nav-link w-100 text-start" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button" role="tab"><i class="bi bi-shield-lock me-2"></i>Security</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div class="col-lg-8">
+        <div class="tab-content" id="v-pills-tabContent">
+            <!-- Personal Info Tab -->
+            <div class="tab-pane fade show active" id="v-pills-info" role="tabpanel">
+                <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+                    <div class="card-header bg-transparent border-0 pt-4 px-4">
+                        <h5 class="fw-bold mb-0">Edit Personal Information</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">First Name</label>
+                                    {{ form.first_name }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Last Name</label>
+                                    {{ form.last_name }}
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-semibold">Email Address</label>
+                                    {{ form.email }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Phone Number</label>
+                                    {{ form.phone }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Date of Birth</label>
+                                    {{ form.date_of_birth }}
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-semibold">Profile Picture</label>
+                                    {{ form.profile_picture }}
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-semibold">Address</label>
+                                    {{ form.address }}
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-semibold">Bio</label>
+                                    {{ form.bio }}
+                                </div>
+                                <div class="col-md-12 mt-4">
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <i class="bi bi-check2-circle me-1"></i>Save Changes
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- School Access Tab -->
+            <div class="tab-pane fade" id="v-pills-schools" role="tabpanel">
+                <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+                    <div class="card-header bg-transparent border-0 pt-4 px-4">
+                        <h5 class="fw-bold mb-0">Active School Memberships</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        {% for membership in memberships %}
+                        <div class="membership-card d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+                                    {% if membership.school.logo %}
+                                        <img src="{{ membership.school.logo.url }}" class="img-fluid rounded-circle">
+                                    {% else %}
+                                        <i class="bi bi-building text-primary fs-4"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ membership.school.name }}</div>
+                                    <div class="text-muted small">Joined {{ membership.created_at|date:"M Y" }}</div>
+                                </div>
+                            </div>
+                            <span class="role-badge bg-light text-primary border border-primary border-opacity-10">{{ membership.get_role_display }}</span>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-building text-muted opacity-25" style="font-size: 4rem;"></i>
+                            <p class="text-muted mt-3">No active school memberships found.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Tab -->
+            <div class="tab-pane fade" id="v-pills-security" role="tabpanel">
+                <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+                    <div class="card-header bg-transparent border-0 pt-4 px-4">
+                        <h5 class="fw-bold mb-0">Security Settings</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="alert alert-info border-0 mb-4" style="border-radius:15px;">
+                            <i class="bi bi-info-circle me-2"></i> Keeping your password updated helps protect your school data.
+                        </div>
+                        
+                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-4 mb-3">
+                            <div>
+                                <div class="fw-bold">Password</div>
+                                <div class="text-muted small">Last changed: Never</div>
+                            </div>
+                            <a href="{% url 'accounts:change_password' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Update</a>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-4">
+                            <div>
+                                <div class="fw-bold">Two-Factor Authentication</div>
+                                <div class="text-muted small">Not currently enabled</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" disabled>Setup</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add form-control class to all form inputs
+    document.querySelectorAll('input, textarea, select').forEach(el => {
+        if (el.type !== 'checkbox' && el.type !== 'radio' && el.type !== 'file') {
+            el.classList.add('form-control');
+        } else if (el.type === 'file') {
+            el.classList.add('form-control-file');
+        }
+    });
+</script>
+{% endblock %}
