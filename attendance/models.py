@@ -5,6 +5,7 @@ from django.db import models
 from django.utils import timezone
 from academics.models import Student, ClassSection
 from schools.models import School, SchoolUser
+from core.models import TenantManager
 
 
 class AttendanceSession(models.Model):
@@ -16,6 +17,9 @@ class AttendanceSession(models.Model):
     is_finalized = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = TenantManager()
+    all_objects = models.Manager()
 
     class Meta:
         unique_together = ['class_section', 'date']

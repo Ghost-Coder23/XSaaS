@@ -6,6 +6,7 @@ from django.utils import timezone
 from schools.models import School, SchoolUser
 from academics.models import Student, AcademicYear, ClassLevel
 from results.models import Term
+from core.models import TenantManager
 
 
 class FeeStructure(models.Model):
@@ -23,6 +24,9 @@ class FeeStructure(models.Model):
     due_date = models.DateField(null=True, blank=True)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = TenantManager()
+    all_objects = models.Manager()
 
     class Meta:
         ordering = ['academic_year', 'name']
@@ -56,6 +60,9 @@ class FeeInvoice(models.Model):
     created_by = models.ForeignKey(SchoolUser, on_delete=models.SET_NULL, null=True, related_name='created_invoices')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = TenantManager()
+    all_objects = models.Manager()
 
     class Meta:
         ordering = ['-issued_date']
@@ -146,6 +153,9 @@ class PaymentConfig(models.Model):
     bank_account_number = models.CharField(max_length=50, blank=True)
     bank_branch = models.CharField(max_length=100, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = TenantManager()
+    all_objects = models.Manager()
 
     def __str__(self):
         return f"Payment config for {self.school.name}"

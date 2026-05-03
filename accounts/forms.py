@@ -30,18 +30,10 @@ class UserProfileForm(forms.ModelForm):
         model = UserProfile
         fields = ['phone', 'address', 'bio', 'profile_picture', 'date_of_birth']
         widgets = {
-            'address': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
-            'date_of_birth': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'bio': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'profile_picture': forms.FileInput(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'rows': 3}),
+            'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
+            'bio': forms.Textarea(attrs={'rows': 4}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['first_name'].widget.attrs.update({'class': 'form-control'})
-        self.fields['last_name'].widget.attrs.update({'class': 'form-control'})
-        self.fields['email'].widget.attrs.update({'class': 'form-control'})
 
 
 class PasswordChangeForm(forms.Form):

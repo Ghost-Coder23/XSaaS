@@ -1,6 +1,6 @@
 """Schools admin configuration"""
 from django.contrib import admin
-from .models import School, SchoolUser
+from .models import School, SchoolUser, GalleryItem
 
 
 @admin.register(School)
@@ -35,4 +35,12 @@ class SchoolUserAdmin(admin.ModelAdmin):
         (None, {'fields': ('user', 'school', 'role', 'is_active', 'signature')}),
         ('Timestamps', {'fields': ('created_at',), 'classes': ('collapse',)}),
     )
+    readonly_fields = ['created_at']
+
+
+@admin.register(GalleryItem)
+class GalleryItemAdmin(admin.ModelAdmin):
+    list_display = ['title', 'school', 'media_type', 'is_featured', 'created_at']
+    list_filter = ['media_type', 'is_featured', 'school']
+    search_fields = ['title', 'description', 'school__name']
     readonly_fields = ['created_at']

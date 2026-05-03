@@ -1,208 +1,33 @@
 {% extends 'base_dashboard.html' %}
 {% block title %}School Settings{% endblock %}
 {% block page_title %}School Settings{% endblock %}
-{% block extra_css %}
-<style>
-    .color-preview-card {
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
-    }
-    .color-preview-header {
-        height: 60px;
-        background-color: {{ object.theme_color|default:'#4F46E5' }};
-        display: flex;
-        align-items: center;
-        padding: 0 1.25rem;
-        color: white;
-    }
-    .settings-section-title {
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-weight: 700;
-        color: #64748b;
-        margin-bottom: 1.25rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    .logo-preview {
-        width: 100px;
-        height: 100px;
-        border-radius: 12px;
-        border: 2px dashed #e2e8f0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        background: #f8fafc;
-    }
-    .logo-preview img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="row">
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
-            <div class="card-header bg-transparent border-0 pt-4 px-4">
-                <h5 class="fw-bold mb-0">Workspace Customization</h5>
-            </div>
-            <div class="card-body p-4">
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    
-                    <div class="settings-section-title">Identity & Branding</div>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">School Name</label>
-                            {{ form.name }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">School Motto</label>
-                            {{ form.motto }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Theme Color</label>
-                            <div class="d-flex align-items-center gap-3">
-                                {{ form.theme_color }}
-                                <span class="small text-muted">This color will be used for your dashboard buttons, icons, and sidebar.</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">School Logo</label>
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="logo-preview">
-                                    {% if object.logo %}
-                                        <img src="{{ object.logo.url }}" id="logoPreviewImg">
-                                    {% else %}
-                                        <i class="bi bi-image text-muted fs-3"></i>
-                                    {% endif %}
-                                </div>
-                                <div class="flex-grow-1">
-                                    <input type="file" name="logo" class="form-control" accept="image/*" id="logoInput">
-                                    <div class="small text-muted mt-1">Recommended: PNG with transparent background.</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="settings-section-title">Contact Information</div>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Public Email</label>
-                            {{ form.email }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Contact Phone</label>
-                            {{ form.phone }}
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-semibold">Physical Address</label>
-                            {{ form.address }}
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end pt-3 border-top">
-                        <button type="submit" class="btn btn-primary px-5">
-                            <i class="bi bi-check2-circle me-1"></i>Apply Customization
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
-            <div class="card-header bg-transparent border-0 pt-4 px-4">
-                <h5 class="fw-bold mb-0">Workspace Preview</h5>
-            </div>
-            <div class="card-body p-4">
-                <p class="text-muted small mb-4">See how your school branding looks in the real workspace.</p>
-                
-                <div class="color-preview-card mb-4">
-                    <div class="color-preview-header" id="previewHeader">
-                        <div class="d-flex align-items-center gap-2">
-                            <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:bold;">
-                                {{ object.name|first|upper|default:'E' }}
-                            </div>
-                            <span class="small fw-bold" id="previewName">{{ object.name|default:'EduCore' }}</span>
-                        </div>
-                    </div>
-                    <div class="p-3 bg-white">
-                        <div class="d-flex align-items-center gap-2 mb-3">
-                            <div style="width:30px;height:30px;border-radius:8px;background:{{ object.theme_color|default:'#4F46E5' }};opacity:0.1;display:flex;align-items:center;justify-content:center;color:{{ object.theme_color|default:'#4F46E5' }};" class="preview-accent-bg">
-                                <i class="bi bi-grid-fill small"></i>
-                            </div>
-                            <div class="bg-light rounded" style="height:10px;width:60%;"></div>
-                        </div>
-                        <div class="btn w-100 btn-sm text-white preview-accent-btn" style="background-color: {{ object.theme_color|default:'#4F46E5' }}; border-radius: 8px;">Action Button</div>
-                    </div>
-                </div>
-
-                <div class="settings-section-title">Quick Links</div>
-                <div class="d-grid gap-2">
-                    <a href="{% url 'upload_signature' %}" class="btn btn-light text-start">
-                        <i class="bi bi-pen me-2"></i>Manage Your Signature
-                    </a>
-                    <a href="{% url 'user_management' %}" class="btn btn-light text-start">
-                        <i class="bi bi-people me-2"></i>User Permissions
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="row justify-content-center">
+<div class="col-md-7">
+<div class="card">
+<div class="card-header">Branding & Settings</div>
+<div class="card-body">
+<form method="post" enctype="multipart/form-data">
+{% csrf_token %}
+<div class="mb-3">
+<label class="form-label fw-bold">School Logo</label>
+{% if object.logo %}<div class="mb-2"><img src="{{ object.logo.url }}" height="60" class="rounded"></div>{% endif %}
+<input type="file" name="logo" class="form-control" accept="image/*">
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const colorInput = document.querySelector('input[type="color"]');
-        const previewHeader = document.getElementById('previewHeader');
-        const previewAccentBgs = document.querySelectorAll('.preview-accent-bg');
-        const previewAccentBtn = document.querySelector('.preview-accent-btn');
-        const nameInput = document.querySelector('input[name="name"]');
-        const previewName = document.getElementById('previewName');
-        const logoInput = document.getElementById('logoInput');
-        const logoPreviewImg = document.getElementById('logoPreviewImg');
-
-        // Color live preview
-        colorInput.addEventListener('input', function() {
-            const color = this.value;
-            previewHeader.style.backgroundColor = color;
-            previewAccentBtn.style.backgroundColor = color;
-            previewAccentBgs.forEach(bg => {
-                bg.style.color = color;
-                bg.style.backgroundColor = color + '1A'; // 10% opacity
-            });
-        });
-
-        // Name live preview
-        nameInput.addEventListener('input', function() {
-            previewName.textContent = this.value || 'EduCore';
-        });
-
-        // Logo preview
-        logoInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    if (logoPreviewImg) {
-                        logoPreviewImg.src = e.target.result;
-                    } else {
-                        const previewDiv = document.querySelector('.logo-preview');
-                        previewDiv.innerHTML = `<img src="${e.target.result}" id="logoPreviewImg">`;
-                    }
-                }
-                reader.readAsDataURL(this.files[0]);
-            }
-        });
-    });
-</script>
+<div class="mb-3">
+<label class="form-label fw-bold">Theme Color</label>
+<input type="color" name="theme_color" value="{{ object.theme_color|default:'#4F46E5' }}" class="form-control form-control-color">
+</div>
+<div class="mb-3">
+<label class="form-label fw-bold">School Motto</label>
+<input type="text" name="motto" value="{{ object.motto|default:'' }}" class="form-control" placeholder="e.g. Excellence in Education">
+</div>
+<button type="submit" class="btn btn-primary">Save Settings</button>
+</form>
+<div class="mb-3">
+<a href="{% url 'upload_signature' %}" class="btn btn-outline-secondary">Upload Your Signature</a>
+</div>
+</div>
+</div>
+</div>
 {% endblock %}

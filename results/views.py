@@ -9,6 +9,7 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.db import transaction
 
+from core.utils import SchoolRoleMixin, school_role_required
 from .models import Term, GradeScale, StudentResult, TermSummary
 from .forms import TermForm, GradeScaleForm, StudentResultForm, BulkResultEntryForm, TermApprovalForm
 from academics.models import Student, Subject, ClassSection, AcademicYear
@@ -258,6 +259,7 @@ class StudentResultsView(DetailView):
 
 
 @login_required
+@school_role_required(['headmaster'])
 def approve_all_results(request):
     if request.method == 'POST':
         term_id = request.POST.get('term_id')

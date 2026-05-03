@@ -2,8 +2,14 @@
 Academic models - Classes, Subjects, Students
 """
 from django.db import models
+
+
+
+
+
 from django.contrib.auth.models import User
 from schools.models import School, SchoolUser
+from core.models import TenantManager
 
 
 class AcademicYear(models.Model):
@@ -13,6 +19,9 @@ class AcademicYear(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     is_current = models.BooleanField(default=False)
+
+    objects = TenantManager()
+    all_objects = models.Manager()
 
     class Meta:
         ordering = ['-start_date']
@@ -27,6 +36,9 @@ class ClassLevel(models.Model):
     name = models.CharField(max_length=50)  # e.g., "Grade 1", "Class 5"
     order = models.IntegerField(default=0)
 
+    objects = TenantManager()
+    all_objects = models.Manager()
+
     class Meta:
         ordering = ['order', 'name']
 
@@ -40,6 +52,9 @@ class Subject(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=20, blank=True)
     description = models.TextField(blank=True)
+
+    objects = TenantManager()
+    all_objects = models.Manager()
 
     class Meta:
         ordering = ['name']
@@ -63,6 +78,9 @@ class ClassSection(models.Model):
     )
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='sections')
 
+    objects = TenantManager()
+    all_objects = models.Manager()
+
     class Meta:
         unique_together = ['class_level', 'section_name', 'academic_year']
         ordering = ['class_level__order', 'section_name']
@@ -80,10 +98,10 @@ class Student(models.Model):
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='students')
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='students', db_index=True)
     school_user = models.OneToOneField(SchoolUser, on_delete=models.CASCADE, related_name='student_details')
 
-    admission_number = models.CharField(max_length=50, unique=True)
+    admission_number = models.CharField(max_length=50, unique=True, db_index=True)
     date_of_birth = models.DateField()
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     address = models.TextField()
@@ -105,6 +123,9 @@ class Student(models.Model):
     date_joined = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
+    objects = TenantManager()
+    all_objects = models.Manager()
+
     class Meta:
         ordering = ['admission_number']
 
@@ -119,7 +140,7 @@ class ParentStudentLink(models.Model):
         ('guardian', 'Guardian'),
     ]
 
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='parent_student_links')
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='parent_student_links', null=True, blank=True)
     parent = models.ForeignKey(
         SchoolUser,
         on_delete=models.CASCADE,
@@ -129,6 +150,9 @@ class ParentStudentLink(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='parent_links')
     relationship = models.CharField(max_length=20, choices=RELATIONSHIP_CHOICES, default='parent')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = TenantManager()
+    all_objects = models.Manager()
 
     class Meta:
         unique_together = ['parent', 'student']
@@ -145,13 +169,27 @@ class ParentStudentLink(models.Model):
 
 class TeacherSubjectAssignment(models.Model):
     """Assign teachers to subjects in specific classes"""
-    teacher = models.ForeignKey(SchoolUser, on_delete=models.CASCADE, related_name='subject_assignments')
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='teacher_subject_assignments', null=True, blank=True)
+    teacher = models.ForeignKey(
+        SchoolUser, 
+        on_delete=models.CASCADE, 
+        limit_choices_to={'role': 'teacher'},
+        related_name='subject_assignments'
+    )
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='teacher_assignments')
     class_section = models.ForeignKey(ClassSection, on_delete=models.CASCADE, related_name='teacher_subjects')
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='teacher_assignments')
+
+    objects = TenantManager()
+    all_objects = models.Manager()
 
     class Meta:
         unique_together = ['teacher', 'subject', 'class_section', 'academic_year']
 
     def __str__(self):
         return f"{self.teacher.user.get_full_name()} - {self.subject.name} ({self.class_section})"
+
+    def save(self, *args, **kwargs):
+        if self.class_section_id and not self.school_id:
+            self.school = self.class_section.school
+        super().save(*args, **kwargs)

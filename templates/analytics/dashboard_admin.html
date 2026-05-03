@@ -5,6 +5,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#4F46E5';
+    
     // Enrollment Trend Chart
     const enrollmentCtx = document.getElementById('enrollmentChart').getContext('2d');
     new Chart(enrollmentCtx, {
@@ -14,8 +16,8 @@
         datasets: [{
           label: 'New Students',
           data: [12, 19, 3, 5, 2, 3],
-          borderColor: '#4F46E5',
-          backgroundColor: 'rgba(79, 70, 229, 0.1)',
+          borderColor: primaryColor,
+          backgroundColor: primaryColor + '1A', // 10% opacity
           fill: true,
           tension: 0.4
         }]

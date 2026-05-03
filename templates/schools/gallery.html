@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Gallery - {{ school.name|default:"EduCore" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .gallery-item {
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        height: 100%;
+    }
+    .gallery-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    .media-container {
+        position: relative;
+        padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        overflow: hidden;
+    }
+    .media-container img, .media-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .media-type-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        backdrop-filter: blur(4px);
+    }
+    .gallery-title {
+        font-weight: 700;
+        color: #1e293b;
+    }
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+        background: #f8fafc;
+        border-radius: 16px;
+        border: 2px dashed #e2e8f0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="gallery-title display-5 mb-3">School Gallery</h1>
+        <p class="lead text-muted">Explore moments and highlights from our school community.</p>
+    </div>
+
+    {% if gallery_items %}
+        <div class="row g-4">
+            {% for item in gallery_items %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="gallery-item">
+                        <div class="media-container">
+                            {% if item.media_type == 'image' %}
+                                <img src="{{ item.image.url }}" alt="{{ item.title }}">
+                                <span class="media-type-badge"><i class="bi bi-image me-1"></i>Image</span>
+                            {% else %}
+                                {% if 'youtube.com' in item.video_url or 'youtu.be' in item.video_url %}
+                                    {% if 'youtube.com/watch?v=' in item.video_url %}
+                                        <iframe src="https://www.youtube.com/embed/{{ item.video_url|cut:'https://www.youtube.com/watch?v=' }}" frameborder="0" allowfullscreen></iframe>
+                                    {% elif 'youtu.be/' in item.video_url %}
+                                        <iframe src="https://www.youtube.com/embed/{{ item.video_url|cut:'https://youtu.be/' }}" frameborder="0" allowfullscreen></iframe>
+                                    {% endif %}
+                                {% elif 'vimeo.com' in item.video_url %}
+                                    <iframe src="https://player.vimeo.com/video/{{ item.video_url|cut:'https://vimeo.com/' }}" frameborder="0" allowfullscreen></iframe>
+                                {% else %}
+                                    <div class="d-flex align-items-center justify-content-center h-100 bg-dark text-white">
+                                        <a href="{{ item.video_url }}" target="_blank" class="text-white text-decoration-none">
+                                            <i class="bi bi-play-circle display-4"></i>
+                                            <p class="mt-2">Watch Video</p>
+                                        </a>
+                                    </div>
+                                {% endif %}
+                                <span class="media-type-badge"><i class="bi bi-play-fill me-1"></i>Video</span>
+                            {% endif %}
+                        </div>
+                        <div class="p-4">
+                            <h5 class="fw-bold mb-2">{{ item.title }}</h5>
+                            <p class="text-muted small mb-0">{{ item.description }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-images display-1 text-muted mb-3"></i>
+            <h3>No items yet</h3>
+            <p class="text-muted">The gallery is currently empty. Check back later for updates!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

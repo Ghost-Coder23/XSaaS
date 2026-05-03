@@ -9,6 +9,7 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 
+from core.utils import SchoolRoleMixin, send_welcome_email
 from .models import AcademicYear, ClassLevel, Subject, ClassSection, Student, TeacherSubjectAssignment
 from .forms import AcademicYearForm, ClassLevelForm, SubjectForm, ClassSectionForm, StudentForm, TeacherForm, TeacherAssignmentForm
 from schools.models import SchoolUser
@@ -38,35 +39,6 @@ class AcademicYearCreateView(CreateView):
         return super().form_valid(form)
 
 
-@method_decorator(login_required, name='dispatch')
-class AcademicYearUpdateView(UpdateView):
-    model = AcademicYear
-    form_class = AcademicYearForm
-    template_name = 'academics/academic_year_form.html'
-    success_url = reverse_lazy('academics:academic_year_list')
-
-    def get_queryset(self):
-        return AcademicYear.objects.filter(school=self.request.school)
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Academic year updated successfully!')
-        return super().form_valid(form)
-
-
-@method_decorator(login_required, name='dispatch')
-class AcademicYearDeleteView(DeleteView):
-    model = AcademicYear
-    template_name = 'academics/academic_year_confirm_delete.html'
-    success_url = reverse_lazy('academics:academic_year_list')
-
-    def get_queryset(self):
-        return AcademicYear.objects.filter(school=self.request.school)
-
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, 'Academic year deleted successfully!')
-        return super().delete(request, *args, **kwargs)
-
-
 # Class Level Views
 @method_decorator(login_required, name='dispatch')
 class ClassLevelListView(ListView):
@@ -89,35 +61,6 @@ class ClassLevelCreateView(CreateView):
         form.instance.school = self.request.school
         messages.success(self.request, 'Class level created successfully!')
         return super().form_valid(form)
-
-
-@method_decorator(login_required, name='dispatch')
-class ClassLevelUpdateView(UpdateView):
-    model = ClassLevel
-    form_class = ClassLevelForm
-    template_name = 'academics/class_level_form.html'
-    success_url = reverse_lazy('academics:class_level_list')
-
-    def get_queryset(self):
-        return ClassLevel.objects.filter(school=self.request.school)
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Class level updated successfully!')
-        return super().form_valid(form)
-
-
-@method_decorator(login_required, name='dispatch')
-class ClassLevelDeleteView(DeleteView):
-    model = ClassLevel
-    template_name = 'academics/class_level_confirm_delete.html'
-    success_url = reverse_lazy('academics:class_level_list')
-
-    def get_queryset(self):
-        return ClassLevel.objects.filter(school=self.request.school)
-
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, 'Class level deleted successfully!')
-        return super().delete(request, *args, **kwargs)
 
 
 # Subject Views
@@ -221,20 +164,32 @@ class StudentCreateView(CreateView):
         return kwargs
 
     def form_valid(self, form):
-        # Create user for student
+        # Create user for student or link existing one
         import string
         import random
         from datetime import datetime
         from .models import Student
-        password_chars = string.ascii_letters + string.digits
-        password = ''.join(random.choice(password_chars) for _ in range(12))
-        user = User.objects.create_user(
-            username=form.cleaned_data['email'],
-            email=form.cleaned_data['email'],
-            password=password,
-            first_name=form.cleaned_data['first_name'],
-            last_name=form.cleaned_data['last_name']
-        )
+        from django.contrib.auth.models import User
+        
+        email = form.cleaned_data['email']
+        user = User.objects.filter(email=email).first()
+        is_new_user = False
+
+        if user:
+            if SchoolUser.objects.filter(user=user, school=self.request.school).exists():
+                messages.warning(self.request, f"User {email} is already a member of this school.")
+                return redirect('academics:student_list')
+        else:
+            is_new_user = True
+            password_chars = string.ascii_letters + string.digits
+            password = ''.join(random.choice(password_chars) for _ in range(12))
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password,
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name']
+            )
 
         # Create SchoolUser link
         school_user = SchoolUser.objects.create(
@@ -243,6 +198,9 @@ class StudentCreateView(CreateView):
             role='student',
             is_active=True
         )
+
+        # Send welcome email
+        send_welcome_email(self.request, user, self.request.school, is_new_user=is_new_user)
 
         # Generate admission number: YYYY###
         current_year = datetime.now().year
@@ -299,11 +257,12 @@ class TeacherListView(ListView):
 
 
 @method_decorator(login_required, name='dispatch')
-class TeacherCreateView(CreateView):
+class TeacherCreateView(SchoolRoleMixin, CreateView):
     model = SchoolUser
     form_class = TeacherForm
     template_name = 'academics/teacher_form.html'
     success_url = reverse_lazy('academics:teacher_list')
+    required_roles = ['headmaster', 'admin']
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -312,24 +271,26 @@ class TeacherCreateView(CreateView):
 
     def form_valid(self, form):
         from django.contrib.auth.models import User
-        from django.contrib.auth.tokens import default_token_generator
-        from django.utils.http import urlsafe_base64_encode
-        from django.utils.encoding import force_bytes
-        from django.contrib.sites.shortcuts import get_current_site
-        from django.core.mail import send_mail
-        from django.template.loader import render_to_string
         
         cleaned_data = form.cleaned_data
-        
-        # Create user
-        password = User.objects.make_random_password()
-        user = User.objects.create_user(
-            username=cleaned_data['email'],
-            email=cleaned_data['email'],
-            first_name=cleaned_data['first_name'],
-            last_name=cleaned_data['last_name'],
-            password=password
-        )
+        email = cleaned_data['email']
+        user = User.objects.filter(email=email).first()
+        is_new_user = False
+
+        if user:
+            if SchoolUser.objects.filter(user=user, school=self.request.school).exists():
+                messages.warning(self.request, f"User {email} is already a member of this school.")
+                return redirect('academics:teacher_list')
+        else:
+            is_new_user = True
+            password = User.objects.make_random_password()
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                first_name=cleaned_data['first_name'],
+                last_name=cleaned_data['last_name'],
+                password=password
+            )
         
         # Create SchoolUser
         school_user = form.save(commit=False)
@@ -339,19 +300,8 @@ class TeacherCreateView(CreateView):
         school_user.is_active = True
         school_user.save()
         
-        # Send welcome email with password reset
-        current_site = get_current_site(self.request)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
-        reset_url = f"https://{current_site.domain}/accounts/password/reset/confirm/{uid}/{token}/"
-        
-        subject = 'Welcome to EduCore! Set Your Password'
-        message = render_to_string('accounts/welcome_email.txt', {
-            'user': user,
-            'school': self.request.school,
-            'reset_link': reset_url,
-        })
-        send_mail(subject, message, 'noreply@educore.com', [user.email], html_message=message)
+        # Send welcome email
+        send_welcome_email(self.request, user, self.request.school, is_new_user=is_new_user)
         
         # Create teacher-subject assignments
         subjects = cleaned_data.get('subjects', [])
@@ -384,11 +334,12 @@ class TeacherAssignmentListView(ListView):
 
 
 @method_decorator(login_required, name='dispatch')
-class TeacherAssignmentCreateView(CreateView):
+class TeacherAssignmentCreateView(SchoolRoleMixin, CreateView):
     model = TeacherSubjectAssignment
     form_class = TeacherAssignmentForm
     template_name = 'academics/teacher_assignment_form.html'
     success_url = reverse_lazy('academics:teacher_assignment_list')
+    required_roles = ['headmaster', 'admin']
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -396,6 +347,7 @@ class TeacherAssignmentCreateView(CreateView):
         return kwargs
 
     def form_valid(self, form):
+        form.instance.school = self.request.school
         messages.success(self.request, 'Teacher assigned successfully!')
         return super().form_valid(form)
 

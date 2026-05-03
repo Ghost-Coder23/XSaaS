@@ -4,6 +4,7 @@ Results models - Marks, Grades, and Report Cards
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from academics.models import Student, Subject, ClassSection, AcademicYear, TeacherSubjectAssignment
+from core.models import TenantManager
 
 
 class Term(models.Model):
@@ -36,6 +37,9 @@ class GradeScale(models.Model):
     min_score = models.FloatField()
     max_score = models.FloatField()
     description = models.CharField(max_length=50)  # Excellent, Good, etc.
+
+    objects = TenantManager()
+    all_objects = models.Manager()
 
     class Meta:
         ordering = ['-min_score']

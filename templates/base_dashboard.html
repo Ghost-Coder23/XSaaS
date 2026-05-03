@@ -11,13 +11,11 @@
 :root {
   --primary: {{ current_school.theme_color|default:"#4F46E5" }};
   --primary-dark: #3730a3;
-  --sidebar-bg: #0f172a;
-  --sidebar-width: 260px;
-  --topbar-height: 64px;
+  --sidebar-bg: #1e1b4b;
+  --sidebar-width: 256px;
 }
 * { box-sizing: border-box; }
-body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: #f8fafc; margin: 0; color: #1e293b; }
-
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; margin: 0; }
 /* Sidebar */
 .sidebar { 
   width: var(--sidebar-width); 
@@ -28,118 +26,187 @@ body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: #f8f
   left: 0; 
   z-index: 200; 
   overflow-y: auto; 
-  transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); 
+  transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex; 
   flex-direction: column;
   box-shadow: 4px 0 10px rgba(0,0,0,0.1);
 }
 .sidebar-brand { 
   padding: 1.5rem 1.25rem; 
-  border-bottom: 1px solid rgba(255,255,255,.05);
-  background: rgba(255,255,255,0.02);
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.05); 
 }
-.sidebar-brand h5 { color: #f8fafc; font-weight: 700; margin: 0; font-size: 1.1rem; letter-spacing: -0.01em; }
-.sidebar-brand small { color: #94a3b8; font-size: .75rem; font-weight: 500; }
+.sidebar-brand h5 { color: #fff; font-weight: 700; margin: 0; font-size: 1.1rem; }
+.sidebar-brand small { color: rgba(255,255,255,0.5); font-size: .75rem; display: block; margin-top: 4px; }
 
 .nav-section { 
-  color: #64748b; 
+  color: rgba(255,255,255,0.4); 
   font-size: .7rem; 
-  font-weight: 700; 
+  font-weight: 800; 
   text-transform: uppercase; 
-  letter-spacing: .1em; 
+  letter-spacing: .12em; 
   padding: 1.5rem 1.25rem .5rem; 
 }
 .nav-link { 
-  color: #94a3b8 !important; 
-  padding: 0.75rem 1.25rem; 
-  margin: 0.125rem 0.75rem;
+  color: rgba(255,255,255,0.7) !important; 
+  padding: .75rem 1.25rem; 
+  margin: 0.1rem 0.75rem;
   border-radius: 10px; 
   font-size: .875rem; 
-  font-weight: 500;
   display: flex; 
   align-items: center; 
   gap: 12px; 
   transition: all .2s; 
   text-decoration: none; 
+  background: transparent !important;
 }
 .nav-link:hover { 
-  color: #f8fafc !important; 
-  background: rgba(255,255,255,0.05); 
+  color: #fff !important; 
+  background: rgba(255,255,255,0.08) !important;
+  transform: translateX(4px);
 }
 .nav-link.active { 
   color: #fff !important; 
-  background: var(--primary); 
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  background: var(--primary) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 .nav-link i { font-size: 1.1rem; width: 20px; text-align: center; }
 
 .sidebar-footer { 
   margin-top: auto; 
-  padding: 1rem; 
+  padding: 1rem 0.75rem; 
   background: rgba(0,0,0,0.2);
 }
-
-/* Main Content */
-.main-content { margin-left: var(--sidebar-width); min-height: 100vh; transition: all .3s; }
-.topbar { 
-  background: rgba(255,255,255,0.8);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid #e2e8f0; 
-  height: var(--topbar-height);
-  padding: 0 1.5rem; 
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between; 
-  position: sticky; 
-  top: 0; 
-  z-index: 100; 
-}
-.page-content { padding: 2rem; max-width: 1400px; margin: 0 auto; }
-.max-width-400 { max-width: 400px; }
-
-/* Components */
+.sidebar-footer .nav-link { margin: 0.25rem 0; }
+/* Main */
+.main-content { margin-left: var(--sidebar-width); min-height: 100vh; transition: margin .25s ease; }
+.topbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: .7rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 1rem; }
+.topbar-left { display: flex; align-items: center; gap: .75rem; }
+.topbar-right { display: flex; align-items: center; gap: .75rem; }
+.page-content { padding: 1.5rem; }
+/* Cards */
 .card { 
   border: none; 
   border-radius: 16px; 
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); 
   background: #fff; 
+  transition: transform 0.2s;
 }
 .card-header { 
   background: transparent; 
   border-bottom: 1px solid #f1f5f9; 
-  font-weight: 600; 
+  font-weight: 700; 
   padding: 1.25rem 1.5rem; 
+  color: #1e293b;
 }
-.btn { border-radius: 10px; font-weight: 500; transition: all 0.2s; }
-.btn-primary { box-shadow: 0 2px 4px rgba(79, 70, 229, 0.1); }
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2); }
 
-/* Stats */
-.stat-card { padding: 1.5rem; }
-.stat-icon { 
-  width: 48px; 
-  height: 48px; 
-  border-radius: 12px; 
+/* Stat cards */
+.stat-card { 
+  background: #fff; 
+  border: none; 
+  border-radius: 16px; 
+  padding: 1.5rem; 
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.stat-card .stat-icon { 
+  width: 56px; 
+  height: 56px; 
+  border-radius: 14px; 
   display: flex; 
   align-items: center; 
   justify-content: center; 
-  font-size: 1.25rem; 
+  font-size: 1.5rem; 
+  flex-shrink: 0;
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--primary);
 }
-.stat-number { font-size: 1.875rem; font-weight: 700; color: #0f172a; }
+.stat-card .stat-number { 
+  font-size: 1.875rem; 
+  font-weight: 800; 
+  line-height: 1; 
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+.stat-card .stat-label { 
+  font-size: .875rem; 
+  font-weight: 600;
+  color: #64748b; 
+}
+/* Buttons */
+.btn-primary { background: var(--primary); border-color: var(--primary); font-weight: 600; border-radius: 10px; padding: 0.5rem 1.25rem; }
+.btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); transform: translateY(-1px); }
+.btn-outline-primary { color: var(--primary) !important; border-color: var(--primary); font-weight: 600; border-radius: 10px; }
+.btn-outline-primary:hover { background: var(--primary); color: #fff !important; }
+.btn-outline-secondary, .btn-outline-success, .btn-outline-warning, .btn-outline-info, .btn-outline-danger {
+  font-weight: 600;
+  border-radius: 10px;
+}
 
-/* Custom Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+/* Dashboard refinements */
+.dashboard-card { border: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.dashboard-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
 
-@media (max-width: 1024px) {
+.soft-table { border-collapse: separate; border-spacing: 0 8px; }
+.soft-table tr { background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border-radius: 10px; }
+.soft-table td { border: none; padding: 1rem; }
+.soft-table td:first-child { border-radius: 10px 0 0 10px; }
+.soft-table td:last-child { border-radius: 0 10px 10px 0; }
+.text-primary { color: var(--primary) !important; }
+.bg-primary { background: var(--primary) !important; }
+/* Badges */
+.badge-present { background: #dcfce7; color: #166534; }
+.badge-absent { background: #fee2e2; color: #991b1b; }
+.badge-late { background: #fef9c3; color: #854d0e; }
+.badge-excused { background: #dbeafe; color: #1e40af; }
+.badge-role-headmaster { background: #ede9fe; color: #5b21b6; }
+.badge-role-admin { background: #dbeafe; color: #1d4ed8; }
+.badge-role-teacher { background: #d1fae5; color: #065f46; }
+.badge-role-student { background: #fef9c3; color: #854d0e; }
+.badge-role-parent { background: #fce7f3; color: #9d174d; }
+/* Notif bell */
+.notif-badge { position: absolute; top: -4px; right: -4px; background: #ef4444; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: .6rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+/* Alert */
+.alert { border-radius: 10px; border: none; font-size: .875rem; }
+/* Table */
+.table th { font-size: .75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid #e2e8f0; }
+.table td { font-size: .875rem; vertical-align: middle; }
+/* Mobile */
+@media (max-width: 768px) {
   .sidebar { transform: translateX(-100%); }
   .sidebar.open { transform: translateX(0); }
   .main-content { margin-left: 0; }
+  .page-content { padding: 1rem; }
+  .stat-card .stat-number { font-size: 1.5rem; }
 }
+/* Desktop sidebar - ensure scrolling */
+@media (min-width: 769px) {
+  .sidebar {
+    height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+  }
+  .sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .sidebar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.3);
+    border-radius: 3px;
+  }
+  .sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,.5);
+  }
+}
+
+/* Sidebar overlay */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 199; }
+.sidebar-overlay.show { display: block; }
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -222,14 +289,11 @@ body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: #f8f
     </a>
 
     <div class="nav-section">Administration</div>
-    <a href="{% url 'inventory:dashboard' %}" class="nav-link {% if 'inventory' in request.path %}active{% endif %}">
-      <i class="bi bi-box-seam"></i> Inventory & Assets
-    </a>
     <a href="{% url 'academics:academic_year_list' %}" class="nav-link {% if 'years' in request.path %}active{% endif %}">
       <i class="bi bi-calendar-range"></i> Academic Years
     </a>
     <a href="{% url 'academics:teacher_assignment_list' %}" class="nav-link {% if 'assignments' in request.path %}active{% endif %}">
-      <i class="bi bi-person-check"></i> Teacher Assignments
+      <i class="bi bi-person-workspace"></i> Teacher Assignments
     </a>
     <a href="{% url 'school_settings' %}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
       <i class="bi bi-gear"></i> Settings
@@ -267,21 +331,11 @@ body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: #f8f
 
 <div class="main-content">
   <div class="topbar">
-    <div class="topbar-left d-flex align-items-center flex-grow-1">
-      <button class="btn btn-sm btn-light d-md-none me-2" onclick="toggleSidebar()" aria-label="Menu">
+    <div class="topbar-left">
+      <button class="btn btn-sm btn-light d-md-none" onclick="toggleSidebar()" aria-label="Menu">
         <i class="bi bi-list fs-5"></i>
       </button>
-      
-      <!-- Global Search -->
-      <div class="search-container d-none d-lg-block flex-grow-1 max-width-400 ms-2 position-relative">
-        <div class="input-group input-group-sm">
-          <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
-          <input type="text" class="form-control bg-light border-0" placeholder="Search students, teachers, or classes..." id="globalSearch" autocomplete="off">
-        </div>
-        <div id="search-results" class="dropdown-menu shadow border-0 w-100 mt-1" style="display: none; max-height: 400px; overflow-y: auto;"></div>
-      </div>
-
-      <nav aria-label="breadcrumb" class="d-none d-md-block ms-3">
+      <nav aria-label="breadcrumb" class="d-none d-md-block">
         <span class="text-muted" style="font-size:.85rem;">{% block page_title %}{% endblock %}</span>
       </nav>
     </div>
@@ -349,69 +403,12 @@ function loadNotifCount() {
     .then(r => r.json())
     .then(d => {
       const el = document.getElementById('notif-count');
-      if (d.count > 0) {
-        el.innerText = d.count;
-        el.style.display = 'flex';
-      } else {
-        el.style.display = 'none';
-      }
-    });
+      if (d.count > 0) { el.textContent = d.count; el.style.display = 'flex'; }
+      else el.style.display = 'none';
+    }).catch(() => {});
 }
 loadNotifCount();
 setInterval(loadNotifCount, 60000);
-
-// Global Search Logic
-const searchInput = document.getElementById('globalSearch');
-const resultsBox = document.getElementById('search-results');
-let searchTimeout;
-
-if (searchInput) {
-  searchInput.addEventListener('input', function() {
-    clearTimeout(searchTimeout);
-    const query = this.value.trim();
-    
-    if (query.length < 2) {
-      resultsBox.style.display = 'none';
-      return;
-    }
-
-    searchTimeout = setTimeout(() => {
-      fetch(`/analytics/search/?q=${encodeURIComponent(query)}`)
-        .then(r => r.json())
-        .then(data => {
-          resultsBox.innerHTML = '';
-          if (data.results.length > 0) {
-            data.results.forEach(item => {
-              const div = document.createElement('a');
-              div.href = item.url;
-              div.className = 'dropdown-item d-flex align-items-center gap-3 py-2';
-              div.innerHTML = `
-                <div class="rounded-circle bg-light p-2 text-primary">
-                  <i class="bi ${item.icon}"></i>
-                </div>
-                <div>
-                  <div class="fw-bold small">${item.title}</div>
-                  <div class="text-muted" style="font-size: .75rem;">${item.subtitle}</div>
-                </div>
-              `;
-              resultsBox.appendChild(div);
-            });
-            resultsBox.style.display = 'block';
-          } else {
-            resultsBox.innerHTML = '<div class="dropdown-item text-muted small py-3 text-center">No results found</div>';
-            resultsBox.style.display = 'block';
-          }
-        });
-    }, 300);
-  });
-
-  // Close results when clicking outside
-  document.addEventListener('click', function(e) {
-    if (!searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
-      resultsBox.style.display = 'none';
-    }
-  });
-}
 </script>
 {% block extra_js %}{% endblock %}
 </body>

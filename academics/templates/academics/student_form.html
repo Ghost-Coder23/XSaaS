@@ -12,12 +12,7 @@
 <div class="col-md-4"><label class="form-label">Email *</label><input type="email" name="email" value="{{ form.email.value|default:'' }}" class="form-control {% if form.email.errors %}is-invalid{% endif %}" required>{% for e in form.email.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}</div>
 <div class="col-md-4"><label class="form-label">Date of Birth *</label><input type="date" name="date_of_birth" value="{{ form.date_of_birth.value|default:'' }}" class="form-control {% if form.date_of_birth.errors %}is-invalid{% endif %}" required>{% for e in form.date_of_birth.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}</div>
 <div class="col-md-4"><label class="form-label">Gender *</label><select name="gender" class="form-select {% if form.gender.errors %}is-invalid{% endif %}" required><option value="">Select</option><option value="M">Male</option><option value="F">Female</option><option value="O">Other</option></select>{% for e in form.gender.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}</div>
-<div class="col-md-6">
-  <div class="d-flex justify-content-between align-items-center mb-1">
-    <label class="form-label mb-0">Class</label>
-    <a href="{% url 'academics:class_section_add' %}" class="text-primary small text-decoration-none"><i class="bi bi-plus-circle me-1"></i>New Class</a>
-  </div>
-  <select name="current_class" class="form-select">
+<div class="col-md-6"><label class="form-label">Class</label><select name="current_class" class="form-select">
 <option value="">-- Select Class --</option>
 {% for cs in form.current_class.field.queryset %}<option value="{{ cs.id }}" {% if form.current_class.value == cs.id|stringformat:'s' %}selected{% endif %}>{{ cs }}</option>{% endfor %}
 </select></div>

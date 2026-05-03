@@ -4,6 +4,7 @@ Schools models - Multi-tenant school management
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+from core.models import TenantManager
 
 
 class School(models.Model):
@@ -16,7 +17,7 @@ class School(models.Model):
     ]
 
     name = models.CharField(max_length=200)
-    subdomain = models.CharField(max_length=50, unique=True)
+    subdomain = models.CharField(max_length=50, unique=True, db_index=True)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
@@ -56,9 +57,9 @@ class SchoolUser(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='school_memberships')
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='members')
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    is_active = models.BooleanField(default=True)
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='members', db_index=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     signature = models.ImageField(upload_to='signatures/', blank=True, null=True)
 
@@ -67,3 +68,29 @@ class SchoolUser(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.school.name} ({self.role})"
+
+
+class GalleryItem(models.Model):
+    """Gallery item (image or video) for a school"""
+    MEDIA_TYPE_CHOICES = [
+        ('image', 'Image'),
+        ('video', 'Video'),
+    ]
+
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='gallery_items')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    media_type = models.CharField(max_length=10, choices=MEDIA_TYPE_CHOICES, default='image')
+    image = models.ImageField(upload_to='gallery/images/', blank=True, null=True, help_text="Upload if media type is Image")
+    video_url = models.URLField(blank=True, null=True, help_text="YouTube or Vimeo URL if media type is Video")
+    is_featured = models.BooleanField(default=False, help_text="Show on the home page")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = TenantManager()
+    all_objects = models.Manager()
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.media_type}) - {self.school.name}"

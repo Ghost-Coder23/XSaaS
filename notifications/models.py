@@ -4,6 +4,7 @@ Notifications models - In-app notifications with SMS/email stubs
 from django.db import models
 from django.contrib.auth.models import User
 from schools.models import School
+from core.models import TenantManager
 
 
 class Notification(models.Model):
@@ -26,6 +27,9 @@ class Notification(models.Model):
     is_read = models.BooleanField(default=False)
     link = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = TenantManager()
+    all_objects = models.Manager()
 
     class Meta:
         ordering = ['-created_at']
@@ -50,6 +54,9 @@ class SMSLog(models.Model):
     provider_response = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    objects = TenantManager()
+    all_objects = models.Manager()
+
     class Meta:
         ordering = ['-created_at']
 
@@ -73,6 +80,9 @@ class Announcement(models.Model):
     created_by = models.ForeignKey('schools.SchoolUser', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True)
+
+    objects = TenantManager()
+    all_objects = models.Manager()
 
     class Meta:
         ordering = ['-created_at']

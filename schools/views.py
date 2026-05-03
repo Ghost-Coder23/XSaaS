@@ -19,7 +19,8 @@ from django.core.mail import send_mail
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
 
-from .models import School, SchoolUser
+from core.utils import SchoolRoleMixin, send_welcome_email
+from .models import School, SchoolUser, GalleryItem
 from .forms import SchoolRegistrationForm, SchoolBrandingForm, AddSchoolUserForm, ParentRegistrationForm, SchoolUserEditForm, SchoolUserSignatureForm
 
 
@@ -325,52 +326,47 @@ class UserManagementView(ListView):
 
 @login_required
 def add_school_user(request):
-    """Add a new user to the school"""
+    """Add a new user to the school or link an existing one"""
     if request.method == 'POST':
         form = AddSchoolUserForm(request.POST)
         if form.is_valid():
             school = request.school
+            email = form.cleaned_data['email']
+            role = form.cleaned_data['role']
 
-            # Create user
-            import random
-            import string
-            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
-            user = User.objects.create_user(
-                username=form.cleaned_data['email'],
-                email=form.cleaned_data['email'],
-                password=temp_password,
-                first_name=form.cleaned_data['first_name'],
-                last_name=form.cleaned_data['last_name']
-            )
+            # Check if user already exists
+            user = User.objects.filter(email=email).first()
+            
+            if user:
+                # User exists, check if they are already in this school
+                if SchoolUser.objects.filter(user=user, school=school).exists():
+                    messages.warning(request, f"User {email} is already a member of this school.")
+                    return redirect('user_management')
+            else:
+                # Create new user
+                import random
+                import string
+                temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+                user = User.objects.create_user(
+                    username=email,
+                    email=email,
+                    password=temp_password,
+                    first_name=form.cleaned_data['first_name'],
+                    last_name=form.cleaned_data['last_name']
+                )
 
-            # Create SchoolUser
+            # Create SchoolUser membership
             SchoolUser.objects.create(
                 user=user,
                 school=school,
-                role=form.cleaned_data['role'],
+                role=role,
                 is_active=True
             )
 
-            # Send welcome email with password reset link
-            from django.contrib.sites.shortcuts import get_current_site
-            from django.utils.http import urlsafe_base64_encode
-            from django.utils.encoding import force_bytes
-            from django.template.loader import render_to_string
-            from django.contrib.auth.tokens import default_token_generator
-            
-            current_site = get_current_site(request)
-            subject = 'Welcome to EduCore! Set your password'
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            reset_link = f"http://{current_site.domain}/accounts/password/reset/confirm/{uid}/{token}/"
-            message = render_to_string('accounts/welcome_email.txt', {
-                'user': user,
-                'school': school,
-                'reset_link': reset_link,
-            })
-            user.email_user(subject, message)
+            # Send welcome/notification email
+            send_welcome_email(request, user, school, is_new_user=is_new_user)
 
-            messages.success(request, f"User {user.get_full_name()} added successfully!")
+            messages.success(request, f"User {user.get_full_name()} added to {school.name}!")
             return redirect('user_management')
 
     return redirect('user_management')
@@ -452,6 +448,7 @@ class ParentRegistrationView(CreateView):
 
     def form_valid(self, form):
         school = self.request.school
+        email = form.cleaned_data['parent_email']
         from academics.models import Student, ParentStudentLink
         student = Student.objects.get(
             school=school,
@@ -459,21 +456,25 @@ class ParentRegistrationView(CreateView):
         )
 
         with transaction.atomic():
-            # Create user
-            user = User.objects.create_user(
-                username=form.cleaned_data['parent_email'],
-                email=form.cleaned_data['parent_email'],
-                password=form.cleaned_data['password1'],
-                first_name=form.cleaned_data['parent_first_name'],
-                last_name=form.cleaned_data['parent_last_name']
-            )
+            # Check if user already exists
+            user = User.objects.filter(email=email).first()
+            
+            if not user:
+                is_new_user = True
+                # Create user
+                user = User.objects.create_user(
+                    username=email,
+                    email=email,
+                    password=form.cleaned_data['password1'],
+                    first_name=form.cleaned_data['parent_first_name'],
+                    last_name=form.cleaned_data['parent_last_name']
+                )
 
-            # Create SchoolUser
-            parent_membership = SchoolUser.objects.create(
+            # Create or get SchoolUser membership
+            parent_membership, created = SchoolUser.objects.get_or_create(
                 user=user,
                 school=school,
-                role='parent',
-                is_active=True
+                defaults={'role': 'parent', 'is_active': True}
             )
 
             # Explicitly link parent to selected child.
@@ -487,19 +488,22 @@ class ParentRegistrationView(CreateView):
             # Auto-link additional children sharing the same parent email in this school.
             sibling_students = Student.objects.filter(
                 school=school,
-                parent_email__iexact=form.cleaned_data['parent_email'],
+                parent_email__iexact=email,
                 is_active=True,
             ).exclude(pk=student.pk)
             linked_count = 1
             for sibling in sibling_students:
-                _, created = ParentStudentLink.objects.get_or_create(
+                _, created_link = ParentStudentLink.objects.get_or_create(
                     school=school,
                     parent=parent_membership,
                     student=sibling,
                     defaults={'relationship': 'parent'},
                 )
-                if created:
+                if created_link:
                     linked_count += 1
+
+        if is_new_user:
+            send_welcome_email(self.request, user, school, is_new_user=True)
 
         messages.success(
             self.request,
@@ -552,3 +556,21 @@ self.addEventListener('activate', event => {
 });
 """
     return HttpResponse(content, content_type='application/javascript')
+
+
+class GalleryListView(ListView):
+    """Gallery page showing images and videos for a school"""
+    model = GalleryItem
+    template_name = 'schools/gallery.html'
+    context_object_name = 'gallery_items'
+
+    def get_queryset(self):
+        # If accessing via school subdomain/context
+        if hasattr(self.request, 'school') and self.request.school:
+            return GalleryItem.objects.filter(school=self.request.school)
+        return GalleryItem.objects.none()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['school'] = getattr(self.request, 'school', None)
+        return context
