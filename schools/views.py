@@ -336,6 +336,7 @@ def add_school_user(request):
 
             # Check if user already exists
             user = User.objects.filter(email=email).first()
+            is_new_user = False
             
             if user:
                 # User exists, check if they are already in this school
@@ -344,6 +345,7 @@ def add_school_user(request):
                     return redirect('user_management')
             else:
                 # Create new user
+                is_new_user = True
                 import random
                 import string
                 temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
@@ -458,6 +460,7 @@ class ParentRegistrationView(CreateView):
         with transaction.atomic():
             # Check if user already exists
             user = User.objects.filter(email=email).first()
+            is_new_user = False
             
             if not user:
                 is_new_user = True

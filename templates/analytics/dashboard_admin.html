@@ -12,10 +12,10 @@
     new Chart(enrollmentCtx, {
       type: 'line',
       data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        labels: {{ enrollment_labels|safe }},
         datasets: [{
           label: 'New Students',
-          data: [12, 19, 3, 5, 2, 3],
+          data: {{ enrollment_data|safe }},
           borderColor: primaryColor,
           backgroundColor: primaryColor + '1A', // 10% opacity
           fill: true,

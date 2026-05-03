@@ -57,10 +57,10 @@ class StudentResult(models.Model):
         ('locked', 'Locked'),
     ]
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='results')
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='student_results')
-    term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='student_results')
-    class_section = models.ForeignKey(ClassSection, on_delete=models.CASCADE, related_name='results')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='results', db_index=True)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='student_results', db_index=True)
+    term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='student_results', db_index=True)
+    class_section = models.ForeignKey(ClassSection, on_delete=models.CASCADE, related_name='results', db_index=True)
 
     # Assessment components (customizable per school)
     continuous_assessment = models.FloatField(

@@ -118,22 +118,32 @@ class ResultEntryView(TemplateView):
                 current_class=class_section,
                 school=school,
                 is_active=True
-            )
+            ).select_related('user')
 
             school_user = self.request.user.school_memberships.filter(school=school).first()
 
+            # Pre-fetch existing results to avoid N+1 in the loop
+            existing_results = StudentResult.objects.filter(
+                student__in=students,
+                subject=subject,
+                term=term
+            ).select_related('student', 'student__user')
+            
+            results_map = {r.student_id: r for r in existing_results}
+
             results = []
             for student in students:
-                result, created = StudentResult.objects.get_or_create(
-                    student=student,
-                    subject=subject,
-                    term=term,
-                    defaults={
-                        'class_section': class_section,
-                        'entered_by': school_user,
-                        'status': 'draft'
-                    }
-                )
+                if student.id in results_map:
+                    result = results_map[student.id]
+                else:
+                    result = StudentResult.objects.create(
+                        student=student,
+                        subject=subject,
+                        term=term,
+                        class_section=class_section,
+                        entered_by=school_user,
+                        status='draft'
+                    )
                 results.append(result)
 
             context['class_section'] = class_section

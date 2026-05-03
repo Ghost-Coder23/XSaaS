@@ -203,6 +203,22 @@ def admin_dashboard(request, school, membership):
         count = Student.objects.filter(current_class=cs, school=school, is_active=True).count()
         classes_data.append({'class': cs, 'count': count})
 
+    # Enrollment Trends (Last 6 months)
+    enrollment_data = []
+    enrollment_labels = []
+    for i in range(5, -1, -1):
+        target_month = (today.month - i - 1) % 12 + 1
+        target_year = today.year + (today.month - i - 1) // 12
+        m_start = date(target_year, target_month, 1)
+        if target_month == 12:
+            m_end = date(target_year + 1, 1, 1)
+        else:
+            m_end = date(target_year, target_month + 1, 1)
+            
+        count = Student.objects.filter(school=school, date_joined__gte=m_start, date_joined__lt=m_end).count()
+        enrollment_data.append(count)
+        enrollment_labels.append(m_start.strftime('%b'))
+
     unread_notifications = Notification.objects.filter(
         recipient=request.user, school=school, is_read=False
     ).order_by('-created_at')[:5]
@@ -225,6 +241,8 @@ def admin_dashboard(request, school, membership):
         'classes_marked_today': classes_marked,
         'classes_not_marked': classes_not_marked,
         'classes_data': classes_data,
+        'enrollment_data': enrollment_data,
+        'enrollment_labels': enrollment_labels,
         'current_term': current_term,
         'unread_notifications': unread_notifications,
         'today': today,
