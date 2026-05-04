@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'superadmin',
     'inventory',
     'core',
+    'messaging',
 ]
 
 MIDDLEWARE = [

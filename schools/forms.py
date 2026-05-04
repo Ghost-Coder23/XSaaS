@@ -14,7 +14,7 @@ class SchoolRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = School
-        fields = ['name', 'subdomain', 'email', 'phone', 'address']
+        fields = ['name', 'subdomain']
         widgets = {
             'subdomain': forms.TextInput(attrs={
                 'placeholder': 'e.g., greenwood',

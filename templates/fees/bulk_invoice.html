@@ -1,36 +1,70 @@
 {% extends "base_dashboard.html" %}
-{% block title %}Bulk Invoice{% endblock %}
-{% block page_title %}Bulk Invoice{% endblock %}
+{% block title %}Bulk Billing — AcademiaLink{% endblock %}
+{% block page_title %}Mass Billing{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-header"><i class="bi bi-people me-2"></i>Create Invoices for All Students</div>
-      <div class="card-body">
-        <p class="text-muted" style="font-size:.88rem;">Select a fee structure and optionally a class. Invoices will be created for all matching students who don't already have one.</p>
-        <form method="post">
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-transparent border-0 pt-4 px-4 text-center">
+        <div class="icon-circle bg-primary-subtle text-primary mx-auto mb-3">
+            <i class="bi bi-people fs-3"></i>
+        </div>
+        <h5 class="fw-bold mb-0">Generate Mass Invoices</h5>
+      </div>
+      <div class="card-body p-4 p-md-5">
+        <p class="text-muted text-center mb-4" style="font-size:.95rem;">Automate your billing process by generating invoices for entire classes or the whole school at once.</p>
+        
+        <form method="post" class="bg-light p-4 rounded-4">
           {% csrf_token %}
-          <div class="mb-3">
-            <label class="form-label fw-semibold" style="font-size:.83rem;">Fee Structure</label>
-            <select name="fee_structure" class="form-select" required>
-              <option value="">Select fee structure...</option>
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-muted text-uppercase">Select Fee Structure</label>
+            <select name="fee_structure" class="form-select form-select-lg" required>
+              <option value="">Choose a fee...</option>
               {% for s in structures %}<option value="{{ s.id }}">{{ s.name }} — {{ s.currency }} {{ s.amount }}</option>{% endfor %}
             </select>
+            <div class="form-text small">Only students without an existing invoice for this fee will be billed.</div>
           </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold" style="font-size:.83rem;">Class (optional — leave blank for all students)</label>
-            <select name="class_section" class="form-select">
-              <option value="">All Students</option>
+          
+          <div class="mb-5">
+            <label class="form-label fw-bold small text-muted text-uppercase">Target Audience</label>
+            <select name="class_section" class="form-select form-select-lg">
+              <option value="">Entire School (All Students)</option>
               {% for c in classes %}<option value="{{ c.id }}">{{ c }}</option>{% endfor %}
             </select>
           </div>
-          <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-check me-1"></i>Create Invoices</button>
-            <a href="{% url 'fees:invoice_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg fw-bold rounded-3 py-3">
+                <i class="bi bi-lightning-charge-fill me-2"></i>Generate Invoices Now
+            </button>
+            <a href="{% url 'fees:home' %}" class="btn btn-link text-muted text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i>Back to Finance
+            </a>
           </div>
         </form>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+    .icon-circle {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .form-select-lg {
+        border-radius: 12px;
+        font-size: 1rem;
+        padding: 0.75rem 1.25rem;
+        border: 2px solid #e2e8f0;
+    }
+    .form-select-lg:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+</style>
 {% endblock %}

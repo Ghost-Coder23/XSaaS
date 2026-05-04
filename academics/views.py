@@ -63,6 +63,35 @@ class ClassLevelCreateView(CreateView):
         return super().form_valid(form)
 
 
+@method_decorator(login_required, name='dispatch')
+class ClassLevelUpdateView(UpdateView):
+    model = ClassLevel
+    form_class = ClassLevelForm
+    template_name = 'academics/class_level_form.html'
+    success_url = reverse_lazy('academics:class_level_list')
+
+    def get_queryset(self):
+        return ClassLevel.objects.filter(school=self.request.school)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Class level updated successfully!')
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class ClassLevelDeleteView(DeleteView):
+    model = ClassLevel
+    template_name = 'academics/class_level_confirm_delete.html'
+    success_url = reverse_lazy('academics:class_level_list')
+
+    def get_queryset(self):
+        return ClassLevel.objects.filter(school=self.request.school)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Class level deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+
 # Subject Views
 @method_decorator(login_required, name='dispatch')
 class SubjectListView(ListView):
@@ -257,6 +286,20 @@ class TeacherListView(ListView):
 
 
 @method_decorator(login_required, name='dispatch')
+class ParentListView(ListView):
+    model = SchoolUser
+    template_name = 'academics/parent_list.html'
+    context_object_name = 'parents'
+
+    def get_queryset(self):
+        return SchoolUser.objects.filter(
+            school=self.request.school,
+            role='parent',
+            is_active=True
+        ).select_related('user').prefetch_related('child_links__student')
+
+
+@method_decorator(login_required, name='dispatch')
 class TeacherCreateView(SchoolRoleMixin, CreateView):
     model = SchoolUser
     form_class = TeacherForm
@@ -350,6 +393,40 @@ class TeacherAssignmentCreateView(SchoolRoleMixin, CreateView):
         form.instance.school = self.request.school
         messages.success(self.request, 'Teacher assigned successfully!')
         return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class TeacherAssignmentUpdateView(UpdateView):
+    model = TeacherSubjectAssignment
+    form_class = TeacherAssignmentForm
+    template_name = 'academics/teacher_assignment_form.html'
+    success_url = reverse_lazy('academics:teacher_assignment_list')
+
+    def get_queryset(self):
+        return TeacherSubjectAssignment.objects.filter(class_section__school=self.request.school)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['school'] = self.request.school
+        return kwargs
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Assignment updated successfully!')
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class TeacherAssignmentDeleteView(DeleteView):
+    model = TeacherSubjectAssignment
+    template_name = 'academics/teacher_assignment_confirm_delete.html'
+    success_url = reverse_lazy('academics:teacher_assignment_list')
+
+    def get_queryset(self):
+        return TeacherSubjectAssignment.objects.filter(class_section__school=self.request.school)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Assignment removed successfully!')
+        return super().delete(request, *args, **kwargs)
 
 
 # Student Edit/Delete Views

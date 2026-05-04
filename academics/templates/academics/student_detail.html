@@ -24,8 +24,13 @@
 </table>
 </div>
 </div>
-<div class="card">
-<div class="card-header">Parent/Guardian</div>
+<div class="card mb-3">
+<div class="card-header d-flex justify-content-between align-items-center">
+    <span>Parent/Guardian</span>
+    {% if school_role in 'headmaster,admin,teacher' %}
+    <small class="text-muted">Primary Contact</small>
+    {% endif %}
+</div>
 <div class="card-body">
 <table class="table table-sm mb-0">
 <tr><th width="40%">Name</th><td>{{ student.parent_name }}</td></tr>
@@ -34,6 +39,30 @@
 </table>
 </div>
 </div>
+
+{% if student.parent_links.all %}
+<div class="card">
+<div class="card-header">Linked Accounts</div>
+<div class="card-body p-0">
+<table class="table table-sm mb-0">
+{% for link in student.parent_links.all %}
+<tr>
+    <td class="px-3 py-2">
+        <strong>{{ link.parent.user.get_full_name }}</strong> ({{ link.relationship|title }})
+    </td>
+    <td class="text-end px-3">
+        {% if request.user != link.parent.user %}
+        <a href="{% url 'messaging:start' link.parent.user.id %}" class="btn btn-sm btn-outline-info">
+            <i class="bi bi-chat-left-dots me-1"></i>Message
+        </a>
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}
+</table>
+</div>
+</div>
+{% endif %}
 </div>
 </div>
 <div class="mt-3">

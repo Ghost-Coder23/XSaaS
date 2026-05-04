@@ -18,4 +18,4 @@ If you did not expect this email, you can ignore it.
 
 Best regards,
 The {{ school.name }} Team
-via EduCore
+via AcademiaLink

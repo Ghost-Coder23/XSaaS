@@ -5,46 +5,86 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#4F46E5';
+    // Use hex color directly from template to avoid getComputedStyle rgb() issues
+    const primaryColor = '{{ current_school.theme_color|default:"#4F46E5" }}';
     
     // Enrollment Trend Chart
     const enrollmentCtx = document.getElementById('enrollmentChart').getContext('2d');
+    const enrollmentData = {{ enrollment_data|safe }};
+    const hasEnrollmentData = enrollmentData.some(v => v > 0);
+
     new Chart(enrollmentCtx, {
       type: 'line',
       data: {
         labels: {{ enrollment_labels|safe }},
         datasets: [{
           label: 'New Students',
-          data: {{ enrollment_data|safe }},
+          data: enrollmentData,
           borderColor: primaryColor,
-          backgroundColor: primaryColor + '1A', // 10% opacity
+          backgroundColor: primaryColor + '1A', // Works with Hex
           fill: true,
-          tension: 0.4
+          tension: 0.4,
+          pointRadius: hasEnrollmentData ? 3 : 0
         }]
       },
       options: {
         responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+        maintainAspectRatio: false,
+        plugins: { 
+          legend: { display: false },
+          tooltip: { enabled: hasEnrollmentData }
+        },
+        scales: { 
+          y: { 
+            beginAtZero: true, 
+            min: 0,
+            max: hasEnrollmentData ? undefined : 10,
+            ticks: { stepSize: 1 },
+            grid: { display: false } 
+          }, 
+          x: { grid: { display: false } } 
+        }
       }
     });
 
     // Fee Collection Chart
     const feeCtx = document.getElementById('feeChart').getContext('2d');
+    const feeCollected = {{ fee_collected_pct|default:0 }};
+    const feePending = {{ fee_pending_pct|default:0 }};
+    const hasFeeData = (feeCollected + feePending) > 0;
+    
     new Chart(feeCtx, {
       type: 'doughnut',
       data: {
         labels: ['Collected', 'Pending'],
         datasets: [{
-          data: [75, 25],
-          backgroundColor: ['#10B981', '#F59E0B'],
+          data: hasFeeData ? [feeCollected, feePending] : [1],
+          backgroundColor: hasFeeData ? ['#10B981', '#F59E0B'] : ['#f1f5f9'],
           borderWidth: 0
         }]
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         cutout: '75%',
-        plugins: { legend: { position: 'bottom' } }
+        plugins: { 
+          legend: { 
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              font: { weight: '600' }
+            }
+          },
+          tooltip: {
+            enabled: hasFeeData,
+            callbacks: {
+              label: function(context) {
+                return ` ${context.label}: ${context.raw}%`;
+              }
+            }
+          }
+        }
       }
     });
   });

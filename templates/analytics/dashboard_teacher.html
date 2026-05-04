@@ -75,9 +75,14 @@
       <h5>Teaching Command Center</h5>
       <small>Track attendance, complete results, and monitor class outcomes quickly.</small>
     </div>
-    <a href="{% url 'results:result_entry' %}" class="btn btn-sm btn-light">
-      <i class="bi bi-pencil-square me-1"></i> Enter Results
-    </a>
+    <div class="d-flex gap-2">
+      <a href="{% url 'upload_signature' %}" class="btn btn-sm btn-outline-light">
+        <i class="bi bi-vector-pen me-1"></i> Signature
+      </a>
+      <a href="{% url 'results:result_entry' %}" class="btn btn-sm btn-light">
+        <i class="bi bi-pencil-square me-1"></i> Enter Results
+      </a>
+    </div>
   </div>
 
   <div class="row g-3 mb-4">

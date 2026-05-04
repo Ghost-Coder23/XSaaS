@@ -245,7 +245,7 @@ def generate_report_card(request, student_id, term_id):
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#e5e7eb')))
     footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=7,
         textColor=colors.HexColor('#9ca3af'), alignment=TA_CENTER)
-    story.append(Paragraph(f'Generated on {datetime.now().strftime("%d %B %Y")} | {school.name} | Powered by EduCore', footer_style))
+    story.append(Paragraph(f'Generated on {datetime.now().strftime("%d %B %Y")} | {school.name} | Powered by AcademiaLink', footer_style))
 
     doc.build(story)
     buffer.seek(0)

@@ -134,6 +134,45 @@ class FeePayment(models.Model):
             invoice.save()
 
 
+class ExpenseCategory(models.Model):
+    """Categories for school expenses"""
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='expense_categories')
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+
+    objects = TenantManager()
+    all_objects = models.Manager()
+
+    class Meta:
+        verbose_name_plural = "Expense Categories"
+
+    def __str__(self):
+        return f"{self.name} - {self.school.name}"
+
+
+class Expense(models.Model):
+    """Record of school spending"""
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='expenses')
+    category = models.ForeignKey(ExpenseCategory, on_delete=models.SET_NULL, null=True, related_name='expenses')
+    title = models.CharField(max_length=200)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    currency = models.CharField(max_length=3, default='USD')
+    date = models.DateField(default=timezone.now)
+    reference = models.CharField(max_length=100, blank=True)
+    notes = models.TextField(blank=True)
+    recorded_by = models.ForeignKey(SchoolUser, on_delete=models.SET_NULL, null=True, related_name='recorded_expenses')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = TenantManager()
+    all_objects = models.Manager()
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.title} ({self.currency} {self.amount})"
+
+
 class PaymentConfig(models.Model):
     """School payment gateway configuration"""
     school = models.OneToOneField(School, on_delete=models.CASCADE, related_name='payment_config')

@@ -23,7 +23,7 @@ class CustomLoginView(LoginView):
             context['school'] = school
             context['login_title'] = f'Login to {school.name}'
         else:
-            context['login_title'] = 'Login to EduCore'
+            context['login_title'] = 'Login to AcademiaLink'
         return context
 
     def form_valid(self, form):

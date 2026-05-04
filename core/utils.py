@@ -22,7 +22,7 @@ def send_welcome_email(request, user, school, is_new_user=True):
         reverse('accounts:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
     )
     
-    subject = f'Welcome to {school.name} on EduCore'
+    subject = f'Welcome to {school.name} on AcademiaLink'
     message = render_to_string('accounts/welcome_email.txt', {
         'user': user,
         'school': school,

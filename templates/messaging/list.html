@@ -1,0 +1,105 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}Messages | {{ current_school.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .conversation-card {
+        transition: all 0.2s ease;
+        border: 1px solid #f1f5f9;
+        cursor: pointer;
+    }
+    .conversation-card:hover {
+        background: #f8fafc;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .unread-badge {
+        width: 10px;
+        height: 10px;
+        background: var(--primary);
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .avatar-placeholder {
+        width: 45px;
+        height: 45px;
+        background: #e2e8f0;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #64748b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-0">Messages</h4>
+        <p class="text-muted small">Connect with teachers and parents directly.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        {% if conversations %}
+            {% for conv in conversations %}
+                <div class="card conversation-card mb-3" onclick="location.href='{% url 'messaging:chat' conv.id %}'">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-placeholder me-3">
+                                {{ conv.other_participant.username|slice:":1"|upper }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="fw-bold mb-0">
+                                        {{ conv.other_participant.get_full_name|default:conv.other_participant.username }}
+                                        {% if conv.has_unread %}
+                                            <span class="unread-badge ms-1"></span>
+                                        {% endif %}
+                                    </h6>
+                                    <small class="text-muted">{{ conv.updated_at|date:"D, H:i" }}</small>
+                                </div>
+                                <p class="text-muted small mb-0 text-truncate" style="max-width: 400px;">
+                                    {% if conv.get_last_message %}
+                                        {{ conv.get_last_message.body }}
+                                    {% else %}
+                                        No messages yet.
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="ms-3">
+                                <i class="bi bi-chevron-right text-muted"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-chat-dots display-1 text-muted opacity-25 mb-3 d-block"></i>
+                <h5>No conversations yet</h5>
+                <p class="text-muted">You haven't started any messages. Find a teacher or parent to start chatting!</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3">Directory</h6>
+                <p class="text-muted small mb-4">Quickly find people to message.</p>
+                
+                {# In a real scenario, we'd list relevant people here. For now, a placeholder #}
+                <div class="alert alert-info border-0 small">
+                    <i class="bi bi-info-circle me-2"></i>
+                    You can start a conversation from a student's profile or teacher's list.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -40,10 +40,10 @@ class School(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return f"https://{self.subdomain}.educore.com"
+        return f"https://{self.subdomain}.academialink.co.zw"
 
     def get_full_domain(self):
-        return f"{self.subdomain}.educore.com"
+        return f"{self.subdomain}.academialink.co.zw"
 
 
 class SchoolUser(models.Model):
@@ -71,13 +71,13 @@ class SchoolUser(models.Model):
 
 
 class GalleryItem(models.Model):
-    """Gallery item (image or video) for a school"""
+    """Gallery item (image or video) for global showcase or specific school"""
     MEDIA_TYPE_CHOICES = [
         ('image', 'Image'),
         ('video', 'Video'),
     ]
 
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='gallery_items')
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='gallery_items', null=True, blank=True, help_text="Leave blank for global showcase")
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     media_type = models.CharField(max_length=10, choices=MEDIA_TYPE_CHOICES, default='image')
@@ -86,11 +86,12 @@ class GalleryItem(models.Model):
     is_featured = models.BooleanField(default=False, help_text="Show on the home page")
     created_at = models.DateTimeField(auto_now_add=True)
 
-    objects = TenantManager()
-    all_objects = models.Manager()
+    objects = models.Manager() # Default to standard manager for global showcase
+    tenant_objects = TenantManager()
 
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.title} ({self.media_type}) - {self.school.name}"
+        school_name = self.school.name if self.school else "Global Showcase"
+        return f"{self.title} ({self.media_type}) - {school_name}"

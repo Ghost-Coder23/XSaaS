@@ -33,34 +33,44 @@ class HomeView(TemplateView):
         context['active_schools_count'] = School.objects.filter(status='active').count()
         context['features'] = [
             {
-                'icon': 'bi-clipboard-data',
-                'title': 'Smart Results Management',
-                'description': 'Effortlessly manage term results with automated calculations and grading.'
+                'icon': 'bi-clipboard-check',
+                'title': 'Academic Excellence',
+                'description': 'Automated grading, custom report cards, and comprehensive student performance tracking.'
             },
             {
-                'icon': 'bi-people',
-                'title': 'Parent & Student Portal',
-                'description': 'Give parents and students instant access to results and progress reports.'
+                'icon': 'bi-wallet2',
+                'title': 'Financial Management',
+                'description': 'Smart fee tracking, automated invoicing, and transparent financial reporting.'
             },
             {
-                'icon': 'bi-building',
-                'title': 'Multi-Tenant Architecture',
-                'description': 'Each school gets their own private subdomain with complete data isolation.'
+                'icon': 'bi-person-badge',
+                'title': 'Unified School Portal',
+                'description': 'Single secure access point for staff, parents, and students with robust privacy.'
             },
             {
-                'icon': 'bi-file-pdf',
-                'title': 'PDF Report Cards',
-                'description': 'Generate professional report cards with your school branding.'
+                'icon': 'bi-globe',
+                'title': 'Private Workspace',
+                'description': 'Your school operates on its own secure, professionally branded digital space.'
             },
             {
-                'icon': 'bi-shield-check',
-                'title': 'Role-Based Access',
-                'description': 'Secure access control for headmasters, admins, teachers, students, and parents.'
+                'icon': 'bi-chat-left-text',
+                'title': 'Seamless Communication',
+                'description': 'Direct channels for announcements and real-time student progress updates.'
             },
             {
-                'icon': 'bi-graph-up',
-                'title': 'Analytics Dashboard',
-                'description': 'Track performance trends and generate insights for better decision making.'
+                'icon': 'bi-shield-lock',
+                'title': 'Advanced Data Privacy',
+                'description': 'State-of-the-art security protecting every aspect of your educational records.'
+            },
+            {
+                'icon': 'bi-graph-up-arrow',
+                'title': 'Intuitive Analytics',
+                'description': 'Visualize enrollment trends and academic performance in one simple dashboard.'
+            },
+            {
+                'icon': 'bi-hdd-stack',
+                'title': 'Asset & Resource Control',
+                'description': 'Efficiently manage school property, library resources, and inventory.'
             },
         ]
         return context
@@ -104,6 +114,8 @@ class SchoolRegistrationView(CreateView):
                 # Create school
                 school = form.save(commit=False)
                 school.status = 'pending'
+                # Use headmaster email as the primary school contact during registration
+                school.email = form.cleaned_data['headmaster_email']
                 school.save()
 
                 # Create headmaster user
@@ -562,16 +574,14 @@ self.addEventListener('activate', event => {
 
 
 class GalleryListView(ListView):
-    """Gallery page showing images and videos for a school"""
+    """Gallery page showing global showcase items"""
     model = GalleryItem
     template_name = 'schools/gallery.html'
     context_object_name = 'gallery_items'
 
     def get_queryset(self):
-        # If accessing via school subdomain/context
-        if hasattr(self.request, 'school') and self.request.school:
-            return GalleryItem.objects.filter(school=self.request.school)
-        return GalleryItem.objects.none()
+        # Show only global items (those not tied to any school)
+        return GalleryItem.objects.filter(school__isnull=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

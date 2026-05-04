@@ -36,6 +36,7 @@ urlpatterns = [
     # Legacy PWA cleanup endpoint (kept intentionally)
     path('sw.js', school_views.service_worker_cleanup, name='service_worker_cleanup'),
     path('inventory/', include('inventory.urls')),
+    path('messages/', include('messaging.urls')),
 ]
 
 if settings.DEBUG:

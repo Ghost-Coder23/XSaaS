@@ -3,7 +3,7 @@ from django import forms
 from django.utils import timezone
 from datetime import time, datetime
 import pytz
-from .models import FeeStructure, FeeInvoice, FeePayment, PaymentConfig
+from .models import FeeStructure, FeeInvoice, FeePayment, PaymentConfig, Expense, ExpenseCategory
 from academics.models import ClassLevel, AcademicYear
 from results.models import Term
 
@@ -74,3 +74,27 @@ class PaymentConfigForm(forms.ModelForm):
             'accept_ecocash', 'ecocash_merchant_code',
             'accept_bank_transfer', 'bank_name', 'bank_account_number', 'bank_branch',
         ]
+
+
+class ExpenseCategoryForm(forms.ModelForm):
+    class Meta:
+        model = ExpenseCategory
+        fields = ['name', 'description']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 2}),
+        }
+
+
+class ExpenseForm(forms.ModelForm):
+    class Meta:
+        model = Expense
+        fields = ['category', 'title', 'amount', 'currency', 'date', 'reference', 'notes']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+            'notes': forms.Textarea(attrs={'rows': 2}),
+        }
+
+    def __init__(self, school=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if school:
+            self.fields['category'].queryset = ExpenseCategory.objects.filter(school=school)

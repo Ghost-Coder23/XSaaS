@@ -13,9 +13,9 @@ class SchoolMiddleware:
         host = request.get_host().split(':')[0]  # strip port
         school = None
 
-        # 1. Subdomain routing (production: school.educore.com)
+        # 1. Subdomain routing (production: school.academialink.co.zw)
         parts = host.split('.')
-        if len(parts) >= 3 and parts[-2] == 'educore' and parts[-1] == 'com':
+        if len(parts) >= 3 and parts[-2] == 'academialink' and parts[-1] == 'zw':
             subdomain = parts[0]
             if subdomain not in ('www', 'admin'):
                 try:

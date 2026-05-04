@@ -232,6 +232,8 @@ def admin_dashboard(request, school, membership):
         'total_invoiced': total_invoiced,
         'total_paid': total_paid,
         'outstanding': outstanding,
+        'fee_collected_pct': round((total_paid / total_invoiced) * 100, 1) if total_invoiced > 0 else 0,
+        'fee_pending_pct': round((outstanding / total_invoiced) * 100, 1) if total_invoiced > 0 else 0,
         'unpaid_invoices': unpaid_invoices,
         'partial_invoices': partial_invoices,
         'overdue_invoices': overdue_invoices,
@@ -375,13 +377,17 @@ def parent_dashboard(request, school, membership):
             defaults={'relationship': 'parent'},
         )
 
-    parent_links = ParentStudentLink.objects.filter(
+    # Find children via explicit links OR matching parent email
+    link_student_ids = ParentStudentLink.objects.filter(
         school=school,
         parent=membership,
-        student__is_active=True,
-    ).select_related('student__user', 'student__current_class')
+    ).values_list('student_id', flat=True)
 
-    children = [link.student for link in parent_links]
+    children = Student.objects.filter(
+        Q(id__in=link_student_ids) | Q(parent_email=request.user.email),
+        school=school,
+        is_active=True
+    ).select_related('user', 'current_class').distinct()
 
     children_data = []
     total_fee_balance = 0
