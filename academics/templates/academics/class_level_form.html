@@ -26,7 +26,28 @@
 {% if field.field.widget.input_type == 'checkbox' %}
 <div class="form-check"><input type="checkbox" name="{{ field.html_name }}" class="form-check-input" {% if field.value %}checked{% endif %}></div>
 {% elif field.field.widget.input_type == 'select' %}
+<div class="input-group">
 <select name="{{ field.html_name }}" class="form-select {% if field.errors %}is-invalid{% endif %}">{% for v,l in field.field.choices %}<option value="{{ v }}" {% if field.value|stringformat:'s' == v|stringformat:'s' %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+{% if field.name == 'class_level' %}
+<a href="{% url 'academics:class_level_add' %}" class="btn btn-outline-secondary" title="Add New Class Level">
+    <i class="bi bi-plus-lg"></i>
+</a>
+{% elif field.name == 'academic_year' %}
+<a href="{% url 'academics:academic_year_add' %}" class="btn btn-outline-secondary" title="Add New Academic Year">
+    <i class="bi bi-plus-lg"></i>
+</a>
+{% endif %}
+</div>
+{% if field.field.choices|length <= 1 and field.name == 'class_level' %}
+<div class="form-text text-danger mt-1">
+    <i class="bi bi-exclamation-circle me-1"></i>No Class Levels found. Please add one first using the "+" button.
+</div>
+{% endif %}
+{% if field.field.choices|length <= 1 and field.name == 'academic_year' %}
+<div class="form-text text-danger mt-1">
+    <i class="bi bi-exclamation-circle me-1"></i>No Academic Years found. Please add one first using the "+" button.
+</div>
+{% endif %}
 {% else %}
 <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.html_name }}" value="{{ field.value|default:'' }}" class="form-control {% if field.errors %}is-invalid{% endif %}">
 {% endif %}

@@ -297,19 +297,49 @@
             <form method="post" novalidate>
                 {% csrf_token %}
 
+                {% if form.errors or form.non_field_errors %}
+                <div class="alert alert-danger rounded-4 border-0 mb-4 p-3 small">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {% if form.non_field_errors %}
+                        {{ form.non_field_errors.0 }}
+                    {% else %}
+                        Invalid email or password. Please try again.
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} rounded-4 border-0 mb-4 p-3 small">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+
                 <div class="input-group-custom">
                     <div class="form-floating">
-                        <input type="email" name="username" class="form-control" id="id_username" placeholder="name@example.com" required>
+                        <input type="email" name="username" class="form-control {% if form.username.errors %}is-invalid{% endif %}" id="id_username" placeholder="name@example.com" value="{{ form.username.value|default:'' }}" required>
                         <label for="id_username">Email Address</label>
                     </div>
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback d-block ps-3 mt-1 small fw-bold">
+                            {{ form.username.errors.0 }}
+                        </div>
+                    {% endif %}
                 </div>
 
                 <div class="input-group-custom">
                     <div class="form-floating">
-                        <input type="password" name="password" class="form-control" id="id_password" placeholder="Password" required>
+                        <input type="password" name="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}" id="id_password" placeholder="Password" required>
                         <label for="id_password">Password</label>
                     </div>
                     <i class="bi bi-eye input-icon" id="togglePassword"></i>
+                    {% if form.password.errors %}
+                        <div class="invalid-feedback d-block ps-3 mt-1 small fw-bold">
+                            {{ form.password.errors.0 }}
+                        </div>
+                    {% endif %}
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-4">

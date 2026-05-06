@@ -53,8 +53,9 @@ Or use subdomain routing in production: `greenwood.educore.com`
 | **Fees** | Fee structures, invoices, payment recording |
 | **Analytics** | Role-specific dashboards (headmaster/admin/teacher/parent/student) |
 | **Notifications** | In-app notifications, announcements, SMS stub |
-| **Parent Portal** | View results, attendance, fee balance |
+| **Parent Portal** | View results, attendance, fee balance, QR-based self-registration |
 | **Student Portal** | View own results and attendance |
+| **QR Registration** | Token-based secure QR codes for parent self-onboarding |
 | **Superadmin** | Platform-level school management |
 
 ---
@@ -70,20 +71,24 @@ Or use subdomain routing in production: `greenwood.educore.com`
 
 ---
 
-## Parent-Child Linking (Many Children Per Parent)
+## Parent-Child Linking & QR Registration
 
-EduCore now uses an explicit parent-to-student link table so one parent account can be linked to multiple children safely.
+EduCore uses an explicit parent-to-student link table and a secure QR-based self-registration system.
 
-- New model: `academics.ParentStudentLink` (`parent` -> `student`, scoped to `school`)
-- Unique constraint prevents duplicate links for the same parent/student pair
-- Parent self-registration now creates a link to the selected child and auto-links same-email sibling records in that school
-- Parent dashboard reads linked children from `ParentStudentLink` (not only email matching)
-- A migration backfills links from existing `Student.parent_email` data for already-created parent accounts
+### Parent-Student Links
+- Model: `academics.ParentStudentLink` (`parent` -> `student`, scoped to `school`)
+- Parent self-registration creates a link to the selected child and auto-links siblings in the same school.
 
-After pulling changes, run:
+### Secure QR Registration
+Schools can now generate unique QR codes for parent onboarding:
+- **Token-based Security**: Each school has a unique `registration_token` embedded in the QR link.
+- **Admin Control**: Headmasters can enable/disable self-registration or regenerate tokens (invalidating old QR codes) from School Settings.
+- **On-the-fly Generation**: QR codes are generated dynamically using the `qrcode` library.
 
+To set up:
 ```bash
-python manage.py migrate
+pip install "qrcode[pil]"
+python manage.py migrate schools
 ```
 
 ---

@@ -8,11 +8,25 @@
 </div>
 {% if 'list' in 'class_section_list' %}
 <div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
-<thead class="table-light"><tr><th>Name</th><th>Details</th></tr></thead>
+<thead class="table-light"><tr><th>Class Section</th><th>Level</th><th>Room</th><th>Actions</th></tr></thead>
 <tbody>
-{% for obj in object_list %}
-<tr><td>{{ obj }}</td><td class="text-muted small">{{ obj.pk }}</td></tr>
-{% empty %}<tr><td colspan="2" class="text-center py-4 text-muted">No records yet.</td></tr>
+{% for obj in class_sections %}
+<tr>
+  <td>{{ obj.name }}</td>
+  <td>{{ obj.class_level.name }}</td>
+  <td>{{ obj.room_number|default:"-" }}</td>
+  <td>
+    <div class="btn-group btn-group-sm">
+        <a href="{% url 'academics:class_section_edit' obj.pk %}" class="btn btn-outline-primary" title="Edit">
+          <i class="bi bi-pencil"></i>
+        </a>
+        <a href="{% url 'academics:class_section_delete' obj.pk %}" class="btn btn-outline-danger" onclick="return confirm('Delete {{ obj }}?');" title="Delete">
+          <i class="bi bi-trash"></i>
+        </a>
+    </div>
+  </td>
+</tr>
+{% empty %}<tr><td colspan="4" class="text-center py-4 text-muted">No class sections yet.</td></tr>
 {% endfor %}
 </tbody>
 </table></div></div>

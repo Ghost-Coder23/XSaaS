@@ -39,6 +39,35 @@ class AcademicYearCreateView(CreateView):
         return super().form_valid(form)
 
 
+@method_decorator(login_required, name='dispatch')
+class AcademicYearUpdateView(UpdateView):
+    model = AcademicYear
+    form_class = AcademicYearForm
+    template_name = 'academics/academic_year_form.html'
+    success_url = reverse_lazy('academics:academic_year_list')
+
+    def get_queryset(self):
+        return AcademicYear.objects.filter(school=self.request.school)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Academic year updated successfully!')
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class AcademicYearDeleteView(DeleteView):
+    model = AcademicYear
+    template_name = 'academics/academic_year_confirm_delete.html'
+    success_url = reverse_lazy('academics:academic_year_list')
+
+    def get_queryset(self):
+        return AcademicYear.objects.filter(school=self.request.school)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Academic year deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+
 # Class Level Views
 @method_decorator(login_required, name='dispatch')
 class ClassLevelListView(ListView):
@@ -154,6 +183,15 @@ class StudentListView(ListView):
     paginate_by = 20
 
     def get_queryset(self):
+        # Clear temporary password session if it exists after it has been displayed
+        if 'last_student_password' in self.request.session:
+            # We use a flag to show it once then delete on next access
+            if self.request.session.get('show_password_once'):
+                del self.request.session['last_student_password']
+                del self.request.session['show_password_once']
+            else:
+                self.request.session['show_password_once'] = True
+
         queryset = Student.objects.filter(school=self.request.school).select_related('user', 'current_class')
 
         # Filter by class if provided
@@ -249,6 +287,15 @@ class StudentCreateView(CreateView):
         form.instance.school_user = school_user
 
         messages.success(self.request, f'Student {user.get_full_name()} created successfully! Admission Number: {admission_number}')
+        
+        # If it's a new user, store the temporary password in session to show once
+        if is_new_user:
+            self.request.session['last_student_password'] = {
+                'name': user.get_full_name(),
+                'email': user.email,
+                'password': password
+            }
+            
         return super().form_valid(form)
 
 

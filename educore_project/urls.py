@@ -33,10 +33,13 @@ urlpatterns = [
     path('analytics/', include('analytics.urls')),
     # Platform superadmin
     path('platform/', include('superadmin.urls')),
-    # Legacy PWA cleanup endpoint (kept intentionally)
-    path('sw.js', school_views.service_worker_cleanup, name='service_worker_cleanup'),
+    # PWA Support
+    path('sw.js', school_views.service_worker, name='service_worker'),
+    path('manifest.json', school_views.manifest, name='manifest'),
+    path('offline/', school_views.offline_view, name='offline'),
     path('inventory/', include('inventory.urls')),
     path('messages/', include('messaging.urls')),
+    path('api/', include('api.urls')),
 ]
 
 if settings.DEBUG:

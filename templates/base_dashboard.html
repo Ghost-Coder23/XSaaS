@@ -7,6 +7,7 @@
 <title>{% block title %}AcademiaLink{% endblock %} | {{ current_school.name|default:"AcademiaLink" }}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link rel="manifest" href="/manifest.json">
 <style>
 :root {
   --primary: {{ current_school.theme_color|default:"#4F46E5" }};
@@ -14,6 +15,45 @@
   --sidebar-bg: #1e1b4b;
   --sidebar-width: 256px;
 }
+/* Offline UI */
+#offline-banner {
+    display: none;
+    background: rgba(245, 158, 11, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: white;
+    text-align: center;
+    padding: 8px 24px;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 50px;
+    z-index: 10000;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
+}
+.sync-status {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 10px 20px;
+    border-radius: 50px;
+    color: white;
+    z-index: 9998;
+    display: none;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    font-weight: 600;
+    font-size: 0.85rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 * { box-sizing: border-box; }
 body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; margin: 0; }
 /* Sidebar */
@@ -294,8 +334,8 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     </a>
     {% endif %}
     {% if school_role == 'headmaster' %}
-    <a href="{% url 'results:pending_approvals' %}" class="nav-link {% if 'pending' in request.path %}active{% endif %}">
-      <i class="bi bi-clock-history"></i> Pending Approvals
+    <a href="{% url 'results:student_proceed' %}" class="nav-link {% if 'proceed' in request.path %}active{% endif %}">
+      <i class="bi bi-arrow-up-circle"></i> Bulk Proceed
     </a>
     {% endif %}
     <a href="{% url 'results:term_list' %}" class="nav-link {% if 'terms' in request.path %}active{% endif %}">
@@ -306,7 +346,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     </a>
   
 
-    {% if school_role in 'headmaster,admin' %}
+    {% if school_role == 'admin' %}
     <div class="nav-section">Finance</div>
     <a href="{% url 'fees:home' %}" class="nav-link {% if 'fees' in request.path %}active{% endif %}">
       <i class="bi bi-cash-stack"></i> Finance & Fees
@@ -320,6 +360,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     <a href="{% url 'fees:structure_list' %}" class="nav-link {% if 'structures' in request.path %}active{% endif %}">
       <i class="bi bi-list-check"></i> Fee Structures
     </a>
+    {% endif %}
 
     <div class="nav-section">Administration</div>
     <a href="{% url 'academics:academic_year_list' %}" class="nav-link {% if 'years' in request.path %}active{% endif %}">
@@ -331,6 +372,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     <a href="{% url 'school_settings' %}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
       <i class="bi bi-gear"></i> Settings
     </a>
+    {% if school_role == 'admin' %}
     <a href="{% url 'fees:payment_config' %}" class="nav-link {% if 'payment-config' in request.path %}active{% endif %}">
       <i class="bi bi-credit-card"></i> Payment Config
     </a>
@@ -343,7 +385,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     {% endif %}
     {% if school_role == 'parent' %}
     <a href="{% url 'academics:teacher_list' %}" class="nav-link {% if 'teachers' in request.path %}active{% endif %}">
-      <i class="bi bi-person-badge"></i> My Children's Teachers
+      <i class="bi bi-person-badge"></i> My Students' Teachers
     </a>
     <a href="{% url 'fees:invoice_list' %}" class="nav-link {% if 'invoices' in request.path %}active{% endif %}">
       <i class="bi bi-receipt"></i> Fee Statements
@@ -414,25 +456,41 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
   </div>
 </footer>
 
+<div id="offline-banner"><i class="bi bi-wifi-off me-2"></i> You are currently offline. Working in local mode.</div>
+<div id="sync-indicator" class="sync-status"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/db.js"></script>
+<script src="/static/js/sync.js"></script>
 <script>
-// Cleanup legacy PWA artifacts from older versions
-(function cleanupLegacyPWA() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations()
-      .then(registrations => Promise.all(registrations.map(reg => reg.unregister())))
-      .catch(() => {});
-  }
-  if ('caches' in window) {
-    caches.keys()
-      .then(keys => Promise.all(
-        keys
-          .filter(key => key === 'educore-v1' || key.startsWith('educore-'))
-          .map(key => caches.delete(key))
-      ))
-      .catch(() => {});
-  }
-})();
+// PWA Registration and Initialization
+const tenantPrefix = "{{ current_school.subdomain|default:'global' }}";
+let db, syncManager;
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+        try {
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+
+            // Initialize DB and Sync
+            db = new EduCoreDB(tenantPrefix);
+            await db.open();
+            
+            syncManager = new SyncManager(db, tenantPrefix);
+            
+            // Perform initial sync if needed
+            const hasSynced = localStorage.getItem(`synced_${tenantPrefix}`);
+            if (!hasSynced && navigator.onLine) {
+                await syncManager.initialSync();
+                localStorage.setItem(`synced_${tenantPrefix}`, 'true');
+            }
+
+        } catch (error) {
+            console.log('ServiceWorker registration failed: ', error);
+        }
+    });
+}
 
 // Sidebar toggle
 function toggleSidebar() {

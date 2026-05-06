@@ -4,10 +4,10 @@ Results models - Marks, Grades, and Report Cards
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from academics.models import Student, Subject, ClassSection, AcademicYear, TeacherSubjectAssignment
-from core.models import TenantManager
+from core.models import TenantManager, SyncBaseModel
 
 
-class Term(models.Model):
+class Term(SyncBaseModel):
     """Academic term (e.g., First Term, Second Term, Third Term)"""
     TERM_CHOICES = [
         (1, 'First Term'),
@@ -30,7 +30,7 @@ class Term(models.Model):
         return f"{self.name} - {self.academic_year.name}"
 
 
-class GradeScale(models.Model):
+class GradeScale(SyncBaseModel):
     """Grading scale for a school"""
     school = models.ForeignKey('schools.School', on_delete=models.CASCADE, related_name='grade_scales')
     grade = models.CharField(max_length=5)  # A, B, C, etc.
@@ -48,7 +48,7 @@ class GradeScale(models.Model):
         return f"{self.grade} ({self.min_score}-{self.max_score})"
 
 
-class StudentResult(models.Model):
+class StudentResult(SyncBaseModel):
     """Student marks for a specific subject and term"""
     STATUS_CHOICES = [
         ('draft', 'Draft'),

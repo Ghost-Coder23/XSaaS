@@ -3,6 +3,28 @@
 {% block page_title %}Headmaster Dashboard{% endblock %}
 {% block content %}
 
+{% if request.session.last_student_password %}
+<div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert" style="background: #ecfdf5; border-left: 4px solid #10b981 !important;">
+    <div class="d-flex align-items-center">
+        <div class="me-3">
+            <i class="bi bi-key-fill fs-2 text-success"></i>
+        </div>
+        <div>
+            <h6 class="alert-heading fw-bold text-success mb-1">New Student Login Credentials</h6>
+            <p class="mb-0 text-dark small">
+                Student: <strong>{{ request.session.last_student_password.name }}</strong> | 
+                Email: <strong>{{ request.session.last_student_password.email }}</strong> | 
+                Password: <strong class="text-danger bg-light px-2 py-1 rounded border">{{ request.session.last_student_password.password }}</strong>
+            </p>
+            <div class="mt-2 text-muted x-small" style="font-size: 0.75rem;">
+                <i class="bi bi-info-circle me-1"></i>Please share these credentials with the student. This message will disappear once you refresh the page.
+            </div>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
         <div class="stat-card">
@@ -26,6 +48,25 @@
         <div class="stat-card">
             <div class="stat-number text-warning">{{ pending_approvals }}</div>
             <div class="stat-label"><i class="bi bi-clock-history me-1"></i>Pending Approvals</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-primary text-white overflow-hidden shadow-sm">
+            <div class="row g-0">
+                <div class="col-md-8 p-4">
+                    <h5 class="card-title fw-bold">Parent Registration Portal</h5>
+                    <p class="card-text">Enable parents to register themselves by scanning a QR code. You can manage this in settings.</p>
+                    <a href="{% url 'school_settings' %}" class="btn btn-light text-primary">
+                        <i class="bi bi-gear-fill me-1"></i>Manage Registration
+                    </a>
+                </div>
+                <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center bg-white bg-opacity-10">
+                    <i class="bi bi-qr-code-scan display-1"></i>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -154,6 +195,9 @@
                 </a>
                 <a href="{% url 'analytics:dashboard_headmaster' %}" class="btn btn-outline-info btn-sm">
                     <i class="bi bi-graph-up me-1"></i>Analytics & Performance
+                </a>
+                <a href="{% url 'results:student_proceed' %}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-arrow-up-circle me-1"></i>Bulk Proceed
                 </a>
             </div>
         </div>

@@ -287,3 +287,65 @@ def approve_all_results(request):
         messages.success(request, f'{count} results approved successfully!')
 
     return redirect('results:pending_approvals')
+
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(school_role_required(['headmaster', 'admin']), name='dispatch')
+class StudentProceedView(TemplateView):
+    """View for bulk proceeding students to the next year/class"""
+    template_name = 'results/student_proceed.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        school = self.request.school
+        
+        from academics.models import ClassSection, AcademicYear
+        
+        class_id = self.request.GET.get('class')
+        target_class_id = self.request.GET.get('target_class')
+        
+        if class_id:
+            source_class = get_object_or_404(ClassSection, id=class_id, school=school)
+            students = Student.objects.filter(
+                current_class=source_class,
+                is_active=True
+            ).select_related('user')
+            
+            # Fetch yearly summaries for these students to help decide promotion
+            # (In a real system, you'd check if they passed)
+            context['source_class'] = source_class
+            context['students'] = students
+
+        context['classes'] = ClassSection.objects.filter(school=school).select_related('class_level', 'academic_year')
+        context['academic_years'] = AcademicYear.objects.filter(school=school)
+        
+        return context
+
+    def post(self, request, *args, **kwargs):
+        school = request.school
+        student_ids = request.POST.getlist('student_ids')
+        target_class_id = request.POST.get('target_class')
+        action = request.POST.get('action') # promote, repeat, withdraw
+
+        if not student_ids or not target_class_id:
+            messages.error(request, "Please select students and a target class.")
+            return redirect('results:student_promotion')
+
+        target_class = get_object_or_404(ClassSection, id=target_class_id, school=school)
+        
+        with transaction.atomic():
+            students = Student.objects.filter(id__in=student_ids, school=school)
+            
+            if action == 'proceed':
+                count = students.update(current_class=target_class)
+                messages.success(request, f"Successfully proceeded {count} students to {target_class}.")
+            elif action == 'repeat':
+                # Logic for repeating could be different (e.g., just change academic year but keep level)
+                # For simplicity, we'll just move them to the selected class
+                count = students.update(current_class=target_class)
+                messages.success(request, f"Successfully set {count} students to repeat in {target_class}.")
+            elif action == 'withdraw':
+                count = students.update(is_active=False)
+                messages.success(request, f"Successfully withdrew {count} students from the school.")
+
+        return redirect('results:student_proceed')

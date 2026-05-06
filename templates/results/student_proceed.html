@@ -1,0 +1,99 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Student Proceed - AcademiaLink{% endblock %}
+{% block page_title %}Student Proceed{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-arrow-up-circle me-2"></i>Bulk Proceed & Migration
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end mb-4">
+                    <div class="col-md-5">
+                        <label class="form-label">Select Source Class (Current Year)</label>
+                        <select name="class" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Choose Class --</option>
+                            {% for c in classes %}
+                                <option value="{{ c.id }}" {% if request.GET.class == c.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ c.academic_year.name }} - {{ c.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Load Students</button>
+                    </div>
+                </form>
+
+                {% if students %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="40"><input type="checkbox" id="selectAll" checked></th>
+                                    <th>Student Name</th>
+                                    <th>Admission No</th>
+                                    <th>Current Class</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td><input type="checkbox" name="student_ids" value="{{ student.id }}" class="student-checkbox" checked></td>
+                                    <td>{{ student.user.get_full_name }}</td>
+                                    <td>{{ student.admission_number }}</td>
+                                    <td>{{ student.current_class }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card bg-light border-0 mt-4">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Action to Perform</h6>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label">Target Class (Next Year)</label>
+                                    <select name="target_class" class="form-select" required>
+                                        <option value="">-- Choose Target Class --</option>
+                                        {% for c in classes %}
+                                            <option value="{{ c.id }}">{{ c.academic_year.name }} - {{ c.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Proceed Action</label>
+                                    <select name="action" class="form-select" required>
+                                        <option value="proceed">Proceed to Next Level</option>
+                                        <option value="repeat">Set to Repeat Level</option>
+                                        <option value="withdraw">Withdraw from School</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-success w-100" onclick="return confirm('Are you sure you want to process these students?')">
+                                        <i class="bi bi-check-circle me-1"></i>Process Proceed
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                {% elif request.GET.class %}
+                <div class="alert alert-info">No active students found in the selected class.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('selectAll').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+});
+</script>
+{% endblock %}

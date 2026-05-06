@@ -2,7 +2,7 @@
 {% block title %}Parent Dashboard{% endblock %}
 {% block page_title %}Parent Dashboard{% endblock %}
 {% block content %}
-<h5 class="fw-bold mb-3">My Children</h5>
+<h5 class="fw-bold mb-3">My Students</h5>
 {% if children %}
 {% for child in children %}
 <div class="col-md-6 col-lg-4 mb-4">
@@ -38,7 +38,7 @@
 {% endfor %}
 {% else %}
 <div class="card"><div class="card-body text-center py-5 text-muted">
-<i class="bi bi-people fs-1 d-block mb-2"></i>No children linked to your account. Contact your school admin.
+<i class="bi bi-people fs-1 d-block mb-2"></i>No students linked to your account. Contact your school admin.
 </div></div>
 {% endif %}
 {% endblock %}

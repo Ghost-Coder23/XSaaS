@@ -29,5 +29,70 @@
 </div>
 </div>
 </div>
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Parent Registration Portal</span>
+        {% if object.parent_registration_enabled %}
+            <span class="badge bg-success">Active</span>
+        {% else %}
+            <span class="badge bg-danger">Disabled</span>
+        {% endif %}
+    </div>
+    <div class="card-body text-center">
+        <p class="text-muted small mb-4">
+            Share this QR code with parents to allow them to self-register and link to their children.
+        </p>
+
+        {% if object.parent_registration_enabled %}
+            <div class="mb-4">
+                <img src="{% url 'registration_qr_code' %}" alt="Registration QR Code" class="img-fluid border p-2 rounded" style="max-width: 200px;">
+            </div>
+            <div class="d-grid gap-2 d-md-block">
+                <a href="{% url 'registration_qr_code' %}" download="registration_qr.png" class="btn btn-outline-primary">
+                    <i class="bi bi-download me-1"></i>Download QR
+                </a>
+                <button type="button" class="btn btn-outline-secondary" onclick="copyRegistrationLink()">
+                    <i class="bi bi-link-45deg me-1"></i>Copy Link
+                </button>
+            </div>
+        {% else %}
+            <div class="py-4 bg-light rounded mb-4">
+                <i class="bi bi-qr-code-scan display-4 text-muted d-block mb-2"></i>
+                <p class="text-muted">Registration is currently disabled.</p>
+            </div>
+        {% endif %}
+
+        <hr class="my-4">
+
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{% url 'toggle_registration' %}" class="btn {% if object.parent_registration_enabled %}btn-danger{% else %}btn-success{% endif %}">
+                    {% if object.parent_registration_enabled %}
+                        <i class="bi bi-x-circle me-1"></i>Disable Registration
+                    {% else %}
+                        <i class="bi bi-check-circle me-1"></i>Enable Registration
+                    {% endif %}
+                </a>
+            </div>
+            {% if object.parent_registration_enabled %}
+            <div>
+                <a href="{% url 'regenerate_registration_token' %}" class="btn btn-warning" onclick="return confirm('Warning: This will invalidate all existing QR codes and links. Continue?')">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Regenerate QR
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function copyRegistrationLink() {
+    const url = window.location.origin + "{% url 'parent_register' %}?token={{ object.registration_token }}";
+    navigator.clipboard.writeText(url).then(() => {
+        alert("Registration link copied to clipboard!");
+    });
+}
+</script>
 </div>
 {% endblock %}

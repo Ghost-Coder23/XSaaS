@@ -9,10 +9,10 @@ from django.db import models
 
 from django.contrib.auth.models import User
 from schools.models import School, SchoolUser
-from core.models import TenantManager
+from core.models import TenantManager, SyncBaseModel
 
 
-class AcademicYear(models.Model):
+class AcademicYear(SyncBaseModel):
     """Academic year for a school"""
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='academic_years')
     name = models.CharField(max_length=50)  # e.g., "2024-2025"
@@ -30,7 +30,7 @@ class AcademicYear(models.Model):
         return f"{self.name} - {self.school.name}"
 
 
-class ClassLevel(models.Model):
+class ClassLevel(SyncBaseModel):
     """Class/Grade level (e.g., Grade 1, Grade 2)"""
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='class_levels')
     name = models.CharField(max_length=50)  # e.g., "Grade 1", "Class 5"
@@ -46,7 +46,7 @@ class ClassLevel(models.Model):
         return f"{self.name} - {self.school.name}"
 
 
-class Subject(models.Model):
+class Subject(SyncBaseModel):
     """Subject offered by a school"""
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='subjects')
     name = models.CharField(max_length=100)
@@ -63,7 +63,7 @@ class Subject(models.Model):
         return f"{self.name} - {self.school.name}"
 
 
-class ClassSection(models.Model):
+class ClassSection(SyncBaseModel):
     """Specific class section (e.g., Grade 1A, Grade 1B)"""
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='class_sections')
     class_level = models.ForeignKey(ClassLevel, on_delete=models.CASCADE, related_name='sections')
@@ -89,7 +89,7 @@ class ClassSection(models.Model):
         return f"{self.class_level.name} {self.section_name} - {self.academic_year.name}"
 
 
-class Student(models.Model):
+class Student(SyncBaseModel):
     """Student model linked to User and School"""
     GENDER_CHOICES = [
         ('M', 'Male'),
@@ -133,7 +133,7 @@ class Student(models.Model):
         return f"{self.user.get_full_name()} ({self.admission_number})"
 
 
-class ParentStudentLink(models.Model):
+class ParentStudentLink(SyncBaseModel):
     """Explicit link between a parent account and one or more students."""
     RELATIONSHIP_CHOICES = [
         ('parent', 'Parent'),
@@ -149,7 +149,6 @@ class ParentStudentLink(models.Model):
     )
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='parent_links')
     relationship = models.CharField(max_length=20, choices=RELATIONSHIP_CHOICES, default='parent')
-    created_at = models.DateTimeField(auto_now_add=True)
 
     objects = TenantManager()
     all_objects = models.Manager()
@@ -167,7 +166,7 @@ class ParentStudentLink(models.Model):
         super().save(*args, **kwargs)
 
 
-class TeacherSubjectAssignment(models.Model):
+class TeacherSubjectAssignment(SyncBaseModel):
     """Assign teachers to subjects in specific classes"""
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='teacher_subject_assignments', null=True, blank=True)
     teacher = models.ForeignKey(

@@ -13,8 +13,8 @@ urlpatterns = [
     # Grade Scales
     path('grade-scales/', views.GradeScaleListView.as_view(), name='grade_scale_list'),
     path('grade-scales/add/', views.GradeScaleCreateView.as_view(), name='grade_scale_add'),
-    path('grade-scales/<int:pk>/edit/', views.GradeScaleUpdateView.as_view(), name='grade_scale_edit'),
-    path('grade-scales/<int:pk>/delete/', views.GradeScaleDeleteView.as_view(), name='grade_scale_delete'),
+    path('grade-scales/<uuid:pk>/edit/', views.GradeScaleUpdateView.as_view(), name='grade_scale_edit'),
+    path('grade-scales/<uuid:pk>/delete/', views.GradeScaleDeleteView.as_view(), name='grade_scale_delete'),
 
     # Result Entry
     path('entry/', views.ResultEntryView.as_view(), name='result_entry'),
@@ -26,5 +26,8 @@ urlpatterns = [
     path('approve-all/', views.approve_all_results, name='approve_all'),
 
     # Student Results
-    path('student/<int:pk>/', views.StudentResultsView.as_view(), name='student_results'),
+    path('student/<uuid:pk>/', views.StudentResultsView.as_view(), name='student_results'),
+
+    # Promotions (Proceed)
+    path('proceed/', views.StudentProceedView.as_view(), name='student_proceed'),
 ]

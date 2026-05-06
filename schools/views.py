@@ -18,11 +18,31 @@ from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
+from django.conf import settings
+import os
+
+@require_GET
+def service_worker(request):
+    """Serves the Service Worker file"""
+    sw_path = os.path.join(settings.BASE_DIR, 'sw.js')
+    with open(sw_path, 'rb') as f:
+        return HttpResponse(f.read(), content_type='application/javascript')
+
+@require_GET
+def manifest(request):
+    """Serves the PWA Manifest file"""
+    manifest_path = os.path.join(settings.BASE_DIR, 'manifest.json')
+    with open(manifest_path, 'rb') as f:
+        return HttpResponse(f.read(), content_type='application/json')
+
+@require_GET
+def offline_view(request):
+    """Offline fallback page"""
+    return render(request, 'offline.html')
 
 from core.utils import SchoolRoleMixin, send_welcome_email
 from .models import School, SchoolUser, GalleryItem
 from .forms import SchoolRegistrationForm, SchoolBrandingForm, AddSchoolUserForm, ParentRegistrationForm, SchoolUserEditForm, SchoolUserSignatureForm
-
 
 class HomeView(TemplateView):
     #Landing page for schools where theye register their schools and get the credential for their space
@@ -446,6 +466,24 @@ class ParentRegistrationView(CreateView):
     template_name = 'schools/parent_register.html'
     success_url = reverse_lazy('home')
 
+    def dispatch(self, request, *args, **kwargs):
+        school = getattr(request, 'school', None)
+        if not school:
+            messages.error(request, "School context not found.")
+            return redirect('home')
+        
+        if not school.parent_registration_enabled:
+            messages.error(request, "Parent self-registration is currently disabled for this school.")
+            return redirect('home')
+
+        # Check token if registration_token is set
+        token = request.GET.get('token')
+        if school.registration_token and token != school.registration_token:
+            messages.error(request, "Invalid or expired registration link.")
+            return redirect('home')
+
+        return super().dispatch(request, *args, **kwargs)
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         if 'instance' in kwargs:
@@ -543,6 +581,73 @@ def upload_signature(request):
     else:
         form = SchoolUserSignatureForm(instance=school_user)
     return render(request, 'schools/upload_signature.html', {'form': form, 'school': request.school})
+
+
+import qrcode
+import io
+from django.urls import reverse
+from django.http import HttpResponse
+
+@login_required
+def registration_qr_code(request):
+    """Generates a QR code for parent registration"""
+    school = request.school
+    if not school:
+        return HttpResponse("School not found", status=404)
+    
+    # Construct the registration URL
+    # Use the school's subdomain and token
+    base_url = request.build_absolute_uri(reverse('parent_register'))
+    registration_url = f"{base_url}?token={school.registration_token}"
+    
+    # Generate QR code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(registration_url)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Save image to a bytes buffer
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    return HttpResponse(buffer.getvalue(), content_type="image/png")
+
+
+@login_required
+def toggle_registration(request):
+    """Toggles parent self-registration status"""
+    # Only headmaster or admin can toggle
+    membership = get_object_or_404(SchoolUser, user=request.user, school=request.school)
+    if membership.role not in ['headmaster', 'admin']:
+        messages.error(request, "You do not have permission to perform this action.")
+        return redirect('school_settings')
+
+    school = request.school
+    school.parent_registration_enabled = not school.parent_registration_enabled
+    school.save()
+    
+    status = "enabled" if school.parent_registration_enabled else "disabled"
+    messages.success(request, f"Parent registration has been {status}.")
+    return redirect('school_settings')
+
+
+@login_required
+def regenerate_registration_token(request):
+    """Regenerates the parent registration token (invalidates old QR codes)"""
+    membership = get_object_or_404(SchoolUser, user=request.user, school=request.school)
+    if membership.role not in ['headmaster', 'admin']:
+        messages.error(request, "You do not have permission to perform this action.")
+        return redirect('school_settings')
+
+    school = request.school
+    school.regenerate_registration_token()
+    messages.success(request, "Registration token has been regenerated. Old QR codes are now invalid.")
+    return redirect('school_settings')
 
 
 @require_GET
