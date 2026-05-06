@@ -12,7 +12,7 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = ['*'] if DEBUG else ['.educore.com', 'www.educore.com', 'localhost', '127.0.0.1','https://techflex.pythonanywhere.com/','']
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://5f84cda563dc8848-77-246-55-237.serveousercontent.com",
+    "https://34fa7eead0bc42c5-77-246-55-160.serveousercontent.com",
     ]
 
 INSTALLED_APPS = [
