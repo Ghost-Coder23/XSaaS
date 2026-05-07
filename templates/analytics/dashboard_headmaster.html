@@ -1,23 +1,9 @@
 {% extends "base_dashboard.html" %}
 {% block title %}Headmaster Dashboard{% endblock %}
 {% block page_title %}Headmaster Dashboard{% endblock %}
+
 {% block extra_css %}
 <style>
-  .headmaster-dashboard .hero {
-    background: linear-gradient(125deg, #111827 0%, #1f2937 52%, #374151 100%);
-    color: #f9fafb;
-    border-radius: 14px;
-    padding: 1.1rem 1.25rem;
-    border: 1px solid rgba(156, 163, 175, 0.35);
-    box-shadow: 0 10px 28px rgba(17, 24, 39, 0.22);
-  }
-  .headmaster-dashboard .hero h5 {
-    margin: 0;
-    font-weight: 700;
-  }
-  .headmaster-dashboard .hero small {
-    color: #d1d5db;
-  }
   .headmaster-dashboard .tile {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -69,23 +55,9 @@
   }
 </style>
 {% endblock %}
+
 {% block content %}
 <div class="headmaster-dashboard">
-  <div class="hero mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-    <div>
-      <h5>School Leadership Dashboard</h5>
-      <small>Track academic health, finance, attendance, and urgent interventions in real time.</small>
-    </div>
-    <div class="d-flex gap-2">
-      <a href="{% url 'results:pending_approvals' %}" class="btn btn-sm btn-light">
-        <i class="bi bi-check2-square me-1"></i> Approvals
-      </a>
-      <a href="{% url 'user_management' %}" class="btn btn-sm btn-outline-light">
-        <i class="bi bi-people me-1"></i> Users
-      </a>
-    </div>
-  </div>
-
   <div class="row g-3 mb-4">
     <div class="col-6 col-lg-3">
       <div class="tile">
