@@ -84,7 +84,10 @@ def headmaster_dashboard(request, school, membership):
 
     # Fee summary (read-only overview for headmaster)
     total_invoiced = FeeInvoice.objects.filter(school=school).aggregate(t=Sum('amount'))['t'] or 0
-    total_collected = FeeInvoice.objects.filter(school=school).aggregate(t=Sum('amount_paid'))['t'] or 0
+    from fees.models import FeePayment
+    total_collected = FeePayment.objects.filter(
+        invoice__school=school, status='confirmed'
+    ).aggregate(t=Sum('amount'))['t'] or 0
     collection_pct = round((total_collected / total_invoiced) * 100, 1) if total_invoiced > 0 else 0
     overdue_count = FeeInvoice.objects.filter(school=school, status__in=['unpaid','partial'], due_date__lt=today).count()
     outstanding_balance = total_invoiced - total_collected
@@ -173,7 +176,10 @@ def admin_dashboard(request, school, membership):
 
     # Fee overview & actionable metrics
     total_invoiced = FeeInvoice.objects.filter(school=school).aggregate(t=Sum('amount'))['t'] or 0
-    total_paid = FeeInvoice.objects.filter(school=school).aggregate(t=Sum('amount_paid'))['t'] or 0
+    from fees.models import FeePayment
+    total_paid = FeePayment.objects.filter(
+        invoice__school=school, status='confirmed'
+    ).aggregate(t=Sum('amount'))['t'] or 0
     outstanding = total_invoiced - total_paid
     unpaid_invoices = FeeInvoice.objects.filter(school=school, status='unpaid').count()
     partial_invoices = FeeInvoice.objects.filter(school=school, status='partial').count()
@@ -483,7 +489,7 @@ def parent_dashboard(request, school, membership):
     ).select_related('user', 'current_class').distinct()
 
     children_data = []
-    total_fee_balance = 0
+    total_balances = {} # Dict of currency: balance
     low_attendance_count = 0
     outstanding_fee_children = 0
     for child in children:
@@ -508,15 +514,50 @@ def parent_dashboard(request, school, membership):
 
         # Fee balance
         invoices = FeeInvoice.objects.filter(student=child, school=school)
+        
+        # Calculate balance per currency
+        currencies = invoices.values_list('currency', flat=True).distinct()
+        child_balances = []
+        for curr in currencies:
+            curr_invoices = invoices.filter(currency=curr)
+            owed = curr_invoices.aggregate(t=Sum('amount'))['t'] or 0
+            # Calculate paid amount by summing confirmed payments directly
+            # This avoids issues if FeeInvoice.amount_paid is out of sync
+            from fees.models import FeePayment
+            paid = FeePayment.objects.filter(
+                invoice__in=curr_invoices, 
+                status='confirmed',
+                currency=curr
+            ).aggregate(t=Sum('amount'))['t'] or 0
+            bal = owed - paid
+            if bal != 0 or owed != 0:
+                child_balances.append({
+                    'currency': curr,
+                    'owed': owed,
+                    'paid': paid,
+                    'balance': bal
+                })
+        
+        # High-level summary for the child
         total_owed = invoices.aggregate(t=Sum('amount'))['t'] or 0
-        total_paid_amt = invoices.aggregate(t=Sum('amount_paid'))['t'] or 0
+        # Sum of all confirmed payments across all currencies (might be mixed, but used for 'outstanding' check)
+        total_paid_amt = FeePayment.objects.filter(
+            invoice__in=invoices, status='confirmed'
+        ).aggregate(t=Sum('amount'))['t'] or 0
         balance = total_owed - total_paid_amt
+        
         overdue_invoices = invoices.filter(
             status__in=['unpaid', 'partial', 'overdue'], due_date__lt=today
         ).count()
         if balance > 0:
             outstanding_fee_children += 1
-        total_fee_balance += balance
+        
+        # Aggregate totals per currency
+        for b in child_balances:
+            curr = b['currency']
+            if curr not in total_balances:
+                total_balances[curr] = 0
+            total_balances[curr] += b['balance']
 
         best_result = None
         weak_result = None
@@ -535,6 +576,7 @@ def parent_dashboard(request, school, membership):
             'weak_result': weak_result,
             'results_count': len(latest_results),
             'fee_balance': balance,
+            'balances': child_balances,
             'overdue_invoices': overdue_invoices,
             'current_term': current_term,
         })
@@ -556,7 +598,7 @@ def parent_dashboard(request, school, membership):
         'children_count': children_count,
         'low_attendance_count': low_attendance_count,
         'outstanding_fee_children': outstanding_fee_children,
-        'total_fee_balance': total_fee_balance,
+        'total_balances': total_balances,
         'announcements': announcements,
         'current_term': current_term,
         'unread_notifications': unread_notifications,
@@ -620,7 +662,10 @@ def student_dashboard(request, school, membership):
     # Fee balance
     invoices = FeeInvoice.objects.filter(student=student)
     total_owed = invoices.aggregate(t=Sum('amount'))['t'] or 0
-    total_paid_amt = invoices.aggregate(t=Sum('amount_paid'))['t'] or 0
+    from fees.models import FeePayment
+    total_paid_amt = FeePayment.objects.filter(
+        invoice__in=invoices, status='confirmed'
+    ).aggregate(t=Sum('amount'))['t'] or 0
     fee_balance = total_owed - total_paid_amt
     overdue_invoices = invoices.filter(
         status__in=['unpaid', 'partial', 'overdue'], due_date__lt=today

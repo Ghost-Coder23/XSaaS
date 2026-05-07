@@ -70,6 +70,23 @@ class FeeInvoice(models.Model):
     def __str__(self):
         return f"INV-{self.invoice_number} - {self.student}"
 
+    def update_balance(self):
+        """Recalculate amount_paid and balance from payments"""
+        total_paid = self.payments.filter(status='confirmed').aggregate(
+            t=models.Sum('amount')
+        )['t'] or 0
+        self.amount_paid = total_paid
+        self.balance = self.amount - self.amount_paid
+        if self.amount_paid >= self.amount:
+            self.status = 'paid'
+        elif self.amount_paid > 0:
+            self.status = 'partial'
+        elif self.due_date and self.due_date < timezone.now().date():
+            self.status = 'overdue'
+        else:
+            self.status = 'unpaid'
+        self.save(update_fields=['amount_paid', 'balance', 'status'])
+
     def save(self, *args, **kwargs):
         self.balance = self.amount - self.amount_paid
         if self.amount_paid >= self.amount:
@@ -125,13 +142,12 @@ class FeePayment(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         # Update invoice balance
-        if self.status == 'confirmed':
-            invoice = self.invoice
-            total_paid = sum(
-                p.amount for p in invoice.payments.filter(status='confirmed')
-            )
-            invoice.amount_paid = total_paid
-            invoice.save()
+        self.invoice.update_balance()
+
+    def delete(self, *args, **kwargs):
+        invoice = self.invoice
+        super().delete(*args, **kwargs)
+        invoice.update_balance()
 
 
 class ExpenseCategory(models.Model):

@@ -40,7 +40,9 @@ def fees_home(request):
 
     # Income Stats
     total_invoiced = FeeInvoice.objects.filter(school=school).aggregate(t=Sum('amount'))['t'] or 0
-    total_paid = FeeInvoice.objects.filter(school=school).aggregate(t=Sum('amount_paid'))['t'] or 0
+    total_paid = FeePayment.objects.filter(
+        invoice__school=school, status='confirmed'
+    ).aggregate(t=Sum('amount'))['t'] or 0
     total_outstanding = total_invoiced - total_paid
 
     # Expense Stats
@@ -302,7 +304,10 @@ def student_fee_statement(request, student_id):
         return redirect('dashboard')
     invoices = FeeInvoice.objects.filter(student=student).prefetch_related('payments')
     total_owed = invoices.aggregate(t=Sum('amount'))['t'] or 0
-    total_paid = invoices.aggregate(t=Sum('amount_paid'))['t'] or 0
+    # Calculate paid amount by summing confirmed payments directly
+    total_paid = FeePayment.objects.filter(
+        invoice__in=invoices, status='confirmed'
+    ).aggregate(t=Sum('amount'))['t'] or 0
     return render(request, 'fees/student_statement.html', {
         'student': student,
         'invoices': invoices,

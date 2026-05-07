@@ -73,8 +73,16 @@
     <div class="col-6 col-lg-3">
       <div class="metric-tile">
         <div class="label">Total Fee Balance</div>
-        <div class="value {% if total_fee_balance > 0 %}text-danger{% else %}text-success{% endif %}">
-          ${{ total_fee_balance|floatformat:2 }}
+        <div class="value">
+          {% if total_balances %}
+            {% for curr, bal in total_balances.items %}
+              <div class="{% if bal > 0 %}text-danger{% else %}text-success{% endif %}" style="font-size: {% if total_balances|length > 1 %}0.9rem{% else %}inherit{% endif %};">
+                {{ curr }} {{ bal|floatformat:2 }}
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-success">$0.00</div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -124,8 +132,16 @@
             </div>
             <div class="col-4">
               <div class="micro-stat">
-                <div class="micro-value {% if cd.fee_balance > 0 %}text-danger{% else %}text-success{% endif %}">
-                  ${{ cd.fee_balance|floatformat:2 }}
+                <div class="micro-value">
+                  {% if cd.balances %}
+                    {% for b in cd.balances %}
+                      <div class="{% if b.balance > 0 %}text-danger{% else %}text-success{% endif %}" style="font-size: {% if cd.balances|length > 1 %}0.75rem{% else %}0.85rem{% endif %}; line-height: 1;">
+                        {{ b.currency }} {{ b.balance|floatformat:0 }}
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="text-success">$0</div>
+                  {% endif %}
                 </div>
                 <div class="micro-label">Fee Balance</div>
               </div>
