@@ -58,23 +58,25 @@ body{font-family:'Segoe UI',system-ui,sans-serif; padding-top: var(--navbar-heig
 /* Modern Navbar */
 .main-navbar {
   height: var(--navbar-height);
-  background: rgba(255, 255, 255, 0.8) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border-bottom: 1px solid rgba(0,0,0,0.05);
+  border-bottom: 2px solid var(--primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .main-navbar.scrolled {
   height: 70px;
-  background: rgba(255, 255, 255, 0.95) !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  background: rgba(255, 255, 255, 1) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 .navbar-brand {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   letter-spacing: -0.02em;
   transition: transform 0.3s ease;
+  font-weight: 800 !important;
 }
 
 .navbar-brand:hover {
@@ -82,20 +84,20 @@ body{font-family:'Segoe UI',system-ui,sans-serif; padding-top: var(--navbar-heig
 }
 
 .navbar-brand img {
-  height: 40px;
+  height: 45px;
   width: auto;
   transition: height 0.3s ease;
 }
 
 .main-navbar.scrolled .navbar-brand img {
-  height: 32px;
+  height: 38px;
 }
 
 .nav-link {
-  color: #475569 !important;
-  font-weight: 600;
-  font-size: 0.9375rem;
-  padding: 0.5rem 1.25rem !important;
+  color: #1e293b !important;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.5rem 1.5rem !important;
   position: relative;
   transition: color 0.3s ease;
 }
@@ -108,9 +110,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif; padding-top: var(--navbar-heig
   content: '';
   position: absolute;
   bottom: 0;
-  left: 1.25rem;
-  right: 1.25rem;
-  height: 2px;
+  left: 1.5rem;
+  right: 1.5rem;
+  height: 3px;
+  border-radius: 2px;
   background: var(--primary);
   transform: scaleX(0);
   transition: transform 0.3s ease;
@@ -122,38 +125,39 @@ body{font-family:'Segoe UI',system-ui,sans-serif; padding-top: var(--navbar-heig
 
 .btn-nav-login {
   border-radius: 12px;
-  padding: 0.6rem 1.5rem;
+  padding: 0.7rem 1.75rem;
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   transition: all 0.3s ease;
   border: 2px solid var(--primary);
   color: var(--primary);
-  background: transparent;
+  background: rgba(79, 70, 229, 0.05);
 }
 
 .btn-nav-login:hover {
   background: var(--primary);
   color: white !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 6px 15px rgba(79, 70, 229, 0.25);
 }
 
 .btn-nav-cta {
   border-radius: 12px;
-  padding: 0.6rem 1.5rem;
+  padding: 0.7rem 1.75rem;
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   transition: all 0.3s ease;
   background: var(--primary);
   border: 2px solid var(--primary);
   color: white;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
 }
 
 .btn-nav-cta:hover {
   background: var(--primary-dark);
   border-color: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
 }
 
 .navbar-toggler {
@@ -214,7 +218,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif; padding-top: var(--navbar-heig
   {% else %}
     <i class="bi bi-mortarboard-fill me-2" style="font-size: 1.5rem;"></i>
   {% endif %}
-  <span class="d-none d-sm-inline">{{ current_school.name|default:"AcademiaLink" }}</span>
+  <span class="ms-1">{{ current_school.name|default:"AcademiaLink" }}</span>
 </a>
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
   <span class="toggler-icon"></span>

@@ -87,6 +87,49 @@
         }
       }
     });
+
+    // Financial Trend Chart (Revenue vs Expenses)
+    const financeCtx = document.getElementById('financeChart').getContext('2d');
+    const revenueData = {{ revenue_data|safe }};
+    const expenseData = {{ expense_data|safe }};
+    const hasFinanceData = revenueData.some(v => v > 0) || expenseData.some(v => v > 0);
+
+    new Chart(financeCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ finance_labels|safe }},
+        datasets: [
+          {
+            label: 'Revenue',
+            data: revenueData,
+            backgroundColor: '#10B981',
+            borderRadius: 6,
+          },
+          {
+            label: 'Expenses',
+            data: expenseData,
+            backgroundColor: '#EF4444',
+            borderRadius: 6,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, font: { weight: '600' } } },
+          tooltip: { enabled: hasFinanceData }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            grid: { color: '#f1f5f9' },
+            ticks: { callback: function(value) { return '$' + value; } }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
   });
 </script>
 {% endblock %}
@@ -357,9 +400,53 @@
 
   <div class="row g-3 mb-4">
     <div class="col-lg-8">
+      <div class="card dashboard-card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-graph-up me-2"></i>Financial Performance</span>
+          <span class="badge bg-light text-dark fw-normal">Last 6 Months</span>
+        </div>
+        <div class="card-body">
+          <canvas id="financeChart" style="max-height: 300px;"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card dashboard-card h-100">
+        <div class="card-header"><i class="bi bi-activity me-2"></i>Live Activity Feed</div>
+        <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+          <div class="list-group list-group-flush">
+            {% for activity in activity_feed %}
+            <div class="list-group-item border-0 py-3">
+              <div class="d-flex align-items-start gap-3">
+                <div class="activity-icon bg-{{ activity.color }} bg-opacity-10 text-{{ activity.color }} rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; min-width: 32px;">
+                  <i class="bi {{ activity.icon }} small"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <h6 class="mb-0 small fw-bold">{{ activity.title }}</h6>
+                    <small class="text-muted" style="font-size: 0.7rem;">{{ activity.time|timesince }} ago</small>
+                  </div>
+                  <p class="text-muted small mb-0">{{ activity.desc }}</p>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-wind fs-2 d-block mb-2"></i>
+              No recent activity found.
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-lg-8">
       <div class="card dashboard-card">
         <div class="card-header">
-          <span><i class="bi bi-graph-up me-2"></i>Enrollment Trends</span>
+          <span><i class="bi bi-people me-2"></i>Enrollment Trends</span>
         </div>
         <div class="card-body">
           <canvas id="enrollmentChart" style="max-height: 250px;"></canvas>

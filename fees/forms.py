@@ -32,6 +32,8 @@ class FeeInvoiceForm(forms.ModelForm):
         model = FeeInvoice
         fields = ['student', 'fee_structure', 'amount', 'currency', 'due_date', 'notes']
         widgets = {
+            'student': forms.Select(attrs={'class': 'searchable-select'}),
+            'fee_structure': forms.Select(attrs={'class': 'searchable-select'}),
             'due_date': forms.DateInput(attrs={'type': 'date'}),
             'notes': forms.Textarea(attrs={'rows': 2}),
         }
@@ -98,3 +100,22 @@ class ExpenseForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if school:
             self.fields['category'].queryset = ExpenseCategory.objects.filter(school=school)
+
+
+class QuickPaymentForm(forms.Form):
+    """Combines invoice creation and payment in one step"""
+    student = forms.ModelChoiceField(queryset=None, widget=forms.Select(attrs={'class': 'searchable-select'}))
+    fee_structure = forms.ModelChoiceField(queryset=None, required=False, help_text="Select a fee structure to auto-fill details", widget=forms.Select(attrs={'class': 'searchable-select'}))
+    amount = forms.DecimalField(max_digits=12, decimal_places=2)
+    currency = forms.ChoiceField(choices=FeeStructure.CURRENCY_CHOICES)
+    method = forms.ChoiceField(choices=FeePayment.METHOD_CHOICES)
+    reference = forms.CharField(max_length=100, required=False)
+    payment_date = forms.DateField(initial=timezone.now, widget=forms.DateInput(attrs={'type': 'date'}))
+    notes = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2}))
+
+    def __init__(self, school=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if school:
+            from academics.models import Student
+            self.fields['student'].queryset = Student.objects.filter(school=school, is_active=True).select_related('user')
+            self.fields['fee_structure'].queryset = FeeStructure.objects.filter(school=school)

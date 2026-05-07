@@ -8,7 +8,7 @@
         <form method="get" class="row g-3 align-items-end">
             <div class="col-md-3">
                 <label class="form-label fw-medium">Class</label>
-                <select name="class" class="form-select" required>
+                <select name="class" class="form-select searchable-select" required>
                     <option value="">Select Class</option>
                     {% for c in classes %}
                     <option value="{{ c.id }}" {% if class_section.id == c.id %}selected{% endif %}>{{ c }}</option>
@@ -17,7 +17,7 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label fw-medium">Subject</label>
-                <select name="subject" class="form-select" required>
+                <select name="subject" class="form-select searchable-select" required>
                     <option value="">Select Subject</option>
                     {% for s in subjects %}
                     <option value="{{ s.id }}" {% if subject.id == s.id %}selected{% endif %}>{{ s.name }}</option>
@@ -26,7 +26,7 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label fw-medium">Term</label>
-                <select name="term" class="form-select" required>
+                <select name="term" class="form-select searchable-select" required>
                     <option value="">Select Term</option>
                     {% for t in terms %}
                     <option value="{{ t.id }}" {% if term.id == t.id %}selected{% endif %}>{{ t }}</option>

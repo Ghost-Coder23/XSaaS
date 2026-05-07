@@ -6,7 +6,7 @@ from .models import Term, GradeScale, StudentResult, TermSummary
 class TermForm(forms.ModelForm):
     class Meta:
         model = Term
-        fields = ['term_number', 'name', 'start_date', 'end_date', 'is_current']
+        fields = ['academic_year', 'term_number', 'name', 'start_date', 'end_date', 'is_current']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),

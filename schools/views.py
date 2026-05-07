@@ -508,20 +508,24 @@ class ParentRegistrationView(CreateView):
         )
 
         with transaction.atomic():
-            # Check if user already exists
-            user = User.objects.filter(email=email).first()
-            is_new_user = False
-            
-            if not user:
-                is_new_user = True
-                # Create user
-                user = User.objects.create_user(
-                    username=email,
-                    email=email,
-                    password=form.cleaned_data['password1'],
-                    first_name=form.cleaned_data['parent_first_name'],
-                    last_name=form.cleaned_data['parent_last_name']
-                )
+            # Check if user already exists or is logged in
+            if self.request.user.is_authenticated:
+                user = self.request.user
+                is_new_user = False
+            else:
+                user = User.objects.filter(email=email).first()
+                is_new_user = False
+                
+                if not user:
+                    is_new_user = True
+                    # Create user
+                    user = User.objects.create_user(
+                        username=email,
+                        email=email,
+                        password=form.cleaned_data['password1'],
+                        first_name=form.cleaned_data['parent_first_name'],
+                        last_name=form.cleaned_data['parent_last_name']
+                    )
 
             # Create or get SchoolUser membership
             parent_membership, created = SchoolUser.objects.get_or_create(
@@ -541,7 +545,7 @@ class ParentRegistrationView(CreateView):
             # Auto-link additional children sharing the same parent email in this school.
             sibling_students = Student.objects.filter(
                 school=school,
-                parent_email__iexact=email,
+                parent_email__iexact=user.email,
                 is_active=True,
             ).exclude(pk=student.pk)
             linked_count = 1
@@ -562,11 +566,14 @@ class ParentRegistrationView(CreateView):
             self.request,
             f'Welcome {user.get_full_name()}! Your account is linked to {linked_count} child record(s).'
         )
-        # Auto-login the new parent
-        user = authenticate(self.request, username=user.username, password=form.cleaned_data['password1'])
-        if user:
-            login(self.request, user)
-        return redirect('/school/dashboard/')
+
+        # Auto-login the new parent if not already logged in
+        if not self.request.user.is_authenticated and is_new_user:
+            user = authenticate(self.request, username=user.username, password=form.cleaned_data['password1'])
+            if user:
+                login(self.request, user)
+        
+        return redirect('dashboard')
 
 
 @login_required

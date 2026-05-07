@@ -12,7 +12,7 @@ from django.utils import timezone
 import io
 
 from .models import FeeStructure, FeeInvoice, FeePayment, PaymentConfig, Expense, ExpenseCategory
-from .forms import FeeStructureForm, FeeInvoiceForm, FeePaymentForm, PaymentConfigForm, ExpenseForm, ExpenseCategoryForm
+from .forms import FeeStructureForm, FeeInvoiceForm, FeePaymentForm, PaymentConfigForm, ExpenseForm, ExpenseCategoryForm, QuickPaymentForm
 from academics.models import Student, ClassLevel, AcademicYear
 from schools.models import SchoolUser
 from django.contrib import messages
@@ -113,6 +113,81 @@ def expense_list(request):
         'exp_form': exp_form,
     }
     return render(request, 'fees/expense_list.html', context)
+
+
+@login_required
+@require_role(['admin', 'headmaster'])
+def quick_payment(request):
+    """View to record a payment and auto-create an invoice if it doesn't exist"""
+    school = request.school
+    school_user = SchoolUser.objects.filter(user=request.user, school=school).first()
+    form = QuickPaymentForm(school=school)
+
+    if request.method == 'POST':
+        form = QuickPaymentForm(school=school, data=request.POST)
+        if form.is_valid():
+            student = form.cleaned_data['student']
+            structure = form.cleaned_data['fee_structure']
+            amount = form.cleaned_data['amount']
+            currency = form.cleaned_data['currency']
+            method = form.cleaned_data['method']
+            reference = form.cleaned_data['reference']
+            payment_date = form.cleaned_data['payment_date']
+            notes = form.cleaned_data['notes']
+
+            try:
+                from django.db import transaction
+                with transaction.atomic():
+                    # 1. Find or Create Invoice
+                    invoice = None
+                    if structure:
+                        # Try to find an existing unpaid/partial invoice for this structure
+                        invoice = FeeInvoice.objects.filter(
+                            student=student, 
+                            fee_structure=structure,
+                            status__in=['unpaid', 'partial', 'overdue']
+                        ).first()
+
+                    if not invoice:
+                        # Create a one-off invoice
+                        invoice_name = structure.name if structure else "General Payment"
+                        invoice = FeeInvoice.objects.create(
+                            school=school,
+                            student=student,
+                            fee_structure=structure,
+                            invoice_number=str(uuid.uuid4().int)[:8],
+                            amount=amount if not structure else structure.amount,
+                            currency=currency,
+                            due_date=timezone.now().date(),
+                            notes=f"Auto-generated for quick payment: {notes}",
+                            created_by=school_user,
+                        )
+
+                    # 2. Record Payment
+                    # Convert date to datetime
+                    import pytz
+                    from datetime import time, datetime
+                    tz = pytz.timezone('Africa/Harare')
+                    dt = tz.localize(datetime.combine(payment_date, time(12, 0)))
+
+                    payment = FeePayment.objects.create(
+                        invoice=invoice,
+                        amount=amount,
+                        currency=currency,
+                        method=method,
+                        status='confirmed',
+                        reference=reference,
+                        payment_date=dt,
+                        notes=notes,
+                        received_by=school_user
+                    )
+
+                messages.success(request, f'Payment of {currency} {amount} recorded for {student.user.get_full_name()}.')
+                return redirect('fees:invoice_detail', pk=invoice.pk)
+            except Exception as e:
+                messages.error(request, f'Error recording payment: {str(e)}')
+
+    return render(request, 'fees/quick_payment.html', {'form': form})
 
 
 @login_required

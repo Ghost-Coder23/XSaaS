@@ -12,7 +12,7 @@ from schools.models import SchoolUser, School
 from academics.models import Student, ClassSection, AcademicYear, ParentStudentLink
 from results.models import StudentResult, TermSummary, Term
 from attendance.models import AttendanceSession, AttendanceRecord
-from fees.models import FeeInvoice, FeePayment
+from fees.models import FeeInvoice, FeePayment, Expense
 from notifications.models import Notification, Announcement
 from academics.models import Subject
 
@@ -197,6 +197,95 @@ def admin_dashboard(request, school, membership):
     classes_marked = today_sessions.filter(is_finalized=True).count()
     classes_not_marked = total_classes - classes_marked
 
+    # 1. Financial Trends (Last 6 months)
+    finance_labels = []
+    revenue_data = []
+    expense_data = []
+    for i in range(5, -1, -1):
+        target_month = (today.month - i - 1) % 12 + 1
+        target_year = today.year + (today.month - i - 1) // 12
+        m_start = date(target_year, target_month, 1)
+        if target_month == 12:
+            m_end = date(target_year + 1, 1, 1)
+        else:
+            m_end = date(target_year, target_month + 1, 1)
+            
+        rev = FeePayment.objects.filter(
+            invoice__school=school, 
+            payment_date__gte=m_start, 
+            payment_date__lt=m_end,
+            status='confirmed'
+        ).aggregate(s=Sum('amount'))['s'] or 0
+        
+        exp = Expense.objects.filter(
+            school=school,
+            date__gte=m_start,
+            date__lt=m_end
+        ).aggregate(s=Sum('amount'))['s'] or 0
+        
+        revenue_data.append(float(rev))
+        expense_data.append(float(exp))
+        finance_labels.append(m_start.strftime('%b'))
+
+    # 3. Recent Activity Stream
+    # Combining various models to create a "live" feed
+    activity_feed = []
+    
+    # New Student Admissions
+    new_students = Student.objects.filter(school=school).order_by('-date_joined')[:5]
+    for s in new_students:
+        activity_feed.append({
+            'type': 'admission',
+            'title': 'New Student Admission',
+            'desc': f'{s.user.get_full_name()} joined {s.current_class or "school"}',
+            'time': s.date_joined,
+            'icon': 'bi-person-plus',
+            'color': 'primary'
+        })
+        
+    # Recent Payments
+    for p in recent_payments:
+        activity_feed.append({
+            'type': 'payment',
+            'title': 'Fee Payment Received',
+            'desc': f'{p.currency} {p.amount} from {p.invoice.student.user.get_full_name()}',
+            'time': p.payment_date,
+            'icon': 'bi-cash-coin',
+            'color': 'success'
+        })
+        
+    # Recent Results
+    recent_results = StudentResult.objects.filter(
+        class_section__school=school
+    ).select_related('student__user', 'subject', 'class_section').order_by('-updated_at')[:5]
+    for r in recent_results:
+        # Convert updated_at (datetime) to date for comparison consistency if needed, 
+        # but sort is what matters here. We'll store as datetime objects.
+        activity_feed.append({
+            'type': 'result',
+            'title': 'Result Recorded',
+            'desc': f'{r.subject.name} score for {r.student.user.get_full_name()}',
+            'time': r.updated_at,
+            'icon': 'bi-pencil-square',
+            'color': 'info'
+        })
+        
+    # Helper to ensure everything is a datetime for sorting
+    from datetime import datetime, time
+    import pytz
+    tz = pytz.timezone('Africa/Harare')
+
+    def to_datetime(val):
+        if isinstance(val, datetime):
+            return val
+        if isinstance(val, date):
+            return tz.localize(datetime.combine(val, time.min))
+        return val
+
+    # Sort activity feed by time
+    activity_feed.sort(key=lambda x: to_datetime(x['time']), reverse=True)
+    activity_feed = activity_feed[:10]
+
     # Students per class
     classes_data = []
     for cs in ClassSection.objects.filter(school=school).select_related('class_level'):
@@ -245,6 +334,10 @@ def admin_dashboard(request, school, membership):
         'classes_data': classes_data,
         'enrollment_data': enrollment_data,
         'enrollment_labels': enrollment_labels,
+        'finance_labels': finance_labels,
+        'revenue_data': revenue_data,
+        'expense_data': expense_data,
+        'activity_feed': activity_feed,
         'current_term': current_term,
         'unread_notifications': unread_notifications,
         'today': today,

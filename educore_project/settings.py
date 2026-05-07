@@ -9,11 +9,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-change-this-in-production-use-env-var')
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*'] if DEBUG else ['.educore.com', 'www.educore.com', 'localhost', '127.0.0.1','https://techflex.pythonanywhere.com/','']
+ALLOWED_HOSTS = ['*'] if DEBUG else ['.educore.com', 'techflex.pythonanywhere.com', 'localhost', '127.0.0.1']
 
 CSRF_TRUSTED_ORIGINS = [
     "https://34fa7eead0bc42c5-77-246-55-160.serveousercontent.com",
-    ]
+    "https://techflex.pythonanywhere.com",
+]
+
+# Tenant Settings
+TENANT_DOMAIN = os.environ.get('TENANT_DOMAIN', 'educore.com')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -42,7 +46,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'core.middleware.RateLimitMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -51,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'middleware.tenant_middleware.SchoolMiddleware',
+    'core.middleware.RateLimitMiddleware',
     'core.middleware.CoreContextMiddleware',
 ]
 

@@ -1,0 +1,107 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Quick Payment — AcademiaLink{% endblock %}
+{% block page_title %}Finance Operations{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-transparent border-0 pt-4 px-4 text-center">
+        <h4 class="fw-bold mb-1">Quick Payment Record</h4>
+        <p class="text-muted small">Record a payment and auto-create an invoice in one step.</p>
+      </div>
+      <div class="card-body p-4">
+        <div class="alert alert-info border-0 rounded-3 mb-4 small">
+          <i class="bi bi-info-circle me-2"></i> This form will automatically create a fee invoice for the student if one doesn't exist for the selected fee structure.
+        </div>
+        
+        <form method="post" id="quickPaymentForm">
+          {% csrf_token %}
+          
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-bold small text-muted text-uppercase">{{ form.student.label }}</label>
+              {{ form.student }}
+              {% if form.student.errors %}<div class="text-danger small mt-1">{{ form.student.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-bold small text-muted text-uppercase">{{ form.fee_structure.label }}</label>
+              {{ form.fee_structure }}
+              <div class="form-text small">{{ form.fee_structure.help_text }}</div>
+              {% if form.fee_structure.errors %}<div class="text-danger small mt-1">{{ form.fee_structure.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted text-uppercase">{{ form.amount.label }}</label>
+              {{ form.amount }}
+              {% if form.amount.errors %}<div class="text-danger small mt-1">{{ form.amount.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted text-uppercase">{{ form.currency.label }}</label>
+              {{ form.currency }}
+              {% if form.currency.errors %}<div class="text-danger small mt-1">{{ form.currency.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted text-uppercase">{{ form.method.label }}</label>
+              {{ form.method }}
+              {% if form.method.errors %}<div class="text-danger small mt-1">{{ form.method.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted text-uppercase">{{ form.payment_date.label }}</label>
+              {{ form.payment_date }}
+              {% if form.payment_date.errors %}<div class="text-danger small mt-1">{{ form.payment_date.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-bold small text-muted text-uppercase">{{ form.reference.label }}</label>
+              {{ form.reference }}
+              {% if form.reference.errors %}<div class="text-danger small mt-1">{{ form.reference.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-bold small text-muted text-uppercase">{{ form.notes.label }}</label>
+              {{ form.notes }}
+              {% if form.notes.errors %}<div class="text-danger small mt-1">{{ form.notes.errors }}</div>{% endif %}
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 py-3 fw-bold mt-4 shadow-sm">
+            <i class="bi bi-check-circle me-2"></i>Record & Finalize Payment
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border-radius: 10px;
+        padding: 0.65rem 1rem;
+        border: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        background-color: #fff;
+    }
+</style>
+
+<script>
+    // Simple auto-fill logic
+    const structureSelect = document.querySelector('select[name="fee_structure"]');
+    const amountInput = document.querySelector('input[name="amount"]');
+    const currencySelect = document.querySelector('select[name="currency"]');
+
+    structureSelect.addEventListener('change', function() {
+        const option = this.options[this.selectedIndex];
+        // We don't have the amount/currency in the option text easily, 
+        // but for a better UX in a real app we'd use an API endpoint or data attributes.
+        // For now, this is just a placeholder for the logic.
+    });
+</script>
+{% endblock %}

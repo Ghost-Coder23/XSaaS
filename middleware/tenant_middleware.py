@@ -2,6 +2,7 @@
 School Tenant Middleware - Handles subdomain-based tenant detection
 Supports subdomain routing for production and ?school= param for local dev.
 """
+from django.conf import settings
 from schools.models import School
 
 
@@ -13,11 +14,14 @@ class SchoolMiddleware:
         host = request.get_host().split(':')[0]  # strip port
         school = None
 
-        # 1. Subdomain routing (production: school.academialink.co.zw)
+        # 1. Subdomain routing (production: school.educore.com)
+        tenant_domain = getattr(settings, 'TENANT_DOMAIN', 'educore.com')
         parts = host.split('.')
-        if len(parts) >= 3 and parts[-2] == 'academialink' and parts[-1] == 'zw':
-            subdomain = parts[0]
-            if subdomain not in ('www', 'admin'):
+        
+        # Check if the host ends with the tenant domain and has a subdomain
+        if host.endswith(tenant_domain):
+            subdomain = host.replace(f'.{tenant_domain}', '')
+            if subdomain and subdomain != host and subdomain not in ('www', 'admin'):
                 try:
                     school = School.objects.get(subdomain=subdomain, status='active')
                 except School.DoesNotExist:

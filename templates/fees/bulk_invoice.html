@@ -18,7 +18,7 @@
           {% csrf_token %}
           <div class="mb-4">
             <label class="form-label fw-bold small text-muted text-uppercase">Select Fee Structure</label>
-            <select name="fee_structure" class="form-select form-select-lg" required>
+            <select name="fee_structure" class="form-select form-select-lg searchable-select" required>
               <option value="">Choose a fee...</option>
               {% for s in structures %}<option value="{{ s.id }}">{{ s.name }} — {{ s.currency }} {{ s.amount }}</option>{% endfor %}
             </select>
@@ -27,7 +27,7 @@
           
           <div class="mb-5">
             <label class="form-label fw-bold small text-muted text-uppercase">Target Audience</label>
-            <select name="class_section" class="form-select form-select-lg">
+            <select name="class_section" class="form-select form-select-lg searchable-select">
               <option value="">Entire School (All Students)</option>
               {% for c in classes %}<option value="{{ c.id }}">{{ c }}</option>{% endfor %}
             </select>

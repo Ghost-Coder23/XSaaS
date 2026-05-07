@@ -12,7 +12,8 @@
 <div class="mb-3"><label class="form-label">Name</label><input type="text" name="name" class="form-control" placeholder="e.g. First Term 2024" required></div>
 <div class="mb-3"><label class="form-label">Academic Year</label>
 <select name="academic_year" class="form-select" required>
-{% for yr in form.fields.academic_year.queryset %}<option value="{{ yr.id }}">{{ yr }}</option>{% endfor %}
+<option value="">---------</option>
+{% for yr in form.fields.academic_year.queryset %}<option value="{{ yr.id }}">{{ yr.name }}</option>{% endfor %}
 </select></div>
 <div class="mb-3"><label class="form-label">Start Date</label><input type="date" name="start_date" class="form-control" required></div>
 <div class="mb-3"><label class="form-label">End Date</label><input type="date" name="end_date" class="form-control" required></div>

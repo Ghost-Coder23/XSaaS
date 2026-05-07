@@ -57,10 +57,14 @@ class School(models.Model):
         self.save()
 
     def get_absolute_url(self):
-        return f"https://{self.subdomain}.academialink.co.zw"
+        from django.conf import settings
+        domain = getattr(settings, 'TENANT_DOMAIN', 'educore.com')
+        return f"https://{self.subdomain}.{domain}"
 
     def get_full_domain(self):
-        return f"{self.subdomain}.academialink.co.zw"
+        from django.conf import settings
+        domain = getattr(settings, 'TENANT_DOMAIN', 'educore.com')
+        return f"{self.subdomain}.{domain}"
 
 
 class SchoolUser(SyncBaseModel):

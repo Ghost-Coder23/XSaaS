@@ -124,8 +124,13 @@ class ParentRegistrationForm(forms.Form):
 
     def clean_parent_email(self):
         email = self.cleaned_data['parent_email']
+        # Check if user already has a membership in THIS school
         if User.objects.filter(email=email).exists():
-            raise forms.ValidationError("This email is already registered.")
+            user = User.objects.get(email=email)
+            if SchoolUser.objects.filter(user=user, school=self.school).exists():
+                # If they are already in this school, check if they are already linked to this student
+                # But we can just say they are already registered here.
+                raise forms.ValidationError("You are already registered with this school. Please login to your dashboard.")
         return email
 
     def clean(self):
