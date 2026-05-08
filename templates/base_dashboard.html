@@ -535,6 +535,20 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     {% endfor %}
+    <!-- Offline Operations Section -->
+    <div id="offline-ops-section" class="card mt-4 d-none">
+        <div class="card-header d-flex justify-content-between align-items-center bg-warning text-dark">
+            <span><i class="bi bi-cloud-arrow-up-fill me-2"></i>Pending Offline Actions</span>
+            <button id="manual-sync-btn" class="btn btn-sm btn-dark" onclick="syncManager.flushQueue()">
+                <i class="bi bi-arrow-repeat me-1"></i>Sync Now
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <ul id="offline-ops-list" class="list-group list-group-flush">
+                <!-- Items populated by sync.js -->
+            </ul>
+        </div>
+    </div>
     {% block content %}{% endblock %}
   </div>
 </div>
@@ -562,6 +576,12 @@ if ('serviceWorker' in navigator) {
         try {
             const registration = await navigator.serviceWorker.register('/sw.js');
             console.log('ServiceWorker registration successful with scope: ', registration.scope);
+
+            // Force refresh when new Service Worker takes over
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log("New Service Worker activated. Reloading...");
+                window.location.reload();
+            });
 
             // Initialize DB and Sync
             db = new EduCoreDB(tenantPrefix);
@@ -594,6 +614,7 @@ function closeSidebar() {
 
 // Notification count
 function loadNotifCount() {
+  if (!navigator.onLine) return;
   fetch('/notifications/unread/')
     .then(r => r.json())
     .then(d => {
@@ -638,6 +659,57 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('notif-count')) {
         loadNotifCount();
         setInterval(loadNotifCount, 60000);
+    }
+
+    // --- Deep Offline Cache Warmer ---
+    if ('serviceWorker' in navigator && navigator.onLine) {
+        // Track what we've already warmed in this session
+        if (!window._warmedRoutes) window._warmedRoutes = new Set();
+
+        const warmPageLinks = () => {
+            console.log("Deep crawling links for offline use...");
+            
+            // 1. Core navigation routes (always high priority)
+            const core = ['/attendance/', '/fees/', '/notifications/', '/academics/classes/', '/analytics/dashboard/'];
+            
+            // 2. Discover all links on the CURRENT page
+            const discovered = Array.from(document.querySelectorAll('a'))
+                .map(a => {
+                    try {
+                        const href = a.getAttribute('href');
+                        if (!href) return null;
+                        // Resolve relative URLs to absolute paths
+                        const url = new URL(href, window.location.origin);
+                        return url.origin === window.location.origin ? url.pathname : null;
+                    } catch(e) { return null; }
+                })
+                .filter(path => 
+                    path && 
+                    path.startsWith('/') && 
+                    !path.includes('logout') && 
+                    !path.includes('delete') && // Don't pre-fetch delete actions
+                    !window._warmedRoutes.has(path)
+                );
+            
+            // 3. Combine and fetch
+            const allToCache = [...new Set([...core, ...discovered])];
+            
+            allToCache.forEach(route => {
+                window._warmedRoutes.add(route);
+                fetch(route, { 
+                    priority: 'low',
+                    headers: { 'Accept': 'text/html' }
+                }).catch(() => {}); 
+            });
+        };
+
+        // Warm the current page after 3 seconds
+        setTimeout(warmPageLinks, 3000);
+
+        // Every time the user clicks or HTMX swaps content, check for NEW links
+        document.addEventListener('htmx:afterSwap', () => {
+            setTimeout(warmPageLinks, 1000);
+        });
     }
 });
 </script>

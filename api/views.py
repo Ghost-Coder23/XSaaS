@@ -100,6 +100,16 @@ class BatchSyncView(APIView):
 
                 try:
                     if op_type in ['create', 'update']:
+                        # Special handling for fee payments to link to invoice via PK if needed
+                        if model_name == 'fee_payment' and 'invoice' not in data:
+                            # Try to extract invoice ID from _offline_origin if possible
+                            origin = data.get('_offline_origin', '')
+                            if '/fees/invoice/' in origin:
+                                try:
+                                    invoice_id = origin.split('/fees/invoice/')[1].split('/')[0]
+                                    data['invoice'] = invoice_id
+                                except: pass
+
                         # Handle Last Write Wins via updated_at
                         instance = model_class.objects.filter(id=client_id).first()
                         if instance:
@@ -117,10 +127,18 @@ class BatchSyncView(APIView):
                             serializer = serializer_class(instance, data=data, partial=True)
                         else:
                             # Create new
+                            # If ID is provided, use it
                             serializer = serializer_class(data=data)
 
                         if serializer.is_valid():
-                            serializer.save(school=school) if hasattr(model_class, 'school') else serializer.save()
+                            if instance:
+                                serializer.save()
+                            else:
+                                # For new objects, ensure ID is preserved if provided
+                                if client_id:
+                                    serializer.save(id=client_id, school=school) if hasattr(model_class, 'school') else serializer.save(id=client_id)
+                                else:
+                                    serializer.save(school=school) if hasattr(model_class, 'school') else serializer.save()
                             results.append({"id": client_id, "status": "success", "data": serializer.data})
                         else:
                             results.append({"id": client_id, "status": "error", "errors": serializer.errors})

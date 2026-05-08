@@ -53,7 +53,7 @@
     <div class="card">
       <div class="card-header"><i class="bi bi-cash-coin me-2"></i>Record Payment</div>
       <div class="card-body">
-        <form method="post" action="{% url 'fees:record_payment' invoice.pk %}">
+        <form method="post" action="{% url 'fees:record_payment' invoice.pk %}" data-offline-model="fee_payment">
           {% csrf_token %}
           <div class="mb-2">
             <label class="form-label fw-semibold" style="font-size:.82rem;">Amount</label>
