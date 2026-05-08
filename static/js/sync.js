@@ -24,25 +24,111 @@ class SyncManager {
     }
 
     async updateOfflineOpsUI() {
-        const section = document.getElementById('offline-ops-section');
-        const list = document.getElementById('offline-ops-list');
-        if (!section || !list) return;
-
+        const sidebarBadge = document.getElementById('sync-sidebar-badge');
+        const notifBadge = document.getElementById('notif-count');
+        const syncPageList = document.getElementById('sync-page-list');
+        
         const queue = await this.db.getAll('sync_queue');
-        if (queue.length > 0) {
-            section.classList.remove('d-none');
-            list.innerHTML = queue.map(item => `
-                <li class="list-group-item d-flex justify-content-between align-items-center py-2" style="font-size: 0.85rem;">
-                    <div>
-                        <span class="badge bg-secondary me-2 text-uppercase" style="font-size: 0.65rem;">${item.type}</span>
-                        <span class="fw-semibold">${item.model.replace('_', ' ')}</span>
-                        <div class="text-muted" style="font-size: 0.75rem;">Source: ${item.data._offline_origin || 'Unknown'}</div>
-                    </div>
-                    <i class="bi bi-clock-history text-warning"></i>
-                </li>
-            `).join('');
-        } else {
-            section.classList.add('d-none');
+        const count = queue.length;
+
+        // 1. Update Sidebar Badge
+        if (sidebarBadge) {
+            if (count > 0) {
+                sidebarBadge.innerText = count;
+                sidebarBadge.classList.remove('d-none');
+            } else {
+                sidebarBadge.classList.add('d-none');
+            }
+        }
+
+        // 2. Update Notification Tab Badge (Add count if pending)
+        if (notifBadge) {
+            // We only show the sync count if there are actually items in the queue
+            if (count > 0) {
+                // Get the base server notifications (ignoring the sync count we might have added previously)
+                // We'll use a data attribute to store the real server count
+                if (!notifBadge.hasAttribute('data-server-count')) {
+                    notifBadge.setAttribute('data-server-count', notifBadge.innerText || '0');
+                }
+                const serverCount = parseInt(notifBadge.getAttribute('data-server-count')) || 0;
+                
+                notifBadge.innerText = serverCount + count;
+                notifBadge.style.display = 'flex';
+                notifBadge.title = `${count} pending offline actions`;
+            } else if (notifBadge.hasAttribute('data-server-count')) {
+                // Restore server count if queue is empty
+                const serverCount = notifBadge.getAttribute('data-server-count');
+                notifBadge.innerText = serverCount;
+                if (parseInt(serverCount) === 0) {
+                    notifBadge.style.display = 'none';
+                }
+            }
+        }
+
+        // 3. Update Sync Page List (if on that page)
+        if (syncPageList) {
+            if (count > 0) {
+                syncPageList.innerHTML = queue.map(item => `
+                    <tr>
+                        <td>
+                            <span class="badge bg-secondary text-uppercase" style="font-size: 0.65rem;">${item.type}</span>
+                        </td>
+                        <td class="fw-semibold">${item.model.replace('_', ' ')}</td>
+                        <td class="text-muted small">${item.data._offline_origin || '/'}</td>
+                        <td><span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Pending</span></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-danger" onclick="syncManager.deleteFromQueue('${item.id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                syncPageList.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-3"></i>
+                                No pending offline actions.
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+    }
+
+    async deleteFromQueue(id) {
+        if (confirm("Are you sure you want to discard this offline action?")) {
+            await this.db.delete('sync_queue', id);
+            this.updateOfflineOpsUI();
+        }
+    }
+
+    /**
+     * Optimistically update the local IndexedDB store
+     * so that the UI shows the change immediately after navigation
+     */
+    async applyOptimisticUpdate(model, type, data) {
+        const storeName = model + 's'; // e.g., 'students', 'fee_payments'
+        try {
+            if (type === 'delete') {
+                // For delete, we don't actually delete from local DB yet (to allow undo/sync)
+                // but we can mark it as hidden
+                const existing = await this.db.get(storeName, data.id);
+                if (existing) {
+                    existing._offline_deleted = true;
+                    await this.db.put(storeName, existing);
+                }
+            } else {
+                // For create or update, merge the new data into the store
+                const existing = await this.db.get(storeName, data.id) || {};
+                const updated = { ...existing, ...data, _offline_pending: true };
+                await this.db.put(storeName, updated);
+            }
+            console.log(`Optimistic ${type} applied to ${storeName}`);
+        } catch (e) {
+            console.warn("Optimistic update failed:", e);
         }
     }
 
@@ -117,6 +203,10 @@ class SyncManager {
 
         try {
             await this.db.queueWrite(modelName, opType, data);
+            
+            // OPTIMISTIC UPDATE: Update local IndexedDB so the change "appears" immediately
+            await this.applyOptimisticUpdate(modelName, opType, data);
+            
             this.updateOfflineOpsUI();
             
             // Show feedback

@@ -366,6 +366,11 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     <a href="{% url 'messaging:list' %}" class="nav-link {% if 'messages' in request.path %}active{% endif %}">
       <i class="bi bi-chat-left-text"></i> Messages
     </a>
+    <a href="{% url 'offline_sync' %}" class="nav-link {% if request.resolver_match.url_name == 'offline_sync' %}active{% endif %}">
+      <i class="bi bi-cloud-arrow-up"></i>
+      <span>Offline Sync</span>
+      <span id="sync-sidebar-badge" class="badge bg-warning text-dark ms-auto d-none" style="font-size: 0.65rem; border-radius: 50px;">0</span>
+    </a>
     <a href="{% url 'notifications:announcements' %}" class="nav-link {% if 'announcements' in request.path %}active{% endif %}">
       <i class="bi bi-megaphone"></i> Announcements
     </a>
@@ -535,20 +540,6 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     {% endfor %}
-    <!-- Offline Operations Section -->
-    <div id="offline-ops-section" class="card mt-4 d-none">
-        <div class="card-header d-flex justify-content-between align-items-center bg-warning text-dark">
-            <span><i class="bi bi-cloud-arrow-up-fill me-2"></i>Pending Offline Actions</span>
-            <button id="manual-sync-btn" class="btn btn-sm btn-dark" onclick="syncManager.flushQueue()">
-                <i class="bi bi-arrow-repeat me-1"></i>Sync Now
-            </button>
-        </div>
-        <div class="card-body p-0">
-            <ul id="offline-ops-list" class="list-group list-group-flush">
-                <!-- Items populated by sync.js -->
-            </ul>
-        </div>
-    </div>
     {% block content %}{% endblock %}
   </div>
 </div>
@@ -622,8 +613,15 @@ function loadNotifCount() {
       if (d.count > 0) {
         el.innerText = d.count;
         el.style.display = 'flex';
+        // Store server count for sync manager to use
+        el.setAttribute('data-server-count', d.count);
+        // Let sync manager update the UI if there are pending items
+        if (window.syncManager) syncManager.updateOfflineOpsUI();
       } else {
+        el.innerText = '0';
         el.style.display = 'none';
+        el.setAttribute('data-server-count', '0');
+        if (window.syncManager) syncManager.updateOfflineOpsUI();
       }
     });
 }
@@ -661,55 +659,64 @@ document.addEventListener('DOMContentLoaded', function() {
         setInterval(loadNotifCount, 60000);
     }
 
-    // --- Deep Offline Cache Warmer ---
+    // --- Deep Offline Cache Warmer (v24: Queued) ---
     if ('serviceWorker' in navigator && navigator.onLine) {
-        // Track what we've already warmed in this session
         if (!window._warmedRoutes) window._warmedRoutes = new Set();
+        let crawlQueue = [];
+        let isProcessingQueue = false;
+
+        const processQueue = async () => {
+            if (isProcessingQueue || crawlQueue.length === 0) return;
+            isProcessingQueue = true;
+            
+            while (crawlQueue.length > 0) {
+                const route = crawlQueue.shift();
+                try {
+                    await fetch(route, { 
+                        priority: 'low',
+                        headers: { 'Accept': 'text/html', 'X-Offline-Warm': 'true' }
+                    });
+                    console.log(`[Crawler] Cached: ${route}`);
+                } catch(e) {}
+                // Wait 200ms between fetches to avoid overloading the browser
+                await new Promise(r => setTimeout(r, 200));
+            }
+            isProcessingQueue = false;
+        };
 
         const warmPageLinks = () => {
-            console.log("Deep crawling links for offline use...");
-            
-            // 1. Core navigation routes (always high priority)
-            const core = ['/attendance/', '/fees/', '/notifications/', '/academics/classes/', '/analytics/dashboard/'];
-            
-            // 2. Discover all links on the CURRENT page
-            const discovered = Array.from(document.querySelectorAll('a'))
-                .map(a => {
+            const discovered = Array.from(document.querySelectorAll('a, [hx-get]'))
+                .map(el => {
                     try {
-                        const href = a.getAttribute('href');
-                        if (!href) return null;
-                        // Resolve relative URLs to absolute paths
+                        const href = el.getAttribute('href') || el.getAttribute('hx-get');
+                        if (!href || href === '#' || href.startsWith('javascript:')) return null;
                         const url = new URL(href, window.location.origin);
-                        return url.origin === window.location.origin ? url.pathname : null;
+                        if (url.origin !== window.location.origin) return null;
+                        
+                        // Normalize: Ensure trailing slash for Django URLs
+                        let path = url.pathname;
+                        if (!path.endsWith('/') && !path.includes('.')) path += '/';
+                        return path;
                     } catch(e) { return null; }
                 })
                 .filter(path => 
-                    path && 
-                    path.startsWith('/') && 
-                    !path.includes('logout') && 
-                    !path.includes('delete') && // Don't pre-fetch delete actions
+                    path && path.startsWith('/') && 
+                    !path.includes('logout') && !path.includes('delete') &&
                     !window._warmedRoutes.has(path)
                 );
             
-            // 3. Combine and fetch
-            const allToCache = [...new Set([...core, ...discovered])];
-            
-            allToCache.forEach(route => {
-                window._warmedRoutes.add(route);
-                fetch(route, { 
-                    priority: 'low',
-                    headers: { 'Accept': 'text/html' }
-                }).catch(() => {}); 
-            });
+            if (discovered.length > 0) {
+                console.log(`[Crawler] Queued ${discovered.length} new links for offline use`);
+                discovered.forEach(path => {
+                    window._warmedRoutes.add(path);
+                    crawlQueue.push(path);
+                });
+                processQueue();
+            }
         };
 
-        // Warm the current page after 3 seconds
-        setTimeout(warmPageLinks, 3000);
-
-        // Every time the user clicks or HTMX swaps content, check for NEW links
-        document.addEventListener('htmx:afterSwap', () => {
-            setTimeout(warmPageLinks, 1000);
-        });
+        setTimeout(warmPageLinks, 2000);
+        document.addEventListener('htmx:afterSwap', () => setTimeout(warmPageLinks, 500));
     }
 });
 </script>

@@ -14,4 +14,5 @@ urlpatterns = [
     path('parent/toggle-registration/', views.toggle_registration, name='toggle_registration'),
     path('parent/regenerate-token/', views.regenerate_registration_token, name='regenerate_registration_token'),
     path('upload-signature/', views.upload_signature, name='upload_signature'),
+    path('offline-sync/', views.offline_sync_page, name='offline_sync'),
 ]

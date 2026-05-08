@@ -3,7 +3,7 @@
  * Handles pre-caching, fetch interception, and background sync.
  */
 
-const CACHE_NAME = 'educore-static-v18';
+const CACHE_NAME = 'educore-static-v25';
 const CORE_ROUTES = [
     '/',
     '/analytics/dashboard/',
@@ -11,6 +11,7 @@ const CORE_ROUTES = [
     '/fees/',
     '/notifications/',
     '/academics/classes/',
+    '/offline-sync/',
     '/offline/'
 ];
 
@@ -84,22 +85,32 @@ self.addEventListener('fetch', (event) => {
         if (isHtmlRequest) {
             event.respondWith(
                 caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
-                    // Try to get fresh data from network
+                    const isWarming = event.request.headers.get('X-Offline-Warm') === 'true';
+                    
+                    // Normalize URL for matching (remove trailing slash for internal comparison)
+                    const normalizedUrl = url.pathname.endsWith('/') ? url.pathname.slice(0, -1) : url.pathname;
+
                     const networkFetch = fetch(event.request).then((networkResponse) => {
-                        if (networkResponse.ok) {
+                        if (networkResponse && networkResponse.status === 200) {
                             const copy = networkResponse.clone();
                             caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
                         }
                         return networkResponse;
                     }).catch((err) => {
-                        // If network fails, we'll return the cached response (if we have one)
-                        // or fallback to the dashboard
                         if (cachedResponse) return cachedResponse;
-                        return caches.match('/analytics/dashboard/') || caches.match('/offline/');
+                        
+                        // Try matching without trailing slash if exact match failed
+                        return caches.match(normalizedUrl, { ignoreSearch: true }).then(altResponse => {
+                            if (altResponse) return altResponse;
+
+                            if (event.request.mode === 'navigate' && !isWarming) {
+                                return caches.match('/analytics/dashboard/') || caches.match('/offline/');
+                            }
+                            throw err;
+                        });
                     });
 
-                    // If we have a cached version, show it instantly while the network update happens
-                    // This is the "Stale-While-Revalidate" pattern for pages
+                    if (isWarming && !cachedResponse) return networkFetch;
                     return cachedResponse || networkFetch;
                 })
             );

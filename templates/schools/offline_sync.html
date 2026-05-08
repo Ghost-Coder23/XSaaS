@@ -1,0 +1,56 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Offline Sync Management{% endblock %}
+{% block page_title %}Offline Sync Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-cloud-arrow-up-fill me-2"></i>Pending Offline Actions</h5>
+                    <button id="manual-sync-page-btn" class="btn btn-light btn-sm" onclick="syncManager.flushQueue()">
+                        <i class="bi bi-arrow-repeat me-1"></i>Sync All Actions Now
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Operation</th>
+                                    <th>Model</th>
+                                    <th>Source Page</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sync-page-list">
+                                <!-- Populated by sync.js -->
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-3"></i>
+                                            No pending offline actions.
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Force UI update when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.syncManager) {
+            syncManager.updateOfflineOpsUI();
+        }
+    });
+</script>
+{% endblock %}

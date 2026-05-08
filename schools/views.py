@@ -40,6 +40,11 @@ def offline_view(request):
     """Offline fallback page"""
     return render(request, 'offline.html')
 
+@login_required
+def offline_sync_page(request):
+    """Page for managing offline sync operations"""
+    return render(request, 'schools/offline_sync.html')
+
 from core.utils import SchoolRoleMixin, send_welcome_email
 from .models import School, SchoolUser, GalleryItem
 from .forms import SchoolRegistrationForm, SchoolBrandingForm, AddSchoolUserForm, ParentRegistrationForm, SchoolUserEditForm, SchoolUserSignatureForm
