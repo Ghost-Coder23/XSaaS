@@ -3,7 +3,7 @@
  * Handles pre-caching, fetch interception, and background sync.
  */
 
-const CACHE_NAME = 'educore-static-v1';
+const CACHE_NAME = 'educore-static-v2';
 const STATIC_ASSETS = [
     '/',
     '/static/css/style.css',
@@ -12,6 +12,10 @@ const STATIC_ASSETS = [
     '/static/icons/icon-192.png',
     '/static/icons/icon-512.png',
     '/offline/',
+    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
+    'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css',
+    'https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.css',
+    'https://unpkg.com/htmx.org@1.9.10'
 ];
 
 // 1. Install Event - Pre-cache static assets

@@ -59,13 +59,15 @@ class SyncManager {
                         const queueItem = queue.find(q => q.data.id === res.id);
                         if (queueItem) {
                             await this.db.delete('sync_queue', queueItem.id);
+                            
+                            // If it was a create/update, update local store with server's confirmed data
+                            if (res.data) {
+                                await this.db.put(queueItem.model + 's', res.data);
+                            }
                         }
                         
                         if (res.status === 'conflict') {
                             console.warn("Conflict detected for", res.id, ". Server data wins.");
-                            // Update local DB with server data
-                            // Note: We need to know which store to update
-                            // This would require more complex mapping
                         }
                     }
                 }

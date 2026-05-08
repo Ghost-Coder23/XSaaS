@@ -16,8 +16,12 @@ from .serializers import (
     SubjectSerializer, ClassSectionSerializer, StudentSerializer,
     AttendanceSessionSerializer, AttendanceRecordSerializer,
     TermSerializer, GradeScaleSerializer, StudentResultSerializer,
-    AnnouncementSerializer, SchoolUserSerializer
+    AnnouncementSerializer, SchoolUserSerializer,
+    FeeStructureSerializer, FeeInvoiceSerializer, FeePaymentSerializer,
+    ExpenseCategorySerializer, ExpenseSerializer
 )
+
+from fees.models import FeeStructure, FeeInvoice, FeePayment, Expense, ExpenseCategory
 
 class InitialSyncView(APIView):
     permission_classes = [IsAuthenticated]
@@ -38,12 +42,26 @@ class InitialSyncView(APIView):
             "grade_scales": GradeScaleSerializer(GradeScale.objects.filter(school=school), many=True).data,
             "announcements": AnnouncementSerializer(Announcement.objects.filter(school=school), many=True).data,
             "teachers": SchoolUserSerializer(SchoolUser.objects.filter(school=school, role='teacher'), many=True).data,
+            "fee_structures": FeeStructureSerializer(FeeStructure.objects.filter(school=school), many=True).data,
+            "expense_categories": ExpenseCategorySerializer(ExpenseCategory.objects.filter(school=school), many=True).data,
         }
         
         # Only include recent attendance and results for initial sync to keep payload small
         # More specific data can be fetched on demand or during delta syncs
         data["attendance_sessions"] = AttendanceSessionSerializer(
-            AttendanceSession.objects.filter(school=school).order_by('-date')[:50], many=True
+            AttendanceSession.objects.filter(school=school).order_by('-date')[:100], many=True
+        ).data
+        data["fee_invoices"] = FeeInvoiceSerializer(
+            FeeInvoice.objects.filter(school=school).order_by('-issued_date')[:100], many=True
+        ).data
+        data["fee_payments"] = FeePaymentSerializer(
+            FeePayment.objects.filter(invoice__school=school).order_by('-payment_date')[:100], many=True
+        ).data
+        data["expenses"] = ExpenseSerializer(
+            Expense.objects.filter(school=school).order_by('-date')[:100], many=True
+        ).data
+        data["results"] = StudentResultSerializer(
+            StudentResult.objects.filter(student__school=school).order_by('-created_at')[:200], many=True
         ).data
         
         return Response(data)
@@ -61,6 +79,10 @@ class BatchSyncView(APIView):
             'attendance_session': (AttendanceSession, AttendanceSessionSerializer),
             'attendance_record': (AttendanceRecord, AttendanceRecordSerializer),
             'student_result': (StudentResult, StudentResultSerializer),
+            'fee_invoice': (FeeInvoice, FeeInvoiceSerializer),
+            'fee_payment': (FeePayment, FeePaymentSerializer),
+            'expense': (Expense, ExpenseSerializer),
+            'announcement': (Announcement, AnnouncementSerializer),
         }
 
         with transaction.atomic():

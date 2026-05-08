@@ -77,3 +77,30 @@ class AnnouncementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Announcement
         fields = '__all__'
+
+from fees.models import FeeStructure, FeeInvoice, FeePayment, Expense, ExpenseCategory
+
+class FeeStructureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeeStructure
+        fields = '__all__'
+
+class FeeInvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeeInvoice
+        fields = '__all__'
+
+class FeePaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeePayment
+        fields = '__all__'
+
+class ExpenseCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExpenseCategory
+        fields = '__all__'
+
+class ExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Expense
+        fields = '__all__'

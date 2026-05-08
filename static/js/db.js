@@ -25,7 +25,9 @@ class EduCoreDB {
                     'students', 'teachers', 'academic_years', 'class_levels', 
                     'subjects', 'class_sections', 'attendance_sessions', 
                     'attendance_records', 'terms', 'grade_scales', 'results',
-                    'announcements', 'sync_queue', 'meta'
+                    'announcements', 'sync_queue', 'meta',
+                    'fee_structures', 'fee_invoices', 'fee_payments', 
+                    'expense_categories', 'expenses'
                 ];
 
                 stores.forEach(storeName => {
