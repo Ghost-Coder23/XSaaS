@@ -3,7 +3,7 @@
  * Handles pre-caching, fetch interception, and background sync.
  */
 
-const CACHE_NAME = 'educore-static-v25';
+const CACHE_NAME = 'educore-static-v26';
 const CORE_ROUTES = [
     '/',
     '/analytics/dashboard/',

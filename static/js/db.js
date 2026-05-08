@@ -4,7 +4,7 @@
  */
 
 const DB_NAME = 'EduCoreOffline';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 class EduCoreDB {
     constructor(tenantPrefix) {
@@ -27,7 +27,7 @@ class EduCoreDB {
                     'attendance_records', 'terms', 'grade_scales', 'results',
                     'announcements', 'sync_queue', 'meta',
                     'fee_structures', 'fee_invoices', 'fee_payments', 
-                    'expense_categories', 'expenses'
+                    'expense_categories', 'expenses', 'school_users'
                 ];
 
                 stores.forEach(storeName => {

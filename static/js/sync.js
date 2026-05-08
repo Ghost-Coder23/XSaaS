@@ -75,7 +75,7 @@ class SyncManager {
                         </td>
                         <td class="fw-semibold">${item.model.replace('_', ' ')}</td>
                         <td class="text-muted small">${item.data._offline_origin || '/'}</td>
-                        <td><span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Pending</span></td>
+                        <td><span class="badge bg-warning text-dark badge-status"><i class="bi bi-clock me-1"></i>Pending</span></td>
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-danger" onclick="syncManager.deleteFromQueue('${item.id}')">
                                 <i class="bi bi-trash"></i>
@@ -146,7 +146,9 @@ class SyncManager {
             else if (path.includes('teacher')) modelName = 'teacher';
             else if (path.includes('attendance')) modelName = 'attendance_record';
             else if (path.includes('payment') || path.includes('invoice')) modelName = 'fee_payment';
-            else if (path.includes('user')) modelName = 'school_user';
+            else if (path.includes('structure')) modelName = 'fee_structure';
+            else if (path.includes('expense')) modelName = 'expense';
+            else if (path.includes('user') || path.includes('profile') || path.includes('settings')) modelName = 'school_user';
             else modelName = 'generic_form';
         }
 
@@ -260,11 +262,21 @@ class SyncManager {
         this.isSyncing = true;
         this.showSyncStatus('syncing');
 
-        // Prepare operations with model name included
+        // Update UI to show 'syncing' status for each item
+        const syncPageList = document.getElementById('sync-page-list');
+        if (syncPageList) {
+            const statusBadges = syncPageList.querySelectorAll('.badge-status');
+            statusBadges.forEach(badge => {
+                badge.className = 'badge bg-info badge-status';
+                badge.innerHTML = '<i class="bi bi-arrow-repeat spin me-1"></i>Syncing...';
+            });
+        }
+
         const operations = queue.map(item => ({
             model: item.model,
             type: item.type,
-            data: item.data
+            data: item.data,
+            queue_id: item.id // Keep the internal ID for cleanup
         }));
 
         try {
@@ -279,33 +291,29 @@ class SyncManager {
 
             if (response.ok) {
                 const result = await response.json();
-                // Clear the queue items that were successfully processed
+                
+                // Process results and clean up
                 for (const res of result.results) {
                     if (res.status === 'success' || res.status === 'conflict') {
-                        // Find the original queue item
-                        const queueItem = queue.find(q => q.data.id === res.id);
-                        if (queueItem) {
-                            // Find the internal IndexedDB ID for deletion
-                            const internalItem = (await this.db.getAll('sync_queue')).find(i => i.data.id === res.id);
-                            if (internalItem) {
-                                await this.db.delete('sync_queue', internalItem.id);
-                            }
+                        // Use the queue_id we sent to find and delete the item
+                        const originalOp = operations.find(op => op.data.id === res.id);
+                        if (originalOp && originalOp.queue_id) {
+                            await this.db.delete('sync_queue', originalOp.queue_id);
                             
-                            // If it was a create/update, update local store with server's confirmed data
+                            // Update local store with server data
                             if (res.data) {
-                                await this.db.put(queueItem.model + 's', res.data);
+                                await this.db.put(originalOp.model + 's', res.data);
                             }
                         }
-                        
-                        if (res.status === 'conflict') {
-                            console.warn("Conflict detected for", res.id, ". Server data wins.");
-                        }
+                    } else {
+                        console.error(`Sync failed for item ${res.id}:`, res.message || res.errors);
                     }
                 }
+                
                 this.showSyncStatus('synced');
-                this.updateOfflineOpsUI();
+                await this.updateOfflineOpsUI();
             } else {
-                this.showSyncStatus('failed');
+                throw new Error("Server responded with error");
             }
         } catch (error) {
             console.error("Sync failed:", error);

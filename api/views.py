@@ -42,6 +42,7 @@ class InitialSyncView(APIView):
             "grade_scales": GradeScaleSerializer(GradeScale.objects.filter(school=school), many=True).data,
             "announcements": AnnouncementSerializer(Announcement.objects.filter(school=school), many=True).data,
             "teachers": SchoolUserSerializer(SchoolUser.objects.filter(school=school, role='teacher'), many=True).data,
+            "school_users": SchoolUserSerializer(SchoolUser.objects.filter(school=school), many=True).data,
             "fee_structures": FeeStructureSerializer(FeeStructure.objects.filter(school=school), many=True).data,
             "expense_categories": ExpenseCategorySerializer(ExpenseCategory.objects.filter(school=school), many=True).data,
         }
@@ -81,8 +82,11 @@ class BatchSyncView(APIView):
             'student_result': (StudentResult, StudentResultSerializer),
             'fee_invoice': (FeeInvoice, FeeInvoiceSerializer),
             'fee_payment': (FeePayment, FeePaymentSerializer),
+            'fee_structure': (FeeStructure, FeeStructureSerializer),
+            'expense_category': (ExpenseCategory, ExpenseCategorySerializer),
             'expense': (Expense, ExpenseSerializer),
             'announcement': (Announcement, AnnouncementSerializer),
+            'school_user': (SchoolUser, SchoolUserSerializer),
         }
 
         with transaction.atomic():
