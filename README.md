@@ -162,3 +162,4 @@ educore_project/
 ├── templates/         # All HTML templates
 └── manage.py
 ```
+So no i added the offline functionality and now the users can browse ove tye site wit or withourt internetc cinnection
