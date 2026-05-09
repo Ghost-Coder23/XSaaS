@@ -1,4 +1,4 @@
-# EduCore API Documentation
+# AcademiaLink API Documentation
 
 This document describes the available API endpoints in the EduCore Multi-tenant School Management SaaS.
 

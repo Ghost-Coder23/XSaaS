@@ -13,7 +13,8 @@ ALLOWED_HOSTS = ['*'] if DEBUG else ['.educore.com', 'techflex.pythonanywhere.co
 
 CSRF_TRUSTED_ORIGINS = [
     "https://34fa7eead0bc42c5-77-246-55-160.serveousercontent.com",
-    "https://techflex.pythonanywhere.com",
+    "https://70fa126ab120c7bd-77-246-53-149.serveousercontent.com",
+    "https://5f0f-77-246-55-229.ngrok-free.app",
 ]
 
 # Tenant Settings
