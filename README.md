@@ -128,7 +128,8 @@ Then run: `python manage.py migrate`
 
 SMS is stubbed in `notifications/utils.py`. To activate real SMS:
 
-1. Register at Africa's Talking (africastalking.com)
+1. Register at Africa's Talking (ctionality and now the users can browse ove tye site wit or withourt internetc cinnection
+no code todayafricastalking.com)
 2. Get API key
 3. Replace the `send_sms()` function body in `notifications/utils.py`
 
@@ -143,7 +144,7 @@ Supported: Paynow, EcoCash, OneMoney, Bank Transfer (Zimswitch), Cash
 
 ---
 
-## File Structure
+## File Structure 
 
 ```
 educore_project/
@@ -162,4 +163,4 @@ educore_project/
 ├── templates/         # All HTML templates
 └── manage.py
 ```
-So no i added the offline functionality and now the users can browse ove tye site wit or withourt internetc cinnection
+So no i added the offline fun
