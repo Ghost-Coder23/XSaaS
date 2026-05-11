@@ -72,6 +72,10 @@ class EduCoreDB {
         });
     }
 
+    async get(storeName, id) {
+        return this.getById(storeName, id);
+    }
+
     async put(storeName, data) {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.getStoreName(storeName)], 'readwrite');

@@ -40,7 +40,7 @@
         <h6 class="fw-bold mb-0">Define New Fee</h6>
       </div>
       <div class="card-body p-4">
-        <form method="post">
+        <form method="post" data-offline-model="fee_structure" data-offline-label="Fee structure">
           {% csrf_token %}
           {% for field in form %}
           <div class="mb-3">

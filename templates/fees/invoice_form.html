@@ -7,7 +7,7 @@
     <div class="card">
       <div class="card-header">{{ title }}</div>
       <div class="card-body">
-        <form method="post">
+        <form method="post" data-offline-model="fee_invoice" data-offline-label="Fee invoice">
           {% csrf_token %}
           {% for field in form %}
           <div class="mb-3">

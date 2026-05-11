@@ -8,15 +8,77 @@
 .att-row.absent-row { background: #fff1f2; }
 .att-row.late-row { background: #fffbeb; }
 .att-row.excused-row { background: #eff6ff; }
+@media (max-width: 767.98px) {
+  .attendance-toolbar {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 0.75rem;
+  }
+  .attendance-actions {
+    flex-direction: column;
+  }
+  .attendance-actions .form-control,
+  .attendance-actions .btn {
+    width: 100% !important;
+  }
+  .att-btn-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 0.45rem;
+  }
+  .att-btn-group .btn {
+    font-size: 0.82rem;
+    padding: 0.55rem 0.5rem;
+  }
+  #att-table thead {
+    display: none;
+  }
+  #att-table,
+  #att-table tbody,
+  #att-table tr,
+  #att-table td {
+    display: block;
+    width: 100%;
+  }
+  #att-table tbody {
+    display: grid;
+    gap: 0.9rem;
+    padding: 1rem;
+  }
+  #att-table tr {
+    border: 0;
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  }
+  #att-table td {
+    border: 0;
+    padding: 0.35rem 0;
+  }
+  #att-table td[data-label="#"] {
+    display: none;
+  }
+  #att-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    margin-bottom: 0.3rem;
+  }
+}
 </style>
 {% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3 attendance-toolbar">
   <div>
     <h5 class="mb-0">{{ class_section }}</h5>
     <small class="text-muted">{{ selected_date }}</small>
   </div>
-  <div class="d-flex gap-2">
+  <div class="d-flex gap-2 attendance-actions">
     <input type="date" class="form-control form-control-sm" value="{{ selected_date }}"
       onchange="window.location='?date='+this.value" style="width:145px;">
     <a href="{% url 'attendance:home' %}" class="btn btn-sm btn-outline-secondary">Back</a>
@@ -51,12 +113,12 @@
           <tbody>
             {% for item in student_records %}
             <tr class="att-row {% if item.record %}{{ item.record.status }}-row{% endif %}" id="row-{{ item.student.id }}">
-              <td class="text-muted">{{ forloop.counter }}</td>
-              <td>
+              <td class="text-muted" data-label="#">{{ forloop.counter }}</td>
+              <td data-label="Student">
                 <div class="fw-semibold">{{ item.student.user.get_full_name }}</div>
                 <small class="text-muted">{{ item.student.admission_number }}</small>
               </td>
-              <td>
+              <td data-label="Status">
                 <div class="btn-group att-btn-group" role="group">
                   <input type="radio" name="status_{{ item.student.id }}" value="present" id="p_{{ item.student.id }}"
                     {% if item.record.status == 'present' or not item.record %}checked{% endif %}
@@ -79,7 +141,7 @@
                   <label for="e_{{ item.student.id }}" class="btn btn-sm {% if item.record.status == 'excused' %}btn-info{% else %}btn-outline-info{% endif %}" id="le_{{ item.student.id }}">Excused</label>
                 </div>
               </td>
-              <td><input type="text" name="notes_{{ item.student.id }}" class="form-control form-control-sm"
+              <td data-label="Notes"><input type="text" name="notes_{{ item.student.id }}" class="form-control form-control-sm"
                 placeholder="Optional" value="{{ item.record.notes|default:'' }}" style="min-width:120px;"></td>
             </tr>
             {% endfor %}

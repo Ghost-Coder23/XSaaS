@@ -14,7 +14,7 @@
           <i class="bi bi-info-circle me-2"></i> This form will automatically create a fee invoice for the student if one doesn't exist for the selected fee structure.
         </div>
         
-        <form method="post" id="quickPaymentForm">
+        <form method="post" id="quickPaymentForm" data-offline-model="fee_payment" data-offline-label="Quick payment">
           {% csrf_token %}
           
           <div class="row g-3">

@@ -216,8 +216,8 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
   z-index: 100; 
   gap: 1rem; 
 }
-.topbar-left { display: flex; align-items: center; gap: 1rem; }
-.topbar-right { display: flex; align-items: center; gap: 1.25rem; }
+.topbar-left { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+.topbar-right { display: flex; align-items: center; gap: 1.25rem; min-width: 0; }
 .page-content { padding: 1.5rem; }
 /* Cards */
 .card { 
@@ -310,11 +310,44 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
 .table td { font-size: .875rem; vertical-align: middle; }
 /* Mobile */
 @media (max-width: 768px) {
+  :root { --sidebar-width: min(86vw, 320px); }
+  body { overflow-x: hidden; }
   .sidebar { transform: translateX(-100%); }
   .sidebar.open { transform: translateX(0); }
   .main-content { margin-left: 0; }
-  .page-content { padding: 1rem; }
+  .topbar {
+    padding: 0.85rem 1rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .topbar-left,
+  .topbar-right {
+    width: 100%;
+  }
+  .topbar-right {
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+  .page-content { padding: 1rem 0.85rem 1.5rem; }
+  .card-header, .card-body { padding-left: 1rem; padding-right: 1rem; }
+  .btn-group { flex-wrap: wrap; }
   .stat-card .stat-number { font-size: 1.5rem; }
+  #offline-banner {
+    top: 10px;
+    left: 0.75rem;
+    right: 0.75rem;
+    transform: none;
+    width: auto;
+    border-radius: 16px;
+  }
+  .sync-status {
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    border-radius: 16px;
+    text-align: center;
+  }
 }
 /* Desktop sidebar - ensure scrolling */
 @media (min-width: 769px) {
@@ -579,6 +612,8 @@ if ('serviceWorker' in navigator) {
             await db.open();
             
             syncManager = new SyncManager(db, tenantPrefix);
+            window.eduCoreDB = db;
+            window.syncManager = syncManager;
             
             // Perform initial sync if needed
             const hasSynced = localStorage.getItem(`synced_${tenantPrefix}`);
@@ -616,12 +651,12 @@ function loadNotifCount() {
         // Store server count for sync manager to use
         el.setAttribute('data-server-count', d.count);
         // Let sync manager update the UI if there are pending items
-        if (window.syncManager) syncManager.updateOfflineOpsUI();
+        if (window.syncManager) window.syncManager.updateOfflineOpsUI();
       } else {
         el.innerText = '0';
         el.style.display = 'none';
         el.setAttribute('data-server-count', '0');
-        if (window.syncManager) syncManager.updateOfflineOpsUI();
+        if (window.syncManager) window.syncManager.updateOfflineOpsUI();
       }
     });
 }

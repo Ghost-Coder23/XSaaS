@@ -334,6 +334,8 @@ if ('serviceWorker' in navigator) {
             await db.open();
             
             syncManager = new SyncManager(db, tenantPrefix);
+            window.eduCoreDB = db;
+            window.syncManager = syncManager;
             
             // Perform initial sync if needed
             const hasSynced = localStorage.getItem(`synced_${tenantPrefix}`);

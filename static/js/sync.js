@@ -1,6 +1,6 @@
 /**
  * Sync Manager for EduCore
- * Handles connectivity detection and batch syncing.
+ * Queues real form submissions offline and replays them later.
  */
 
 class SyncManager {
@@ -12,26 +12,26 @@ class SyncManager {
     }
 
     init() {
+        window.syncManager = this;
+
         window.addEventListener('online', () => this.handleOnlineStatus(true));
         window.addEventListener('offline', () => this.handleOnlineStatus(false));
-        
-        // Intercept form submissions for offline use
-        document.addEventListener('submit', (e) => this.handleFormSubmit(e));
-        
-        // Initial check
+
+        // Capture submits before the browser navigates away while offline.
+        document.addEventListener('submit', (event) => this.handleFormSubmit(event), true);
+
         this.handleOnlineStatus(navigator.onLine);
-        this.updateOfflineOpsUI();
+        this.updateOfflineOpsUI().catch((error) => console.warn('Offline UI update failed:', error));
     }
 
     async updateOfflineOpsUI() {
         const sidebarBadge = document.getElementById('sync-sidebar-badge');
         const notifBadge = document.getElementById('notif-count');
         const syncPageList = document.getElementById('sync-page-list');
-        
+
         const queue = await this.db.getAll('sync_queue');
         const count = queue.length;
 
-        // 1. Update Sidebar Badge
         if (sidebarBadge) {
             if (count > 0) {
                 sidebarBadge.innerText = count;
@@ -41,49 +41,21 @@ class SyncManager {
             }
         }
 
-        // 2. Update Notification Tab Badge (Add count if pending)
         if (notifBadge) {
-            // We only show the sync count if there are actually items in the queue
-            if (count > 0) {
-                // Get the base server notifications (ignoring the sync count we might have added previously)
-                // We'll use a data attribute to store the real server count
-                if (!notifBadge.hasAttribute('data-server-count')) {
-                    notifBadge.setAttribute('data-server-count', notifBadge.innerText || '0');
-                }
-                const serverCount = parseInt(notifBadge.getAttribute('data-server-count')) || 0;
-                
-                notifBadge.innerText = serverCount + count;
-                notifBadge.style.display = 'flex';
-                notifBadge.title = `${count} pending offline actions`;
-            } else if (notifBadge.hasAttribute('data-server-count')) {
-                // Restore server count if queue is empty
-                const serverCount = notifBadge.getAttribute('data-server-count');
-                notifBadge.innerText = serverCount;
-                if (parseInt(serverCount) === 0) {
-                    notifBadge.style.display = 'none';
-                }
+            if (!notifBadge.hasAttribute('data-server-count')) {
+                notifBadge.setAttribute('data-server-count', notifBadge.innerText || '0');
             }
+
+            const serverCount = parseInt(notifBadge.getAttribute('data-server-count') || '0', 10) || 0;
+            const total = serverCount + count;
+
+            notifBadge.innerText = total;
+            notifBadge.style.display = total > 0 ? 'flex' : 'none';
+            notifBadge.title = count > 0 ? `${count} pending offline action${count === 1 ? '' : 's'}` : '';
         }
 
-        // 3. Update Sync Page List (if on that page)
         if (syncPageList) {
-            if (count > 0) {
-                syncPageList.innerHTML = queue.map(item => `
-                    <tr>
-                        <td>
-                            <span class="badge bg-secondary text-uppercase" style="font-size: 0.65rem;">${item.type}</span>
-                        </td>
-                        <td class="fw-semibold">${item.model.replace('_', ' ')}</td>
-                        <td class="text-muted small">${item.data._offline_origin || '/'}</td>
-                        <td><span class="badge bg-warning text-dark badge-status"><i class="bi bi-clock me-1"></i>Pending</span></td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-danger" onclick="syncManager.deleteFromQueue('${item.id}')">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
+            if (count === 0) {
                 syncPageList.innerHTML = `
                     <tr>
                         <td colspan="5" class="text-center py-5">
@@ -94,236 +66,376 @@ class SyncManager {
                         </td>
                     </tr>
                 `;
+                return;
             }
+
+            const rows = queue
+                .slice()
+                .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0))
+                .map((item) => {
+                    const status = this.getQueueStatus(item);
+                    const model = this.escapeHtml(this.getItemLabel(item));
+                    const origin = this.escapeHtml(item.data?._offline_origin || '/');
+                    const error = item.last_error
+                        ? `<div class="text-danger small mt-1">${this.escapeHtml(item.last_error)}</div>`
+                        : '';
+
+                    return `
+                        <tr>
+                            <td>
+                                <span class="badge bg-secondary text-uppercase" style="font-size: 0.65rem;">${this.escapeHtml(item.type || 'submit')}</span>
+                            </td>
+                            <td class="fw-semibold">${model}${error}</td>
+                            <td class="text-muted small">${origin}</td>
+                            <td>
+                                <span class="badge ${status.className} badge-status">
+                                    <i class="bi ${status.icon} me-1"></i>${status.label}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-danger" onclick="window.syncManager.deleteFromQueue('${item.id}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                })
+                .join('');
+
+            syncPageList.innerHTML = rows;
         }
+    }
+
+    getQueueStatus(item) {
+        if (item.last_error) {
+            return {
+                className: 'bg-danger-subtle text-danger',
+                icon: 'bi-exclamation-triangle',
+                label: 'Needs review'
+            };
+        }
+
+        return {
+            className: 'bg-warning text-dark',
+            icon: 'bi-clock',
+            label: 'Pending'
+        };
+    }
+
+    getItemLabel(item) {
+        const explicitLabel = item.data?._offline_label;
+        if (explicitLabel) return explicitLabel;
+        if (item.model) return this.prettyName(item.model);
+        return 'Form Submission';
     }
 
     async deleteFromQueue(id) {
-        if (confirm("Are you sure you want to discard this offline action?")) {
+        if (confirm('Are you sure you want to discard this offline action?')) {
             await this.db.delete('sync_queue', id);
-            this.updateOfflineOpsUI();
+            await this.updateOfflineOpsUI();
         }
     }
 
-    /**
-     * Optimistically update the local IndexedDB store
-     * so that the UI shows the change immediately after navigation
-     */
-    async applyOptimisticUpdate(model, type, data) {
-        const storeName = model + 's'; // e.g., 'students', 'fee_payments'
-        try {
-            if (type === 'delete') {
-                // For delete, we don't actually delete from local DB yet (to allow undo/sync)
-                // but we can mark it as hidden
-                const existing = await this.db.get(storeName, data.id);
-                if (existing) {
-                    existing._offline_deleted = true;
-                    await this.db.put(storeName, existing);
-                }
-            } else {
-                // For create or update, merge the new data into the store
-                const existing = await this.db.get(storeName, data.id) || {};
-                const updated = { ...existing, ...data, _offline_pending: true };
-                await this.db.put(storeName, updated);
-            }
-            console.log(`Optimistic ${type} applied to ${storeName}`);
-        } catch (e) {
-            console.warn("Optimistic update failed:", e);
-        }
-    }
-
-    async handleFormSubmit(event) {
+    handleFormSubmit(event) {
         const form = event.target;
-        
-        // Don't intercept logout or external forms
-        if (form.action.includes('logout') || (form.action && !form.action.includes(window.location.origin) && form.action.startsWith('http'))) return;
+        if (!(form instanceof HTMLFormElement)) return;
 
-        // Determine the model/action
-        let modelName = form.getAttribute('data-offline-model');
-        if (!modelName) {
-            const path = window.location.pathname;
-            if (path.includes('student')) modelName = 'student';
-            else if (path.includes('teacher')) modelName = 'teacher';
-            else if (path.includes('attendance')) modelName = 'attendance_record';
-            else if (path.includes('payment') || path.includes('invoice')) modelName = 'fee_payment';
-            else if (path.includes('structure')) modelName = 'fee_structure';
-            else if (path.includes('expense')) modelName = 'expense';
-            else if (path.includes('user') || path.includes('profile') || path.includes('settings')) modelName = 'school_user';
-            else modelName = 'generic_form';
-        }
-
-        // If we are definitely offline, handle immediately
-        if (!navigator.onLine) {
-            this.saveOffline(form, modelName, event);
+        if (!navigator.onLine && this.formRequiresFileUpload(form) && !this.shouldIgnoreForm(form)) {
+            event.preventDefault();
+            this.showFormAlert(
+                form,
+                'danger',
+                'This form includes file uploads, so it still needs an internet connection to submit.'
+            );
             return;
         }
 
-        // If we are "online", we still want to handle the case where the server is down
-        // We do this by intercepting the submit and trying to fetch it ourselves
-        event.preventDefault();
-        
-        const formData = new FormData(form);
-        try {
-            const response = await fetch(form.action, {
-                method: form.method || 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest', // Tell Django it's an AJAX request
-                }
-            });
+        if (!this.isOfflineCapableForm(form) || navigator.onLine) return;
 
-            if (response.ok) {
-                // Success! Redirect or reload as intended
-                window.location.reload();
-            } else {
-                // Server returned an error (e.g. 500, 404)
-                throw new Error("Server error");
-            }
-        } catch (error) {
-            // Network error (Server down) or Server error
-            console.log("Server unreachable or error, saving offline...");
-            this.saveOffline(form, modelName);
-        }
+        event.preventDefault();
+        this.saveOffline(form, event.submitter || document.activeElement).catch((error) => {
+            console.error('Failed to save offline:', error);
+            this.showFormAlert(
+                form,
+                'danger',
+                'We could not save this action offline. Please try again once the connection returns.'
+            );
+        });
     }
 
-    async saveOffline(form, modelName, event = null) {
-        if (event) event.preventDefault();
+    shouldIgnoreForm(form) {
+        return form.dataset.offlineIgnore === 'true';
+    }
 
-        const formData = new FormData(form);
-        const data = {};
-        formData.forEach((value, key) => {
-            if (key === 'csrfmiddlewaretoken') return;
-            data[key] = value;
-        });
+    isOfflineCapableForm(form) {
+        const method = (form.method || 'GET').toUpperCase();
+        if (method === 'GET' || this.shouldIgnoreForm(form)) return false;
 
-        // Determine operation type
-        const isDelete = form.action.includes('delete') || form.querySelector('.btn-danger');
-        const opType = isDelete ? 'delete' : (window.location.pathname.includes('add') || window.location.pathname.includes('create') ? 'create' : 'update');
+        const actionUrl = this.getFormAction(form);
+        if (actionUrl.origin !== window.location.origin) return false;
+        if (this.isAuthRelatedPath(actionUrl.pathname)) return false;
+        if (this.formRequiresFileUpload(form)) return false;
 
-        data.id = data.id || crypto.randomUUID();
-        data._offline_origin = window.location.pathname;
+        return true;
+    }
 
-        try {
-            await this.db.queueWrite(modelName, opType, data);
-            
-            // OPTIMISTIC UPDATE: Update local IndexedDB so the change "appears" immediately
-            await this.applyOptimisticUpdate(modelName, opType, data);
-            
-            this.updateOfflineOpsUI();
-            
-            // Show feedback
-            const btn = form.querySelector('button[type="submit"]') || form.querySelector('button');
-            if (btn) {
-                btn.innerHTML = '<i class="bi bi-cloud-check"></i> Saved Offline';
-                btn.classList.add('btn-warning');
-                btn.disabled = true;
-            }
+    isAuthRelatedPath(pathname) {
+        return /(logout|login|password|reset)/i.test(pathname);
+    }
 
-            const alert = document.createElement('div');
-            alert.className = 'alert alert-warning mt-3 shadow-sm border-0';
-            alert.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-info-circle-fill fs-4 me-3"></i>
-                    <div>
-                        <strong>Action Saved Offline!</strong><br>
-                        The server is currently unreachable. Your changes have been stored locally and will sync automatically.
-                    </div>
-                </div>
-            `;
-            form.prepend(alert);
+    formRequiresFileUpload(form) {
+        const enctype = (form.enctype || '').toLowerCase();
+        return enctype === 'multipart/form-data' || Boolean(form.querySelector('input[type="file"]'));
+    }
 
-            setTimeout(() => {
-                const backBtn = document.querySelector('a.btn-secondary') || document.querySelector('.btn-back');
-                window.location.href = (backBtn && backBtn.href) ? backBtn.href : '/analytics/dashboard/';
-            }, 2500);
-        } catch (e) {
-            console.error("Failed to save offline:", e);
+    getFormAction(form) {
+        const action = form.getAttribute('action') || window.location.href;
+        return new URL(action, window.location.origin);
+    }
+
+    determineModelName(form, submitter) {
+        const explicitModel = form.getAttribute('data-offline-model');
+        if (explicitModel) return explicitModel;
+
+        const actionPath = this.getFormAction(form).pathname;
+        const currentPath = window.location.pathname;
+        const combinedPath = `${actionPath} ${currentPath}`.toLowerCase();
+        const submitterName = (submitter?.name || '').toLowerCase();
+
+        if (submitterName === 'add_category') return 'expense_category';
+        if (submitterName === 'add_expense') return 'expense';
+        if (combinedPath.includes('attendance')) return 'attendance_record';
+        if (combinedPath.includes('result') || combinedPath.includes('entry') || combinedPath.includes('approval')) return 'student_result';
+        if (combinedPath.includes('invoice') && combinedPath.includes('payment')) return 'fee_payment';
+        if (combinedPath.includes('quick-payment')) return 'fee_payment';
+        if (combinedPath.includes('invoice')) return 'fee_invoice';
+        if (combinedPath.includes('structure')) return 'fee_structure';
+        if (combinedPath.includes('expense')) return 'expense';
+        if (combinedPath.includes('announcement')) return 'announcement';
+        if (combinedPath.includes('teacher')) return 'teacher';
+        if (combinedPath.includes('student')) return 'student';
+        if (combinedPath.includes('subject')) return 'subject';
+        if (combinedPath.includes('class') || combinedPath.includes('section')) return 'class_section';
+        if (combinedPath.includes('term')) return 'term';
+        if (combinedPath.includes('year')) return 'academic_year';
+        if (combinedPath.includes('user') || combinedPath.includes('profile') || combinedPath.includes('settings')) return 'school_user';
+
+        return 'form_submission';
+    }
+
+    determineOperationType(form, submitter) {
+        const explicitOperation = form.getAttribute('data-offline-operation');
+        if (explicitOperation) return explicitOperation;
+
+        const actionPath = this.getFormAction(form).pathname.toLowerCase();
+        const submitterText = (submitter?.innerText || submitter?.value || '').toLowerCase();
+
+        if (actionPath.includes('delete') || submitterText.includes('delete') || submitterText.includes('remove')) {
+            return 'delete';
         }
+        if (actionPath.includes('add') || actionPath.includes('create') || actionPath.includes('register') || actionPath.includes('new')) {
+            return 'create';
+        }
+        if (actionPath.includes('edit') || actionPath.includes('update') || actionPath.includes('payment') || actionPath.includes('mark')) {
+            return 'update';
+        }
+
+        return 'submit';
+    }
+
+    serializeFormData(formData) {
+        const entries = [];
+        formData.forEach((value, key) => {
+            if (value instanceof File) return;
+            entries.push({ key, value: String(value) });
+        });
+        return entries;
+    }
+
+    async saveOffline(form, submitter) {
+        const formData = new FormData(form);
+        if (submitter?.name && !formData.has(submitter.name)) {
+            formData.append(submitter.name, submitter.value || '1');
+        }
+
+        const modelName = this.determineModelName(form, submitter);
+        const opType = this.determineOperationType(form, submitter);
+        const actionUrl = this.getFormAction(form);
+        const itemLabel = form.getAttribute('data-offline-label') || this.prettyName(modelName);
+
+        const queuePayload = {
+            _offline_origin: `${window.location.pathname}${window.location.search}`,
+            _offline_url: actionUrl.toString(),
+            _offline_method: (form.method || 'POST').toUpperCase(),
+            _offline_label: itemLabel,
+            _offline_entries: this.serializeFormData(formData),
+            _offline_saved_at: new Date().toISOString()
+        };
+
+        await this.db.queueWrite(modelName, opType, queuePayload);
+        await this.updateOfflineOpsUI();
+
+        const submitButton = submitter || form.querySelector('button[type="submit"], input[type="submit"]');
+        this.decorateSubmitButton(submitButton, 'Saved Offline');
+        this.showFormAlert(
+            form,
+            'warning',
+            `Saved offline. Your ${itemLabel.toLowerCase()} will sync automatically when the connection returns.`
+        );
+    }
+
+    decorateSubmitButton(button, label) {
+        if (!button) return;
+
+        if (button.tagName === 'INPUT') {
+            button.value = label;
+        } else {
+            button.innerHTML = `<i class="bi bi-cloud-check me-1"></i>${label}`;
+        }
+        button.classList.remove('btn-primary', 'btn-success', 'btn-danger');
+        button.classList.add('btn-warning');
+        button.disabled = true;
+    }
+
+    showFormAlert(form, tone, message) {
+        const existingAlert = form.querySelector('.offline-form-alert');
+        if (existingAlert) existingAlert.remove();
+
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${tone} offline-form-alert mt-3 shadow-sm border-0`;
+        alert.innerHTML = `
+            <div class="d-flex align-items-start">
+                <i class="bi ${tone === 'danger' ? 'bi-exclamation-triangle-fill' : 'bi-cloud-check-fill'} fs-4 me-3"></i>
+                <div>${this.escapeHtml(message)}</div>
+            </div>
+        `;
+
+        form.prepend(alert);
     }
 
     handleOnlineStatus(isOnline) {
         const banner = document.getElementById('offline-banner');
         if (!isOnline) {
             if (banner) banner.style.display = 'block';
-            console.log("App is offline. Changes will be saved locally.");
-        } else {
-            if (banner) banner.style.display = 'none';
-            console.log("App is online. Starting sync...");
-            this.flushQueue();
+            console.log('App is offline. Changes will be saved locally.');
+            return;
         }
+
+        if (banner) banner.style.display = 'none';
+        console.log('App is online. Starting sync...');
+        this.flushQueue();
     }
 
     async flushQueue() {
         if (this.isSyncing || !navigator.onLine) return;
-        
+
         const queue = await this.db.getAll('sync_queue');
         if (queue.length === 0) return;
 
         this.isSyncing = true;
         this.showSyncStatus('syncing');
 
-        // Update UI to show 'syncing' status for each item
-        const syncPageList = document.getElementById('sync-page-list');
-        if (syncPageList) {
-            const statusBadges = syncPageList.querySelectorAll('.badge-status');
-            statusBadges.forEach(badge => {
-                badge.className = 'badge bg-info badge-status';
-                badge.innerHTML = '<i class="bi bi-arrow-repeat spin me-1"></i>Syncing...';
-            });
-        }
-
-        const operations = queue.map(item => ({
-            model: item.model,
-            type: item.type,
-            data: item.data,
-            queue_id: item.id // Keep the internal ID for cleanup
-        }));
+        let syncedCount = 0;
+        let failedCount = 0;
 
         try {
-            const response = await fetch('/api/sync/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': this.getCookie('csrftoken')
-                },
-                body: JSON.stringify({ operations: operations })
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                
-                // Process results and clean up
-                for (const res of result.results) {
-                    if (res.status === 'success' || res.status === 'conflict') {
-                        // Use the queue_id we sent to find and delete the item
-                        const originalOp = operations.find(op => op.data.id === res.id);
-                        if (originalOp && originalOp.queue_id) {
-                            await this.db.delete('sync_queue', originalOp.queue_id);
-                            
-                            // Update local store with server data
-                            if (res.data) {
-                                await this.db.put(originalOp.model + 's', res.data);
-                            }
-                        }
+            for (const item of queue) {
+                try {
+                    if (this.isReplayableFormItem(item)) {
+                        await this.replayQueuedForm(item);
                     } else {
-                        console.error(`Sync failed for item ${res.id}:`, res.message || res.errors);
+                        await this.syncLegacyQueueItem(item);
                     }
+                    syncedCount += 1;
+                } catch (error) {
+                    failedCount += 1;
+                    await this.markQueueError(item, error);
+                    console.error(`Sync failed for item ${item.id}:`, error);
                 }
-                
-                this.showSyncStatus('synced');
-                await this.updateOfflineOpsUI();
-            } else {
-                throw new Error("Server responded with error");
             }
-        } catch (error) {
-            console.error("Sync failed:", error);
-            this.showSyncStatus('failed');
+
+            if (failedCount === 0) {
+                this.showSyncStatus('synced', `${syncedCount} action${syncedCount === 1 ? '' : 's'} synced`);
+            } else if (syncedCount > 0) {
+                this.showSyncStatus('partial', `${syncedCount} synced, ${failedCount} still need attention`);
+            } else {
+                this.showSyncStatus('failed');
+            }
         } finally {
             this.isSyncing = false;
+            await this.updateOfflineOpsUI();
         }
     }
 
-    showSyncStatus(status) {
+    isReplayableFormItem(item) {
+        return Boolean(item.data?._offline_url && Array.isArray(item.data?._offline_entries));
+    }
+
+    async replayQueuedForm(item) {
+        const formData = new FormData();
+        for (const entry of item.data._offline_entries) {
+            formData.append(entry.key, entry.value);
+        }
+
+        const headers = { 'X-Requested-With': 'OfflineSync' };
+        const csrfToken = this.getCookie('csrftoken');
+        if (csrfToken) headers['X-CSRFToken'] = csrfToken;
+
+        const response = await fetch(item.data._offline_url, {
+            method: (item.data._offline_method || 'POST').toUpperCase(),
+            body: formData,
+            headers,
+            credentials: 'same-origin',
+            redirect: 'follow'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
+        }
+
+        await this.db.delete('sync_queue', item.id);
+    }
+
+    async syncLegacyQueueItem(item) {
+        const response = await fetch('/api/sync/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': this.getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                operations: [{
+                    model: item.model,
+                    type: item.type,
+                    data: item.data,
+                    queue_id: item.id
+                }]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Legacy sync request failed');
+        }
+
+        const result = await response.json();
+        const itemResult = result.results?.[0];
+        if (!itemResult || !['success', 'conflict'].includes(itemResult.status)) {
+            throw new Error(itemResult?.message || 'Legacy sync could not be completed');
+        }
+
+        await this.db.delete('sync_queue', item.id);
+    }
+
+    async markQueueError(item, error) {
+        const updated = {
+            ...item,
+            last_error: error.message || 'Sync failed',
+            last_attempt: new Date().toISOString()
+        };
+        await this.db.put('sync_queue', updated);
+    }
+
+    showSyncStatus(status, message = '') {
         const indicator = document.getElementById('sync-indicator');
         if (!indicator) return;
 
@@ -332,19 +444,38 @@ class SyncManager {
 
         switch (status) {
             case 'syncing':
-                indicator.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Syncing...';
+                indicator.innerHTML = '<i class="bi bi-arrow-repeat spin me-1"></i>Syncing pending actions...';
                 indicator.classList.add('bg-info');
                 break;
             case 'synced':
-                indicator.innerHTML = '<i class="bi bi-check-circle"></i> All data synced';
+                indicator.innerHTML = `<i class="bi bi-check-circle me-1"></i>${this.escapeHtml(message || 'All data synced')}`;
                 indicator.classList.add('bg-success');
-                setTimeout(() => indicator.style.display = 'none', 3000);
+                setTimeout(() => { indicator.style.display = 'none'; }, 3000);
+                break;
+            case 'partial':
+                indicator.innerHTML = `<i class="bi bi-exclamation-circle me-1"></i>${this.escapeHtml(message)}`;
+                indicator.classList.add('bg-warning', 'text-dark');
                 break;
             case 'failed':
-                indicator.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Sync failed. <button onclick="syncManager.flushQueue()">Retry</button>';
+                indicator.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Sync failed. <button onclick="window.syncManager.flushQueue()">Retry</button>';
                 indicator.classList.add('bg-danger');
                 break;
         }
+    }
+
+    prettyName(value) {
+        return String(value || 'form_submission')
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+
+    escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     getCookie(name) {
@@ -353,7 +484,7 @@ class SyncManager {
             const cookies = document.cookie.split(';');
             for (let i = 0; i < cookies.length; i++) {
                 const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                if (cookie.substring(0, name.length + 1) === `${name}=`) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
                 }
@@ -364,13 +495,12 @@ class SyncManager {
 
     async initialSync() {
         if (!navigator.onLine) return;
-        
+
         try {
             const response = await fetch('/api/initial-sync/');
             if (response.ok) {
                 const data = await response.json();
-                
-                // Bulk save all data to IndexedDB
+
                 for (const [key, value] of Object.entries(data)) {
                     if (Array.isArray(value)) {
                         await this.db.bulkPut(key, value);
@@ -378,10 +508,10 @@ class SyncManager {
                         await this.db.put('meta', { id: 'current_school', ...value });
                     }
                 }
-                console.log("Initial sync completed.");
+                console.log('Initial sync completed.');
             }
         } catch (error) {
-            console.error("Initial sync failed:", error);
+            console.error('Initial sync failed:', error);
         }
     }
 }

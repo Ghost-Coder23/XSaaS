@@ -1,6 +1,61 @@
 {% extends 'base_dashboard.html' %}
 {% block title %}Enter Results{% endblock %}
 {% block page_title %}Result Entry{% endblock %}
+{% block extra_css %}
+<style>
+@media (max-width: 767.98px) {
+    .result-summary {
+        align-items: flex-start !important;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    #results-table thead {
+        display: none;
+    }
+    #results-table,
+    #results-table tbody,
+    #results-table tr,
+    #results-table td {
+        display: block;
+        width: 100%;
+    }
+    #results-table tbody {
+        display: grid;
+        gap: 0.9rem;
+        padding: 1rem;
+    }
+    #results-table tr {
+        border: 0;
+        border-radius: 16px;
+        padding: 1rem;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        background: #fff;
+    }
+    #results-table td {
+        border: 0;
+        padding: 0.35rem 0;
+    }
+    #results-table td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        margin-bottom: 0.3rem;
+    }
+    .results-footer {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 0.75rem;
+    }
+    .results-footer .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
 {% block content %}
 
 <div class="card mb-3">
@@ -44,19 +99,19 @@
 
 {% if results %}
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header d-flex justify-content-between align-items-center result-summary">
         <span>
             <strong>{{ subject.name }}</strong> &mdash; {{ class_section }} &mdash; {{ term }}
         </span>
         <span class="text-muted small">{{ results|length }} student{{ results|length|pluralize }}</span>
     </div>
-    <form method="post">
+    <form method="post" data-offline-model="student_result" data-offline-label="Results submission">
         {% csrf_token %}
         <input type="hidden" name="class" value="{{ class_section.id }}">
         <input type="hidden" name="subject" value="{{ subject.id }}">
         <input type="hidden" name="term" value="{{ term.id }}">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0" id="results-table">
                 <thead class="table-light">
                     <tr>
                         <th>Student</th>
@@ -71,34 +126,34 @@
                 <tbody>
                     {% for result in results %}
                     <tr>
-                        <td>
+                        <td data-label="Student">
                             <div class="fw-medium">{{ result.student.user.get_full_name }}</div>
                             <div class="text-muted small">{{ result.student.admission_number }}</div>
                         </td>
-                        <td>
+                        <td data-label="CA Score">
                             <input type="number" name="ca_{{ result.id }}" value="{{ result.continuous_assessment }}"
                                 class="form-control form-control-sm ca-input" data-id="{{ result.id }}"
                                 min="0" max="100" step="0.5"
                                 {% if result.status == 'locked' %}readonly{% endif %}>
                         </td>
-                        <td>
+                        <td data-label="Exam Score">
                             <input type="number" name="exam_{{ result.id }}" value="{{ result.exam_score }}"
                                 class="form-control form-control-sm exam-input" data-id="{{ result.id }}"
                                 min="0" max="100" step="0.5"
                                 {% if result.status == 'locked' %}readonly{% endif %}>
                         </td>
-                        <td>
+                        <td data-label="Total">
                             <span class="fw-bold total-{{ result.id }}">{{ result.total_score|floatformat:1 }}</span>
                         </td>
-                        <td>
+                        <td data-label="Grade">
                             <span class="badge bg-primary grade-{{ result.id }}">{{ result.grade|default:'-' }}</span>
                         </td>
-                        <td>
+                        <td data-label="Comment">
                             <input type="text" name="comment_{{ result.id }}" value="{{ result.teacher_comment }}"
                                 class="form-control form-control-sm" placeholder="Optional"
                                 {% if result.status == 'locked' %}readonly{% endif %}>
                         </td>
-                        <td>
+                        <td data-label="Status">
                             {% if result.status == 'draft' %}
                             <span class="badge bg-secondary">Draft</span>
                             {% elif result.status == 'submitted' %}
@@ -114,7 +169,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer d-flex justify-content-between align-items-center">
+        <div class="card-footer d-flex justify-content-between align-items-center results-footer">
             <small class="text-muted">Results will be submitted for headmaster approval.</small>
             <button type="submit" class="btn btn-primary">
                 <i class="bi bi-send me-1"></i>Submit Results

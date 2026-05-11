@@ -131,7 +131,7 @@
     </div>
 
     <div class="chat-input-area">
-        <form id="chatForm" method="post" class="chat-input-wrapper">
+        <form id="chatForm" method="post" class="chat-input-wrapper" data-offline-ignore="true">
             {% csrf_token %}
             <input type="text" name="body" class="chat-input" placeholder="Type a message..." required autocomplete="off">
             <button type="submit" class="btn-send">
