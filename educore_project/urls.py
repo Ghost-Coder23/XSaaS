@@ -40,6 +40,8 @@ urlpatterns = [
     path('inventory/', include('inventory.urls')),
     path('messages/', include('messaging.urls')),
     path('api/', include('api.urls')),
+    # Timetable
+    path('timetable/', include('timetable.urls')),
 ]
 
 if settings.DEBUG:

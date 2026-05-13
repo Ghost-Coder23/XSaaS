@@ -1,0 +1,199 @@
+{% extends 'timetable/base.html' %}
+{% block title %}Periods – Timetable Manager{% endblock %}
+{% block page_title %}Periods{% endblock %}
+{% block topbar_actions %}
+  <button class="btn btn-primary" onclick="openModal('modal-add-period')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Period
+  </button>
+{% endblock %}
+
+{% block content %}
+<div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:13px 18px;margin-bottom:20px;font-size:.875rem;">
+  <strong style="color:#60a5fa;">ℹ Tip:</strong> Periods define the daily schedule slots. Add both teaching periods and breaks (like lunch). The <em>Order</em> field determines the sequence they appear in the timetable.
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">All Periods <span class="badge badge-muted" style="margin-left:8px">{{ periods|length }}</span></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Label</th><th>Start</th><th>End</th><th>Type</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for p in periods %}
+        <tr data-id="{{ p.id }}">
+          <td class="text-muted text-sm">{{ p.order }}</td>
+          <td class="font-semibold">{{ p.label }}</td>
+          <td>{{ p.start_time|time:"H:i" }}</td>
+          <td>{{ p.end_time|time:"H:i" }}</td>
+          <td>
+            {% if p.is_break %}
+              <span class="badge badge-warning">Break</span>
+            {% else %}
+              <span class="badge badge-info">Teaching</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <button class="btn btn-outline btn-sm" onclick="editPeriod({{ p.id }},'{{ p.label|escapejs }}','{{ p.start_time|time:"H:i" }}','{{ p.end_time|time:"H:i" }}',{{ p.is_break|lower }},{{ p.order }})">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deletePeriod({{ p.id }}, this)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty-state">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <h3>No periods defined</h3><p>Add your daily schedule slots — e.g. Period 1 (08:00–08:50), Break (10:30–11:00).</p>
+          <button class="btn btn-primary" onclick="openModal('modal-add-period')">Add Period</button>
+        </div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Period Modal -->
+<div class="modal-backdrop" id="modal-add-period">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add Period</span>
+      <button class="btn-close" data-dismiss="modal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Label *</label>
+        <input type="text" id="add-label" class="form-control" placeholder="e.g. Period 1 or Break">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Start Time *</label>
+          <input type="time" id="add-start" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">End Time *</label>
+          <input type="time" id="add-end" class="form-control">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Order (sequence)</label>
+          <input type="number" id="add-order" class="form-control" value="0" min="0">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:4px">
+          <label class="form-check" style="cursor:pointer">
+            <input type="checkbox" id="add-is-break">
+            <span>This is a break / lunch</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      <button class="btn btn-primary" id="btn-add-period">Add Period</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Period Modal -->
+<div class="modal-backdrop" id="modal-edit-period">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Edit Period</span>
+      <button class="btn-close" data-dismiss="modal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-group">
+        <label class="form-label">Label *</label>
+        <input type="text" id="edit-label" class="form-control">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Start Time</label>
+          <input type="time" id="edit-start" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">End Time</label>
+          <input type="time" id="edit-end" class="form-control">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Order</label>
+          <input type="number" id="edit-order" class="form-control" min="0">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:4px">
+          <label class="form-check" style="cursor:pointer">
+            <input type="checkbox" id="edit-is-break">
+            <span>This is a break / lunch</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      <button class="btn btn-primary" id="btn-edit-period">Save Changes</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('btn-add-period').addEventListener('click', async function() {
+  const body = {
+    label: document.getElementById('add-label').value.trim(),
+    start_time: document.getElementById('add-start').value,
+    end_time: document.getElementById('add-end').value,
+    order: parseInt(document.getElementById('add-order').value || 0),
+    is_break: document.getElementById('add-is-break').checked,
+  };
+  if (!body.label || !body.start_time || !body.end_time) { toast('Label, start and end times are required', 'error'); return; }
+  setLoading(this, true);
+  try {
+    await api('{% url "timetable:period-create" %}', { method: 'POST', body: JSON.stringify(body) });
+    toast('Period added', 'success'); closeModal('modal-add-period'); location.reload();
+  } catch(e) { toast(e.message, 'error'); }
+  setLoading(this, false);
+});
+
+function editPeriod(id, label, start, end, isBreak, order) {
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-label').value = label;
+  document.getElementById('edit-start').value = start;
+  document.getElementById('edit-end').value = end;
+  document.getElementById('edit-order').value = order;
+  document.getElementById('edit-is-break').checked = isBreak;
+  openModal('modal-edit-period');
+}
+
+document.getElementById('btn-edit-period').addEventListener('click', async function() {
+  const id = document.getElementById('edit-id').value;
+  const body = {
+    label: document.getElementById('edit-label').value.trim(),
+    start_time: document.getElementById('edit-start').value,
+    end_time: document.getElementById('edit-end').value,
+    order: parseInt(document.getElementById('edit-order').value || 0),
+    is_break: document.getElementById('edit-is-break').checked,
+  };
+  setLoading(this, true);
+  try {
+    await api(`/api/periods/${id}/update/`, { method: 'PUT', body: JSON.stringify(body) });
+    toast('Period updated', 'success'); closeModal('modal-edit-period'); location.reload();
+  } catch(e) { toast(e.message, 'error'); }
+  setLoading(this, false);
+});
+
+async function deletePeriod(id, btn) {
+  if (!confirmDelete('Delete this period? Timetable entries using it will also be removed.')) return;
+  setLoading(btn, true);
+  try {
+    await api(`/api/periods/${id}/delete/`, { method: 'DELETE' });
+    document.querySelector(`tr[data-id="${id}"]`)?.remove();
+    toast('Period deleted', 'success');
+  } catch(e) { toast(e.message, 'error'); }
+  setLoading(btn, false);
+}
+</script>
+{% endblock %}

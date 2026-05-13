@@ -427,6 +427,11 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
     <a href="{% url 'academics:subject_list' %}" class="nav-link {% if 'subjects' in request.path %}active{% endif %}">
       <i class="bi bi-book"></i> Subjects
     </a>
+    {% if school_role in 'headmaster,teacher,admin' %}
+    <a href="{% url 'timetable:dashboard' %}" class="nav-link {% if 'timetable' in request.path %}active{% endif %}">
+      <i class="bi bi-calendar-week"></i> Timetables
+    </a>
+    {% endif %}
 
     <div class="nav-section">Attendance</div>
     <a href="{% url 'attendance:home' %}" class="nav-link {% if 'attendance' in request.path %}active{% endif %}">
@@ -438,6 +443,16 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; marg
       <i class="bi bi-pencil-square"></i> Enter Results
     </a>
     {% elif school_role == 'admin' %}
+    <div class="nav-section">Academic</div>
+    <a href="{% url 'academics:teacher_list' %}" class="nav-link {% if 'teachers' in request.path %}active{% endif %}">
+      <i class="bi bi-person-badge"></i> Teachers Directory
+    </a>
+    <a href="{% url 'academics:parent_list' %}" class="nav-link {% if 'parents' in request.path %}active{% endif %}">
+      <i class="bi bi-people-fill"></i> Parents Directory
+    </a>
+    <a href="{% url 'timetable:dashboard' %}" class="nav-link {% if 'timetable' in request.path %}active{% endif %}">
+      <i class="bi bi-calendar-week"></i> Timetables
+    </a>
     <div class="nav-section">Analytics</div>
     <a href="{% url 'analytics:dashboard' %}#admin" class="nav-link {% if 'dashboard' in request.path %}active{% endif %}">
       <i class="bi bi-graph-up"></i> Admin Stats

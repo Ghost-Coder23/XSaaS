@@ -1,24 +1,16 @@
 """
-Django settings for EduCore - Multi-tenant School Management SaaS
+Django settings for School Timetable Manager.
 """
 import os
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-change-this-in-production-use-env-var')
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+SECRET_KEY = 'django-insecure-change-this-in-production-use-env-variable'
 
-ALLOWED_HOSTS = ['*'] if DEBUG else ['.educore.com', 'techflex.pythonanywhere.com', 'localhost', '127.0.0.1']
+DEBUG = True
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://34fa7eead0bc42c5-77-246-55-160.serveousercontent.com",
-    "https://70fa126ab120c7bd-77-246-53-149.serveousercontent.com",
-    "https://5f0f-77-246-55-229.ngrok-free.app",
-]
-
-# Tenant Settings
-TENANT_DOMAIN = os.environ.get('TENANT_DOMAIN', 'educore.com')
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -27,23 +19,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_forms',
-    'crispy_bootstrap5',
-    'accounts',
-    'schools',
-    'academics',
-    'results',
-    'reports',
-    'attendance',
-    'fees',
-    'notifications',
-    'analytics',
-    'superadmin',
-    'inventory',
-    'core',
-    'messaging',
-    'rest_framework',
-    'api',
     'timetable',
 ]
 
@@ -55,17 +30,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'middleware.tenant_middleware.SchoolMiddleware',
-    'core.middleware.RateLimitMiddleware',
-    'core.middleware.CoreContextMiddleware',
 ]
 
-ROOT_URLCONF = 'educore_project.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -73,13 +45,10 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'schools.context_processors.school_context',
             ],
         },
     },
 ]
-
-WSGI_APPLICATION = 'educore_project.wsgi.application'
 
 DATABASES = {
     'default': {
@@ -87,11 +56,12 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-# PostgreSQL (uncomment and configure for production):
+
+# For PostgreSQL, replace the DATABASES config with:
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.environ.get('DB_NAME', 'educore'),
+#         'NAME': os.environ.get('DB_NAME', 'timetable_db'),
 #         'USER': os.environ.get('DB_USER', 'postgres'),
 #         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
 #         'HOST': os.environ.get('DB_HOST', 'localhost'),
@@ -107,23 +77,15 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Africa/Harare'
+TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/analytics/dashboard/'
-LOGOUT_REDIRECT_URL = '/'
-
-CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
-CRISPY_TEMPLATE_PACK = 'bootstrap5'
-
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'noreply@educore.com'
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
