@@ -30,8 +30,8 @@
           <td class="text-muted text-sm">{{ s.teachers.count }} teacher{{ s.teachers.count|pluralize }}</td>
           <td>
             <div class="flex gap-2">
-              <button class="btn btn-outline btn-sm" onclick="editSubject({{ s.id }},'{{ s.name|escapejs }}','{{ s.code|escapejs }}',{{ s.periods_per_week }},'{{ s.color }}')">Edit</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteSubject({{ s.id }}, this)">Delete</button>
+              <button class="btn btn-outline btn-sm" onclick="editSubject('{{ s.id }}','{{ s.name|escapejs }}','{{ s.code|escapejs }}',{{ s.periods_per_week }},'{{ s.color }}')">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteSubject('{{ s.id }}', this)">Delete</button>
             </div>
           </td>
         </tr>

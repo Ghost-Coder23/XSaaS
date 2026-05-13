@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'notifications',
     'analytics',
     'superadmin',
-    'inventory',
+'inventory.apps.InventoryConfig',
     'core',
     'messaging',
     'rest_framework',

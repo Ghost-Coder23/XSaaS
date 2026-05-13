@@ -39,8 +39,8 @@
           <td>{{ t.max_periods_per_day }}</td>
           <td>
             <div class="flex gap-2">
-              <button class="btn btn-outline btn-sm" onclick="editTeacher({{ t.id }})">Edit</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteTeacher({{ t.id }}, this)">Delete</button>
+              <button class="btn btn-outline btn-sm" onclick="editTeacher('{{ t.id }}')">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteTeacher('{{ t.id }}', this)">Delete</button>
             </div>
           </td>
         </tr>
@@ -142,7 +142,7 @@ async function editTeacher(id) {
     document.getElementById('teacher-days').value = JSON.stringify(t.available_days || [1,2,3,4,5]);
     initDayPicker('days-picker', 'teacher-days');
     document.querySelectorAll('.subject-checkbox').forEach(cb => {
-      cb.checked = t.subject_ids.includes(parseInt(cb.value));
+      cb.checked = t.subject_ids.map(String).includes(String(cb.value));
     });
     openModal('modal-teacher');
   } catch(e) { toast(e.message, 'error'); }
