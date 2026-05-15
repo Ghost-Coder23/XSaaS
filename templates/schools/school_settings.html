@@ -22,7 +22,20 @@
 <label class="form-label fw-bold">School Motto</label>
 <input type="text" name="motto" value="{{ object.motto|default:'' }}" class="form-control" placeholder="e.g. Excellence in Education">
 </div>
-<button type="submit" class="btn btn-primary">Save Settings</button>
+<hr class="my-4">
+<h5 class="fw-bold mb-3">Grading Configuration</h5>
+<div class="row g-3">
+<div class="col-md-6">
+<label class="form-label fw-bold">Continuous Assessment (CA) Weight (%)</label>
+<input type="number" name="ca_weight" value="{{ object.ca_weight }}" class="form-control" min="0" max="100" step="0.5" placeholder="30">
+</div>
+<div class="col-md-6">
+<label class="form-label fw-bold">Exam Weight (%)</label>
+<input type="number" name="exam_weight" value="{{ object.exam_weight }}" class="form-control" min="0" max="100" step="0.5" placeholder="70">
+</div>
+</div>
+<p class="text-muted small mt-2">Total weight must equal 100%</p>
+<button type="submit" class="btn btn-primary mt-3">Save Settings</button>
 </form>
 <div class="mb-3">
 <a href="{% url 'upload_signature' %}" class="btn btn-outline-secondary">Upload Your Signature</a>

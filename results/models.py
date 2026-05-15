@@ -109,9 +109,33 @@ class StudentResult(SyncBaseModel):
         return f"{self.student} - {self.subject} - {self.term}"
 
     def calculate_total(self):
-        """Calculate total score based on CA and Exam"""
-        # Default: 30% CA, 70% Exam (can be customized)
-        self.total_score = (self.continuous_assessment * 0.3) + (self.exam_score * 0.7)
+        """Calculate total score based on school's selected grading system"""
+        school = self.class_section.school
+        
+        if school.grading_system == 'system':
+            # System Default: 30% CA, 70% Exam
+            ca_weight = 0.3
+            exam_weight = 0.7
+        elif school.grading_system == 'custom_weights':
+            # Custom CA/Exam Weights
+            ca_weight = school.ca_weight / 100.0
+            exam_weight = school.exam_weight / 100.0
+        elif school.grading_system == 'multiple_components':
+            # TODO: Implement multiple assessment components
+            # For now, fall back to custom weights
+            ca_weight = school.ca_weight / 100.0
+            exam_weight = school.exam_weight / 100.0
+        elif school.grading_system == 'subject_specific':
+            # TODO: Implement subject-specific grading
+            # For now, fall back to custom weights
+            ca_weight = school.ca_weight / 100.0
+            exam_weight = school.exam_weight / 100.0
+        else:
+            # Fallback to system default
+            ca_weight = 0.3
+            exam_weight = 0.7
+        
+        self.total_score = (self.continuous_assessment * ca_weight) + (self.exam_score * exam_weight)
         return self.total_score
 
     def assign_grade(self, grade_scales):

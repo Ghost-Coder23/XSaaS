@@ -48,13 +48,26 @@ class SchoolLoginForm(forms.Form):
 
 
 class SchoolBrandingForm(forms.ModelForm):
-    """Form for customizing school branding"""
+    """Form for customizing school branding and settings"""
     class Meta:
         model = School
-        fields = ['logo', 'theme_color', 'motto']
+        fields = ['logo', 'theme_color', 'motto', 'ca_weight', 'exam_weight']
         widgets = {
             'theme_color': forms.TextInput(attrs={'type': 'color'}),
+            'ca_weight': forms.NumberInput(attrs={'min': 0, 'max': 100, 'step': 0.5}),
+            'exam_weight': forms.NumberInput(attrs={'min': 0, 'max': 100, 'step': 0.5}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        ca_weight = cleaned_data.get('ca_weight')
+        exam_weight = cleaned_data.get('exam_weight')
+        
+        if ca_weight is not None and exam_weight is not None:
+            total = ca_weight + exam_weight
+            if total != 100.0:
+                raise forms.ValidationError(f"Total weight must be 100%. Current total: {total}%")
+        return cleaned_data
 
 
 class AddSchoolUserForm(forms.Form):

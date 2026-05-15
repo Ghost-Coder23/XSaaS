@@ -3,6 +3,7 @@ Schools models - Multi-tenant school management
 """
 import uuid
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 from django.urls import reverse
 from core.models import TenantManager, SyncBaseModel
@@ -40,6 +41,33 @@ class School(models.Model):
     # Subscription
     subscription_active = models.BooleanField(default=False)
     subscription_expires = models.DateTimeField(null=True, blank=True)
+
+    # Grading Configuration
+    GRADING_SYSTEM_CHOICES = [
+        ('system', 'System Grading (Default: 30% CA, 70% Exam)'),
+        ('custom_weights', 'Custom CA/Exam Weights'),
+        ('multiple_components', 'Multiple Assessment Components'),
+        ('subject_specific', 'Subject-Specific Grading'),
+    ]
+    
+    grading_system = models.CharField(
+        max_length=30,
+        choices=GRADING_SYSTEM_CHOICES,
+        default='system',
+        help_text='Choose the grading system for your school'
+    )
+    
+    # Custom Weights System
+    ca_weight = models.FloatField(
+        default=30.0,
+        help_text='Weight percentage for Continuous Assessment (CA)',
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    exam_weight = models.FloatField(
+        default=70.0,
+        help_text='Weight percentage for Exam',
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
 
     class Meta:
         ordering = ['-created_at']
