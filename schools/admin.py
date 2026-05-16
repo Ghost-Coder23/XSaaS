@@ -5,8 +5,8 @@ from .models import School, SchoolUser, GalleryItem
 
 @admin.register(School)
 class SchoolAdmin(admin.ModelAdmin):
-    list_display = ['name', 'subdomain', 'status', 'subscription_active', 'grading_system', 'created_at']
-    list_filter = ['status', 'subscription_active', 'grading_system', 'created_at']
+    list_display = ['name', 'subdomain', 'status', 'subscription_active', 'created_at']
+    list_filter = ['status', 'subscription_active', 'created_at']
     search_fields = ['name', 'subdomain', 'email']
     readonly_fields = ['created_at', 'updated_at']
     fieldsets = (
@@ -15,9 +15,6 @@ class SchoolAdmin(admin.ModelAdmin):
         }),
         ('Branding', {
             'fields': ('logo', 'theme_color', 'motto')
-        }),
-        ('Grading Configuration', {
-            'fields': ('grading_system', 'ca_weight', 'exam_weight')
         }),
         ('Status', {
             'fields': ('status', 'is_demo', 'subscription_active', 'subscription_expires')

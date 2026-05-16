@@ -1,6 +1,6 @@
 Hello {{ user.get_full_name|default:user.username }},
 
-Welcome to {{ school.name }} on EduCore!
+Welcome to {{ school.name }} on AcademiaLink!
 
 {% if is_new_user %}
 An account has been created for you. To set your password and access your account, please click the link below:
@@ -9,7 +9,8 @@ An account has been created for you. To set your password and access your accoun
 
 (Note: This link will expire in 24 hours.)
 {% else %}
-You have been added to {{ school.name }}. Since you already have an EduCore account, you can log in using your existing credentials at:
+You have been added to {{ school.name }}. Since you already have an AcademiaLink account, you can log in using your existing credentials at:
+
 
 {{ reset_link|cut:"/accounts/password/reset/confirm/" }}
 {% endif %}

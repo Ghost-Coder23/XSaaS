@@ -115,6 +115,39 @@ class ContactView(TemplateView):
     """Contact page"""
     template_name = 'schools/contact.html'
 
+    def post(self, request, *args, **kwargs):
+        full_name = request.POST.get('full_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        message_text = request.POST.get('message', '').strip()
+
+        if not full_name or not email or not message_text:
+            messages.error(request, 'Please fill in all contact form fields.')
+            return self.get(request, *args, **kwargs)
+
+        recipient_list = ['bsoftdgital@gmail.com']
+        subject = f'Contact message from {full_name}'
+        body = (
+            f'You have received a new contact form submission.\n\n'
+            f'Name: {full_name}\n'
+            f'Email: {email}\n\n'
+            f'Message:\n{message_text}\n'
+        )
+
+        try:
+            send_mail(
+                subject=subject,
+                message=body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=recipient_list,
+                fail_silently=False,
+            )
+            messages.success(request, 'Your message has been sent. Thank you!')
+        except Exception:
+            messages.error(request, 'Your message could not be sent. Please try again later.')
+
+        return self.get(request, *args, **kwargs)
+
+
 
 class PrivacyPolicyView(TemplateView):
     """Privacy policy page"""

@@ -373,7 +373,10 @@ class TeacherCreateView(SchoolRoleMixin, CreateView):
                 return redirect('academics:teacher_list')
         else:
             is_new_user = True
-            password = User.objects.make_random_password()
+            import string
+            import random
+            password_chars = string.ascii_letters + string.digits
+            password = ''.join(random.choice(password_chars) for _ in range(12))
             user = User.objects.create_user(
                 username=email,
                 email=email,

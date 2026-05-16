@@ -12,8 +12,7 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = ['*'] if DEBUG else ['.educore.com', 'techflex.pythonanywhere.com', 'localhost', '127.0.0.1']
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://34fa7eead0bc42c5-77-246-55-160.serveousercontent.com",
-    "https://70fa126ab120c7bd-77-246-53-149.serveousercontent.com",
+   
     "https://5f0f-77-246-55-229.ngrok-free.app",
 ]
 
@@ -125,5 +124,10 @@ LOGOUT_REDIRECT_URL = '/'
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'noreply@educore.com'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST ='smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'bsoftdgital@gmail.com'
+EMAIL_HOST_PASSWORD = 'scvbeqocwjhnswok'
+DEFAULT_FROM_EMAIL = 'Academialink <bsoftdgital@gmail.com>'

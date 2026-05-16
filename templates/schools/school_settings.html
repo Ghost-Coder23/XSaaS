@@ -24,7 +24,15 @@
 </div>
 <hr class="my-4">
 <h5 class="fw-bold mb-3">Grading Configuration</h5>
-<div class="row g-3">
+<div class="mb-3">
+<label class="form-label fw-bold">Grading System</label>
+<select name="grading_system" class="form-select">
+{% for key, label in object.GRADING_SYSTEM_CHOICES %}
+<option value="{{ key }}" {% if object.grading_system == key %}selected{% endif %}>{{ label }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="row g-3" id="custom-weights-section">
 <div class="col-md-6">
 <label class="form-label fw-bold">Continuous Assessment (CA) Weight (%)</label>
 <input type="number" name="ca_weight" value="{{ object.ca_weight }}" class="form-control" min="0" max="100" step="0.5" placeholder="30">
