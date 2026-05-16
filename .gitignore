@@ -8,4 +8,8 @@ media/
 staticfiles/
 *.egg-info/
 .DS_Store
+# SQLite database files
 db.sqlite3
+*.sqlite3
+*.db
+
